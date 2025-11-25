@@ -1,0 +1,12 @@
+# =======================================
+# 🚫 Fichiers spécifiques à Eclipse
+# =======================================
+*.classpath
+*.project
+*.settings/
+*.loadpath
+*.zip
+
+
+/.metadata/
+
