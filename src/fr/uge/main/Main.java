@@ -1,5 +1,6 @@
 package fr.uge.main;
 
+import fr.uge.graphics.GameRun;
 import fr.uge.implement.BackPack;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.MapDungeon;
@@ -22,6 +23,10 @@ public class Main {
 
 	    MapDungeon floor3 = dungeon.getFloor(2);
 	    floor3.show();
+	    
+	    
+	    GameRun gameRun = new GameRun();
+			gameRun.run();
 
 	  
 	  

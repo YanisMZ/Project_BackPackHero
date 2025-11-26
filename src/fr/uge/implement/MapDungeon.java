@@ -1,6 +1,7 @@
 package fr.uge.implement;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MapDungeon {
@@ -23,6 +24,12 @@ public class MapDungeon {
     }
     System.out.println();
 }
+	
+	
+	public List<Room> rooms() {
+    return rooms;
+}
+
 
 	
 	
