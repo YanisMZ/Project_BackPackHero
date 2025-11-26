@@ -26,7 +26,7 @@ public class GameRun {
     Application.run(Color.WHITE, context -> {
 
         Dungeon dungeon = new Dungeon();          
-        var floor0 = dungeon.getFloor(0);         
+        var floor0 = dungeon.getFloor(2);         
 
         GameView view = new GameView(context, floor0);
         view.render();

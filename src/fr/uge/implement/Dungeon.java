@@ -26,6 +26,9 @@ public class Dungeon {
 
 
         floor.add(new Room(prefix + " Merchant Room"));
+        
+        floor.add(new Room(prefix + " Corridor 1"));
+        floor.add(new Room(prefix + " Corridor 2"));
 
 
         floor.add(new Room(prefix + " Healer Room"));
@@ -33,14 +36,18 @@ public class Dungeon {
 
         floor.add(new Room(prefix + " Treasure Room 1"));
         floor.add(new Room(prefix + " Treasure Room 2"));
+        
+        floor.add(new Room(prefix + " Corridor 3"));
+        floor.add(new Room(prefix + " Corridor 4"));
 
  
         floor.add(new Room(prefix + " Exit Door"));
 
   
-        floor.add(new Room(prefix + " Corridor 1"));
-        floor.add(new Room(prefix + " Corridor 2"));
-        floor.add(new Room(prefix + " Corridor 3"));
+        floor.add(new Room(prefix + " Corridor 5"));
+        floor.add(new Room(prefix + " Corridor 6"));
+        floor.add(new Room(prefix + " Corridor 7"));
+        floor.add(new Room(prefix + " Corridor 8"));
 
         return floor;
     }
