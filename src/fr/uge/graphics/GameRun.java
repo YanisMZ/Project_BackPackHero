@@ -25,11 +25,20 @@ public class GameRun {
 
     Application.run(Color.WHITE, context -> {
 
-        Dungeon dungeon = new Dungeon();          
-        var floor0 = dungeon.getFloor(2);         
+        Dungeon dungeon = new Dungeon();
+        var floor0 = dungeon.getFloor(0);
 
         GameView view = new GameView(context, floor0);
-        view.render();
+        GameController controller = new GameController(context, view, floor0);
+
+        boolean running = true;
+
+        while (running) {
+
+            controller.update();  
+
+            view.render();        
+        }
     });
 }
 
