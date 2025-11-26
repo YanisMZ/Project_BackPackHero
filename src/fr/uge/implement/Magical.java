@@ -1,5 +1,9 @@
 package fr.uge.implement;
 
-public record Magical(String name) implements Item {
+import java.util.Objects;
 
+public record Magical(String name) implements Item {
+	public Magical {
+		Objects.requireNonNull(name);
+	}
 }

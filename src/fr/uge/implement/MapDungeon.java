@@ -16,7 +16,7 @@ public class MapDungeon {
 	}
 	
 	
-	public void print() {
+	public void show() {
     System.out.println("=== Floor ===");
     for (Room r : rooms) {
         System.out.println(" - " + r.name());
