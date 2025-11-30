@@ -64,6 +64,10 @@ public class GameController {
                 System.out.println("Player moved to room " + clickedRoom);
             }
               
+              if (floor.playerOnEnemyRoom()) {
+                System.out.println("⚠ Combat déclenché !");
+            }
+              
               
 
               

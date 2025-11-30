@@ -67,6 +67,12 @@ public class MapDungeon {
       this.playerIndex = index;
   }
     
+    
+    public boolean playerOnEnemyRoom() {
+      return rooms.get(playerIndex).name().contains("Enemy");
+  }
+
+    
 
 
     
