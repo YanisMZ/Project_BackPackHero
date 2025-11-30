@@ -28,8 +28,8 @@ public class GameRun {
 
     	Dungeon dungeon = new Dungeon();
 
-    	BackPack backpack = dungeon.backpack();  // le sac global
-    	BackPack.fillBackPackForTest(backpack);  // on remplit le seul vrai sac
+    	BackPack backpack = dungeon.backpack(); 
+    	BackPack.fillBackPackForTest(backpack); 
 
     	System.out.println(backpack.BackPackDisplay());
 

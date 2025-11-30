@@ -119,7 +119,6 @@ public record GameView(ApplicationContext context,MapDungeon floor,BackPack back
     int cellSize = 60;
     int padding = 8;
 
-    // ---- REMETTRE LES ITEMS DU SAC DANS LES SLOTS ----
     Item[] slots = new Item[15];
     backpack.items().forEach((item, index) -> {
         if (index < slots.length) {
@@ -127,11 +126,11 @@ public record GameView(ApplicationContext context,MapDungeon floor,BackPack back
         }
     });
 
-    // titre
+    
     graphics.setColor(Color.BLACK);
     graphics.drawString("Backpack :", originX, originY - 10);
 
-    // dessin des cases
+    
     for (int i = 0; i < slots.length; i++) {
 
         int row = i / cols;
