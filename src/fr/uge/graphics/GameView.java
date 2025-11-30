@@ -4,6 +4,11 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.file.Path;
+
+import javax.imageio.ImageIO;
 
 import com.github.forax.zen.ApplicationContext;
 
@@ -16,9 +21,23 @@ import fr.uge.implement.Room;
  */
 public record GameView(ApplicationContext context,MapDungeon floor){
 	
+	
+	private static final BufferedImage heroImage = loadHero();
+
+    private static BufferedImage loadHero() {
+        try {
+            return ImageIO.read(
+                Path.of("./data/hero.png").toFile()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    
 	public void render() {
-    context.renderFrame(graphics -> drawGrid(graphics));
-}
+		context.renderFrame(graphics -> drawGrid(graphics));
+	}
 
 	
 	
@@ -72,16 +91,11 @@ public record GameView(ApplicationContext context,MapDungeon floor){
         if (i == floor.playerIndex()) {
           graphics.setColor(Color.RED);
 
-          int circleSize = cellSize / 2; 
-          int cx = x + (cellSize - circleSize) / 2;
-          int cy = y + (cellSize - circleSize) / 2;
+          int imgSize = cellSize / 2; 
+          int cx = x + (cellSize - imgSize) / 2;
+          int cy = y + (cellSize - imgSize) / 2;
 
-          graphics.fill(new Ellipse2D.Float(
-              cx,
-              cy,
-              circleSize,
-              circleSize
-          ));
+          graphics.drawImage(heroImage, cx, cy, imgSize, imgSize, null);
       }
 
         // texte
