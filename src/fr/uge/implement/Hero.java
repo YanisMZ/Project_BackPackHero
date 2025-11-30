@@ -12,5 +12,8 @@ public class Hero {
 		return champ;
 	}
 	
-	
+	@Override
+    public String toString() {
+        return "Hero => { hp = " + hp + ", mana = " + mana + " }";
+    }
 }
