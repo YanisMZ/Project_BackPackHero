@@ -7,6 +7,7 @@ import com.github.forax.zen.Event;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
+import fr.uge.implement.BackPack;
 import fr.uge.implement.MapDungeon;
 
 /**
@@ -17,11 +18,15 @@ public class GameController {
     private final ApplicationContext context;
     private final GameView view;
     private final MapDungeon floor;
+    private final BackPack backpack;
 
-    public GameController(ApplicationContext context, GameView view, MapDungeon floor) {
+    public GameController(ApplicationContext context, GameView view, MapDungeon floor,BackPack backpack) {
         this.context = Objects.requireNonNull(context);
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
+        this.backpack = Objects.requireNonNull(backpack);
+        
+        
     }
 
     /** Called every frame to check player input */

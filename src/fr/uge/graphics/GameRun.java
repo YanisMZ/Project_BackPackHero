@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.github.forax.zen.Application;
 
+import fr.uge.implement.BackPack;
 import fr.uge.implement.Dungeon;
 
 
@@ -25,11 +26,18 @@ public class GameRun {
 
     Application.run(Color.WHITE, context -> {
 
-        Dungeon dungeon = new Dungeon();
-        var floor0 = dungeon.getFloor(0);
+    	Dungeon dungeon = new Dungeon();
 
-        GameView view = new GameView(context, floor0);
-        GameController controller = new GameController(context, view, floor0);
+    	BackPack backpack = dungeon.backpack();  // le sac global
+    	BackPack.fillBackPackForTest(backpack);  // on remplit le seul vrai sac
+
+    	System.out.println(backpack.BackPackDisplay());
+
+    	var floor0 = dungeon.getFloor(0);
+
+    	GameView view = new GameView(context, floor0, backpack);
+    	GameController controller = new GameController(context, view, floor0, backpack);
+
 
         boolean running = true;
 

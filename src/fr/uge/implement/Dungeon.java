@@ -6,6 +6,7 @@ import java.util.List;
 public class Dungeon {
 
     private final List<MapDungeon> floors = new ArrayList<>();
+    private final BackPack backpack = new BackPack();
 
     public Dungeon() {
         floors.add(createFirstFloor());
@@ -16,6 +17,10 @@ public class Dungeon {
     public MapDungeon getFloor(int index) {
         return floors.get(index);
     }
+    
+    public BackPack backpack() {
+      return backpack;
+  }
 
     private MapDungeon createFloor(String prefix) {
         MapDungeon floor = new MapDungeon();

@@ -11,7 +11,7 @@ import fr.uge.implement.Sword;
 public class Main {
 
 	public static void main(String[] args) {
-		var backPack = new BackPack();
+		
 		Hero hero = new Hero().initCharacter();
 		Enemy boss = new Enemy(200);
         Enemy goblin1 = new Enemy(50);
@@ -27,9 +27,6 @@ public class Main {
         System.out.println(hero);
         System.out.println("Enemies list:");
         System.out.println(boss.toString());
-        
-	    BackPack.fillBackPackForTest(backPack);
-	    System.out.println(backPack.BackPackDisplay());
 	    
 	    Dungeon dungeon = new Dungeon();
 
