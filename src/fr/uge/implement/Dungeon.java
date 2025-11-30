@@ -25,6 +25,9 @@ public class Dungeon {
     private MapDungeon createFloor(String prefix) {
         MapDungeon floor = new MapDungeon();
 
+        floor.add(new Room(prefix + " Corridor 1"));
+        floor.add(new Room(prefix + " Corridor 2"));
+        
         floor.add(new Room(prefix + " Enemy Room A"));
         floor.add(new Room(prefix + " Enemy Room B"));
         floor.add(new Room(prefix + " Enemy Room C"));
@@ -32,8 +35,6 @@ public class Dungeon {
 
         floor.add(new Room(prefix + " Merchant Room"));
         
-        floor.add(new Room(prefix + " Corridor 1"));
-        floor.add(new Room(prefix + " Corridor 2"));
 
 
         floor.add(new Room(prefix + " Healer Room"));

@@ -21,31 +21,38 @@ import fr.uge.implement.Room;
 /**
  * Represents the visual representation of the game, handling rendering.
  */
-public record GameView(ApplicationContext context,MapDungeon floor,BackPack backpack){
+public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack){
 	
 	
-	private static final BufferedImage heroImage = loadHero();
-    private static BufferedImage loadHero() {
+	private static BufferedImage loadImage(String fileName) {
         try {
             return ImageIO.read(
-                Path.of("./data/hero.png").toFile()
+                Path.of("./data", fileName).toFile()
             );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    
-	public void render() {
-		context.renderFrame(g -> {
-	    drawGrid(g);
-	    drawBackPack(g);
-	});
+    private static final BufferedImage backgroundImage = loadImage("corridor.png");
+    private static final BufferedImage heroImage       = loadImage("hero.png");
 
-	}
+    public void render() {
+        context.renderFrame(g -> {
+            drawBackground(g);  // 1) fond
+            drawGrid(g);        // 2) rooms + héros
+            drawBackPack(g);    // 3) backpack
+        });
+    }
 
-	
-	
+    private void drawBackground(Graphics2D g) {
+        var info = context.getScreenInfo();
+        int width = info.width();
+        int height = info.height();
+
+        // on étire corridor.png pour remplir toute la fenêtre
+        g.drawImage(backgroundImage, 0, 0, width, height, null);
+    }
 
 	/**
 	 * Draws the game grid.
