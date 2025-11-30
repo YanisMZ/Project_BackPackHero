@@ -33,7 +33,7 @@ public class GameController {
        
           }
 
-          case KeyboardEvent ke -> { // pour quiiter
+          case KeyboardEvent ke -> { // pour quiter
               
               if (ke.key() == KeyboardEvent.Key.Q) {
                   System.exit(0);
@@ -52,7 +52,14 @@ public class GameController {
               System.out.println(mouseX);
 
               // On déduit quelle salle a été cliquée
-              Integer clickedRoom = roomAt(mouseX, mouseY);
+              int clickedRoom = roomAt(mouseX, mouseY);
+              if (floor.adjacentRooms().contains(clickedRoom)) {
+                // Déplacement du joueur
+                floor.setPlayerIndex(clickedRoom);
+                System.out.println("Player moved to room " + clickedRoom);
+            }
+              
+              
 
               
           }

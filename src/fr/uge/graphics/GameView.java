@@ -58,7 +58,7 @@ public record GameView(ApplicationContext context,MapDungeon floor){
 
         // si case adjacente la couleur est plus clair
         if (adjacents.contains(i)) {
-            graphics.setColor(color.brighter());
+            graphics.setColor(color.GREEN);
         } else {
             graphics.setColor(color);
         }
@@ -68,7 +68,7 @@ public record GameView(ApplicationContext context,MapDungeon floor){
         graphics.setColor(Color.BLACK);
         graphics.draw(new Rectangle2D.Float(x, y, cellSize, cellSize));
 
-        
+        // player 
         if (i == floor.playerIndex()) {
           graphics.setColor(Color.RED);
 
@@ -89,6 +89,17 @@ public record GameView(ApplicationContext context,MapDungeon floor){
         graphics.drawString(room.name(), x + 8, y + cellSize / 2);
     }
 }
+	
+	
+	
+	private void clearScreen(Graphics2D graphics) {
+		graphics.setColor(Color.WHITE);
+		graphics.fillRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
+	}
+	
+	
+	
+	
 	
 	
 

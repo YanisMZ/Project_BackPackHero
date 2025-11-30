@@ -41,13 +41,13 @@ public class MapDungeon {
         int col = playerIndex % cols;
         int maxRow = maxIndex / cols;
 
-        // gauche
+        // left
         if (col > 0) adj.add(playerIndex - 1);
-        // droite
+        // right
         if (col < cols - 1 && playerIndex + 1 <= maxIndex) adj.add(playerIndex + 1);
-        // haut
+        // up
         if (row > 0) adj.add(playerIndex - cols);
-        // bas
+        // down
         if (row < maxRow && playerIndex + cols <= maxIndex) adj.add(playerIndex + cols);
 
         return adj;
@@ -60,4 +60,12 @@ public class MapDungeon {
         }
         System.out.println();
     }
+    
+    
+    public void setPlayerIndex(int index) {
+      this.playerIndex = index;
+  }
+
+    
+    
 }
