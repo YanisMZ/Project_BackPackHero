@@ -12,6 +12,8 @@ import javax.imageio.ImageIO;
 
 import com.github.forax.zen.ApplicationContext;
 
+import fr.uge.implement.BackPack;
+import fr.uge.implement.Item;
 import fr.uge.implement.MapDungeon;
 import fr.uge.implement.Room;
 
@@ -19,11 +21,10 @@ import fr.uge.implement.Room;
 /**
  * Represents the visual representation of the game, handling rendering.
  */
-public record GameView(ApplicationContext context,MapDungeon floor){
+public record GameView(ApplicationContext context,MapDungeon floor,BackPack backpack){
 	
 	
 	private static final BufferedImage heroImage = loadHero();
-
     private static BufferedImage loadHero() {
         try {
             return ImageIO.read(
@@ -36,7 +37,11 @@ public record GameView(ApplicationContext context,MapDungeon floor){
 
     
 	public void render() {
-		context.renderFrame(graphics -> drawGrid(graphics));
+		context.renderFrame(g -> {
+	    drawGrid(g);
+	    drawBackPack(g);
+	});
+
 	}
 
 	
@@ -103,7 +108,61 @@ public record GameView(ApplicationContext context,MapDungeon floor){
         graphics.drawString(room.name(), x + 8, y + cellSize / 2);
     }
 }
+
 	
+	private void drawBackPack(Graphics2D graphics) {
+
+    int originX = 20;
+    int originY = 550;
+
+    int cols = 5;
+    int cellSize = 60;
+    int padding = 8;
+
+    // ---- REMETTRE LES ITEMS DU SAC DANS LES SLOTS ----
+    Item[] slots = new Item[15];
+    backpack.items().forEach((item, index) -> {
+        if (index < slots.length) {
+            slots[index] = item;
+        }
+    });
+
+    // titre
+    graphics.setColor(Color.BLACK);
+    graphics.drawString("Backpack :", originX, originY - 10);
+
+    // dessin des cases
+    for (int i = 0; i < slots.length; i++) {
+
+        int row = i / cols;
+        int col = i % cols;
+
+        int x = originX + col * (cellSize + padding);
+        int y = originY + row * (cellSize + padding);
+
+        // fond
+        if (slots[i] == null) {
+            graphics.setColor(Color.YELLOW);
+        } else {
+            graphics.setColor(Color.CYAN);
+        }
+        graphics.fill(new Rectangle2D.Float(x, y, cellSize, cellSize));
+
+        // bordure
+        graphics.setColor(Color.BLACK);
+        graphics.draw(new Rectangle2D.Float(x, y, cellSize, cellSize));
+
+        // nom de l’objet
+        if (slots[i] != null) {
+            graphics.setColor(Color.BLACK);
+            String name = slots[i].name();
+            if (name.length() > 8) name = name.substring(0, 7) + "...";
+            graphics.drawString(name, x + 5, y + cellSize / 2);
+        }
+    }
+}
+
+
 	
 	
 	private void clearScreen(Graphics2D graphics) {

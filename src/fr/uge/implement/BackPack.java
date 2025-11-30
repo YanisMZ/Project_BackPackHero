@@ -2,6 +2,7 @@ package fr.uge.implement;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,11 @@ public class BackPack {
     }
     return 0;
 }
+	
+	public Map<Item, Integer> items() {
+    return items;
+}
+
 
 	
 	public String BackPackInfo() {
@@ -36,7 +42,7 @@ public class BackPack {
 	
 	
 	public static void fillBackPackForTest(BackPack backPack) {
-    for (int i = 1; i <= 20; i++) {
+    for (int i = 1; i <= 5; i++) {
         String name = "Sword_" + i;    
         int damage = 10 * i;           
         backPack.add(new Sword(name, damage));

@@ -8,6 +8,7 @@ public class MapDungeon {
     private final ArrayList<Room> rooms;
     private int playerIndex = 0; 
 
+
     public MapDungeon() {
         this.rooms = new ArrayList<>();
     }
@@ -65,6 +66,8 @@ public class MapDungeon {
     public void setPlayerIndex(int index) {
       this.playerIndex = index;
   }
+    
+
 
     
     
