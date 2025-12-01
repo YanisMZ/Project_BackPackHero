@@ -18,6 +18,10 @@ public class Enemy {
 		enemies.add(enemy);
 	}
 	
+	private void displayEnemy(int nbtodisplay) {
+		
+	}
+	
 	@Override
 	public String toString() {
 	    return "Enemy : hp = " + hp +

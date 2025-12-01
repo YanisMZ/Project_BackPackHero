@@ -19,8 +19,10 @@ public class GameController {
     private final GameView view;
     private final MapDungeon floor;
     private final BackPack backpack;
+    Boolean combat;
 
     public GameController(ApplicationContext context, GameView view, MapDungeon floor,BackPack backpack) {
+    	this.combat = false;
         this.context = Objects.requireNonNull(context);
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
@@ -62,10 +64,12 @@ public class GameController {
                 // Déplacement du joueur
                 floor.setPlayerIndex(clickedRoom);
                 System.out.println("Player moved to room " + clickedRoom);
+                this.combat = false;
             }
               
               if (floor.playerOnEnemyRoom()) {
                 System.out.println("⚠ Combat déclenché !");
+                this.combat = true;
             }
               
               

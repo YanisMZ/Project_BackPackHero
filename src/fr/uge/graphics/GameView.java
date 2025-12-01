@@ -35,15 +35,27 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     }
 
     private static final BufferedImage backgroundImage = loadImage("corridor.png");
-    private static final BufferedImage heroImage       = loadImage("hero.png");
+    private static final BufferedImage heroImage = loadImage("hero.png");
+    private static final BufferedImage enemyImage = loadImage("enemy.png");
 
     public void render() {
         context.renderFrame(g -> {
-            drawBackground(g);  // 1) fond
+        	clearScreen(g);
+              // 1) fond
             drawGrid(g);        // 2) rooms + héros
             drawBackPack(g);    // 3) backpack
         });
     }
+    
+    public void corridorDisplay() {
+        context.renderFrame(g -> {
+        	clearScreen(g);
+            drawBackground(g);  // 1) fond
+            drawGrid(g);        // 2) rooms + héros
+                // 3) backpack
+        });
+    }
+
 
     private void drawBackground(Graphics2D g) {
         var info = context.getScreenInfo();
@@ -108,6 +120,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
           int cy = y + (cellSize - imgSize) / 2;
 
           graphics.drawImage(heroImage, cx, cy, imgSize, imgSize, null);
+
       }
 
         // texte
@@ -164,24 +177,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
             String name = slots[i].name();
             if (name.length() > 8) name = name.substring(0, 7) + "...";
             graphics.drawString(name, x + 5, y + cellSize / 2);
-        }
-    }
-}
+	        }
+	    }
+	}
 
 
-	
 	
 	private void clearScreen(Graphics2D graphics) {
-		graphics.setColor(Color.WHITE);
+		graphics.setColor(Color.BLACK);
 		graphics.fillRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
 	}
-	
-	
-	
-	
-	
-	
-
-
 
 }

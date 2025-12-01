@@ -10,8 +10,6 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.Dungeon;
 
 
-
-
 /**
  * Runs the game application and manages player turns.
  */
@@ -23,34 +21,28 @@ public class GameRun {
 	 * Starts the game application and handles the main game loop.
 	 */
 	public void run() {
+	    Application.run(Color.WHITE, context -> {
+	        Dungeon dungeon = new Dungeon();
 
-    Application.run(Color.WHITE, context -> {
+	        BackPack backpack = dungeon.backpack();
+	        BackPack.fillBackPackForTest(backpack);
 
-    	Dungeon dungeon = new Dungeon();
+	        System.out.println(backpack.BackPackDisplay());
 
-    	BackPack backpack = dungeon.backpack(); 
-    	BackPack.fillBackPackForTest(backpack); 
+	        var floor0 = dungeon.getFloor(0);
 
-    	System.out.println(backpack.BackPackDisplay());
-
-    	var floor0 = dungeon.getFloor(0);
-
-    	GameView view = new GameView(context, floor0, backpack);
-    	GameController controller = new GameController(context, view, floor0, backpack);
+	        GameView view = new GameView(context, floor0, backpack);
+	        GameController controller = new GameController(context, view, floor0, backpack);
 
 
-        boolean running = true;
-
-        while (running) {
-
-            controller.update();  
-
-            view.render();        
-        }
-    });
-}
-
-	
-
-	
-}
+	        while (true) {
+	            controller.update();
+	            if (controller.combat) {
+	            	view.render();
+	            } else {
+	            	view.corridorDisplay();
+	            }
+	        }
+	    });
+	}
+}	
