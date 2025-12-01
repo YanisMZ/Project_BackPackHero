@@ -15,41 +15,8 @@ public class Combat {
         this.enemies = new ArrayList<>(enemies);
     }
 
-    public void start() {
-        System.out.println("=== Début du combat ===");
-        System.out.println("Héros : " + hero);
-        System.out.println("Ennemis : " + enemies + "\n");
 
-        while (hero.hp() > 0 && !enemies.isEmpty()) {
-            heroTurn();
-            if (enemies.isEmpty()) break;     // Si héros tue tout → fin
-
-            enemyTurn();
-        }
-
-        if (hero.hp() <= 0) {
-            System.out.println("💀 Le héros est mort !");
-        } else {
-            System.out.println("🎉 Le héros a vaincu tous les ennemis !");
-        }
-    }
-
-    // ============================
-    //      TOUR DU HÉROS
-    // ============================
-    private void heroTurn() {
-        System.out.println("\n---- Tour du héros ----");
-
-        int action = random.nextInt(2); // 0 = attaquer, 1 = se défendre
-
-        if (action == 0) {
-            attackEnemy();
-        } else {
-            defendHero();
-        }
-    }
-
-    private void attackEnemy() {
+    public void attackEnemy() {
         Enemy target = enemies.get(0); // on attaque le premier ennemi
         System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
 
@@ -64,7 +31,7 @@ public class Combat {
         }
     }
 
-    private void defendHero() {
+    public void defendHero() {
         System.out.println("🛡️ Le héros se protège (gagne 2 protection)");
         hero.restoreMana(2);  // on utilise mana comme "protection"
     }
@@ -72,7 +39,7 @@ public class Combat {
     // ============================
     //      TOUR DES ENNEMIS
     // ============================
-    private void enemyTurn() {
+    public void enemyTurn() {
         System.out.println("\n---- Tour des ennemis ----");
 
         List<Enemy> updatedEnemies = new ArrayList<>();

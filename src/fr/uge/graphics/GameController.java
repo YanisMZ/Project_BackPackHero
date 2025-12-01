@@ -8,6 +8,7 @@ import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
 import fr.uge.implement.BackPack;
+import fr.uge.implement.Combat;
 import fr.uge.implement.MapDungeon;
 
 /**
@@ -19,9 +20,11 @@ public class GameController {
     private final GameView view;
     private final MapDungeon floor;
     private final BackPack backpack;
+    private Combat fight; 
     Boolean combat;
     Boolean corridor;
     Boolean treasure;
+    private boolean inCombat = false;
 
     public GameController(ApplicationContext context, GameView view, MapDungeon floor,BackPack backpack) {
     	this.combat = false;
@@ -31,24 +34,53 @@ public class GameController {
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
         this.backpack = Objects.requireNonNull(backpack);
+        
     }
 
     /** Called every frame to check player input */
     public void update() {
-      var event = context.pollOrWaitEvent(10);
+    	var event = context.pollOrWaitEvent(10);
 
       switch (event) {
-          case null -> {
-       
-          }
 
-          case KeyboardEvent ke -> { // pour quiter
-              
+          case null -> {}
+
+          // ----------------------------------
+          //  1. Touche de sortie
+          // ----------------------------------
+          case KeyboardEvent ke -> {
+
               if (ke.key() == KeyboardEvent.Key.Q) {
                   System.exit(0);
               }
-          }
 
+              // ----------------------------------
+              // COMBAT : touches A et D 
+              // ----------------------------------
+              if (inCombat) {
+                  switch (ke.key()) {
+
+                      case A -> {
+                          System.out.println("🎯 ACTION → Le héros attaque !");
+                          fight.attackEnemy();
+                          fight.enemyTurn();
+                          //checkCombatEnd();
+                      }
+
+                      case D -> {
+                          System.out.println("🛡️ ACTION → Le héros se défend !");
+                          fight.defendHero();
+                          fight.enemyTurn();
+                          //checkCombatEnd();
+                      }
+
+                      default -> {}
+                  }
+              }
+          }
+            
+        
+    
           case PointerEvent pe -> {
               // on vérifie que c’est un VRAI clic
               if (pe.action() != PointerEvent.Action.POINTER_DOWN) {
