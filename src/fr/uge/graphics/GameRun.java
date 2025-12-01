@@ -8,52 +8,43 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.Dungeon;
 
 /**
- * Runs the game application and manages player turns.
+ * Lance l'application de jeu et gère la boucle principale.
  */
 public class GameRun {
-	public GameRun() {
-	}
+  public GameRun() {
+  }
 
-	/**
-	 * Starts the game application and handles the main game loop.
-	 */
-	public void run() {
-		Application.run(Color.WHITE, context -> {
-<<<<<<< Updated upstream
-=======
-			int nb_enemies = 2;
->>>>>>> Stashed changes
-			Dungeon dungeon = new Dungeon();
+  /**
+   * Démarre l'application de jeu et gère la boucle principale.
+   */
+  public void run() {
+    Application.run(Color.WHITE, context -> {
+      int nbEnemies = 2; // nombre d’ennemis pour l’affichage du combat
+      Dungeon dungeon = new Dungeon();
 
-			BackPack backpack = dungeon.backpack();
-			BackPack.fillBackPackForTest(backpack);
+      BackPack backpack = dungeon.backpack();
+      BackPack.fillBackPackForTest(backpack);
 
-			System.out.println(backpack.BackPackDisplay());
+      System.out.println(backpack.BackPackDisplay());
 
-			var floor0 = dungeon.getFloor(0);
+      var floor0 = dungeon.getFloor(0);
 
-			GameView view = new GameView(context, floor0, backpack);
-			GameController controller = new GameController(context, view, floor0, backpack);
-			view.corridorDisplay();
+      GameView view = new GameView(context, floor0, backpack);
+      GameController controller = new GameController(context, view, floor0, backpack);
 
-			while (true) {
-				controller.update();
-<<<<<<< Updated upstream
+      view.corridorDisplay();
 
-				if (controller.combat) {
-					view.combatDisplay();
-=======
-				if (controller.combat) {
-					view.combatDisplay(nb_enemies);
->>>>>>> Stashed changes
-				}
-				if (controller.corridor) {
-					view.corridorDisplay();
-				}
-				if (controller.treasure) {
-					view.treasureDisplay();
-				}
-			}
-		});
-	}
+      while (true) {
+        controller.update();
+
+        if (controller.isInCombat()) {
+          view.combatDisplay(nbEnemies);
+        } else if (controller.isInCorridor()) {
+          view.corridorDisplay();
+        } else if (controller.isInTreasure()) {
+          view.treasureDisplay();
+        }
+      }
+    });
+  }
 }
