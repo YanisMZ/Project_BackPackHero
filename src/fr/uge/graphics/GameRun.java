@@ -22,6 +22,7 @@ public class GameRun {
 	 */
 	public void run() {
 	    Application.run(Color.WHITE, context -> {
+	    	int nb_enemies = 2;
 	        Dungeon dungeon = new Dungeon();
 
 	        BackPack backpack = dungeon.backpack();
@@ -37,9 +38,8 @@ public class GameRun {
 
 	        while (true) {
 	            controller.update();
-	            
 	            if (controller.combat) {
-	            	view.combatDisplay();
+	            	view.combatDisplay(nb_enemies);
 	            }
 	            if (controller.corridor) {
 	            	view.corridorDisplay();
@@ -50,4 +50,4 @@ public class GameRun {
 	        }
 	    });
 	}
-}	
+}

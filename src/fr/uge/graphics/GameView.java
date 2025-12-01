@@ -41,22 +41,25 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     private static final BufferedImage heroImage2 = loadImage("hero2.png");
     private static final BufferedImage enemyImage = loadImage("enemy.png");
     private static final BufferedImage enemyImage2 = loadImage("enemy2miror.png");
+    private static final BufferedImage enemyRoomImage1 = loadImage("fight0.png");
+    private static final BufferedImage enemyRoomImage2 = loadImage("fight2.png");
+    private static final BufferedImage enemyRoomImage3 = loadImage("fight3.png");
 
     public void render() {
         context.renderFrame(g -> {
         	clearScreen(g);
-              // 1) fond
-            drawGrid(g);        // 2) rooms + héros
-            drawBackPack(g);    // 3) backpack
+            drawGrid(g);
+            drawBackPack(g);
         });
     }
     
-    public void combatDisplay() {
+    public void combatDisplay(int nb_enemies) {
         context.renderFrame(g -> {
         	clearScreen(g);
-            drawCombat(g);
-            drawGrid(g);        // 2) rooms + héros
-            drawBackPack(g);    // 3) backpack
+        	// en fonction du nombre ICI:
+            drawCombat(g, 3);
+            drawGrid(g);
+            drawBackPack(g);
         });
     }
     
@@ -64,21 +67,16 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         context.renderFrame(g -> {
         	clearScreen(g);
             drawCorridor(g);
-            drawHero(g);// 1) fond
-            drawGrid(g);        // 2) rooms + héros
-                // 3) backpack
+            drawHero(g);
+            drawGrid(g);
         });
     }
-
-    
 
 	public void treasureDisplay() {
     	context.renderFrame(g -> {
     		clearScreen(g);
     		drawTreasure(g);
-    		// 1) fond
-            drawGrid(g);        // 2) rooms + héros
-                // 3) backpack
+            drawGrid(g);
         });
     }
 
@@ -88,18 +86,24 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         int width = info.width();
         int height = info.height();
 
-        // on étire corridor.png pour remplir toute la fenêtre
         g.drawImage(treasureRoomImage, 0, 0, width, height, null);
         g.drawImage(treasureImage, width/2, height/2, width/2, height/2, null);
     }
     
-    private void drawCombat(Graphics2D g) {
+    private void drawCombat(Graphics2D g, int nb_enemies) {
     	var info = context.getScreenInfo();
         int width = info.width();
         int height = info.height();
         
-        // on étire corridor.png pour remplir toute la fenêtre
-        g.drawImage(enemyImage2, 0, height/3, width/2, height/2, null);
+        g.drawImage(
+        	    switch (nb_enemies) {
+        	        case 1 -> enemyRoomImage1;
+        	        case 2 -> enemyRoomImage2;
+        	        case 3 -> enemyRoomImage3;
+        	        default -> throw new IllegalArgumentException("nb_enemies must be 1–3, got " + nb_enemies);
+        	    },
+        	    0, 0, width, height, null
+        	);
     }
     
     private void drawHero(Graphics2D g) {
@@ -107,18 +111,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         int width = info.width();
         int height = info.height();
 
-        // on étire corridor.png pour remplir toute la fenêtre
         g.drawImage(heroImage2, width/4, height/4, width, height, null);
 	}
-    
-    private void drawEnemyRoom(Graphics2D g, int nb_enemy) {
-    	var info = context.getScreenInfo();
-        int width = info.width();
-        int height = info.height();
-        
-    	g.drawImage(heroImage2, width/4, height/4, width, height, null);
-    }
-    
     
     
     private void drawCorridor(Graphics2D g) {
@@ -126,7 +120,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         int width = info.width();
         int height = info.height();
 
-        // on étire corridor.png pour remplir toute la fenêtre
         g.drawImage(corridorImage, 0, 0, width, height, null);
     }
 
@@ -153,7 +146,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         int x = padding + col * (cellSize + padding);
         int y = padding + row * (cellSize + padding);
 
-        // couleur normale selon le type...
         Color color = switch (room.name()) {
             case String s when s.contains("Enemy") -> new Color(200, 80, 80);
             case String s when s.contains("Merchant") -> new Color(80, 180, 250);
