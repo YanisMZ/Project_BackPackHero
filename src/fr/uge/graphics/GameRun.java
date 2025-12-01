@@ -33,14 +33,19 @@ public class GameRun {
 
 	        GameView view = new GameView(context, floor0, backpack);
 	        GameController controller = new GameController(context, view, floor0, backpack);
-
+	        view.corridorDisplay();
 
 	        while (true) {
 	            controller.update();
+	            
 	            if (controller.combat) {
-	            	view.render();
-	            } else {
+	            	view.combatDisplay();
+	            }
+	            if (controller.corridor) {
 	            	view.corridorDisplay();
+	            }
+	            if (controller.treasure) {
+	            	view.treasureDisplay();
 	            }
 	        }
 	    });

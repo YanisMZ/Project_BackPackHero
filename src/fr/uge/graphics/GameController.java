@@ -20,15 +20,17 @@ public class GameController {
     private final MapDungeon floor;
     private final BackPack backpack;
     Boolean combat;
+    Boolean corridor;
+    Boolean treasure;
 
     public GameController(ApplicationContext context, GameView view, MapDungeon floor,BackPack backpack) {
     	this.combat = false;
+    	this.corridor = false;
+    	this.treasure = false;
         this.context = Objects.requireNonNull(context);
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
         this.backpack = Objects.requireNonNull(backpack);
-        
-        
     }
 
     /** Called every frame to check player input */
@@ -65,16 +67,27 @@ public class GameController {
                 floor.setPlayerIndex(clickedRoom);
                 System.out.println("Player moved to room " + clickedRoom);
                 this.combat = false;
+                this.corridor = true;
+                this.treasure = false;
             }
               
               if (floor.playerOnEnemyRoom()) {
                 System.out.println("⚠ Combat déclenché !");
                 this.combat = true;
+                this.treasure = false;
+                this.corridor = false;
             }
               
-              
-
-              
+              if (floor.playerOnCorridor()) {
+                  this.corridor = true;
+                  this.treasure = false;
+                  this.combat = false;
+              }
+              if (floor.playerOnTreasureRoom()) {
+            	  this.treasure = true;
+            	  this.combat = false;
+            	  this.corridor = false;
+              }
           }
       }
   }

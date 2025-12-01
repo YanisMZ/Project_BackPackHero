@@ -34,9 +34,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         }
     }
 
-    private static final BufferedImage backgroundImage = loadImage("corridor.png");
+    private static final BufferedImage corridorImage = loadImage("corridor2.png");
+    private static final BufferedImage treasureRoomImage = loadImage("treasureroom.png");
+    private static final BufferedImage treasureImage = loadImage("treasure.png");
     private static final BufferedImage heroImage = loadImage("hero.png");
+    private static final BufferedImage heroImage2 = loadImage("hero2.png");
     private static final BufferedImage enemyImage = loadImage("enemy.png");
+    private static final BufferedImage enemyImage2 = loadImage("enemy2miror.png");
 
     public void render() {
         context.renderFrame(g -> {
@@ -47,23 +51,83 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         });
     }
     
+    public void combatDisplay() {
+        context.renderFrame(g -> {
+        	clearScreen(g);
+            drawCombat(g);
+            drawGrid(g);        // 2) rooms + héros
+            drawBackPack(g);    // 3) backpack
+        });
+    }
+    
     public void corridorDisplay() {
         context.renderFrame(g -> {
         	clearScreen(g);
-            drawBackground(g);  // 1) fond
+            drawCorridor(g);
+            drawHero(g);// 1) fond
             drawGrid(g);        // 2) rooms + héros
                 // 3) backpack
         });
     }
 
+    
 
-    private void drawBackground(Graphics2D g) {
+	public void treasureDisplay() {
+    	context.renderFrame(g -> {
+    		clearScreen(g);
+    		drawTreasure(g);
+    		// 1) fond
+            drawGrid(g);        // 2) rooms + héros
+                // 3) backpack
+        });
+    }
+
+    
+    private void drawTreasure(Graphics2D g) {
         var info = context.getScreenInfo();
         int width = info.width();
         int height = info.height();
 
         // on étire corridor.png pour remplir toute la fenêtre
-        g.drawImage(backgroundImage, 0, 0, width, height, null);
+        g.drawImage(treasureRoomImage, 0, 0, width, height, null);
+        g.drawImage(treasureImage, width/2, height/2, width/2, height/2, null);
+    }
+    
+    private void drawCombat(Graphics2D g) {
+    	var info = context.getScreenInfo();
+        int width = info.width();
+        int height = info.height();
+        
+        // on étire corridor.png pour remplir toute la fenêtre
+        g.drawImage(enemyImage2, 0, height/3, width/2, height/2, null);
+    }
+    
+    private void drawHero(Graphics2D g) {
+    	var info = context.getScreenInfo();
+        int width = info.width();
+        int height = info.height();
+
+        // on étire corridor.png pour remplir toute la fenêtre
+        g.drawImage(heroImage2, width/4, height/4, width, height, null);
+	}
+    
+    private void drawEnemyRoom(Graphics2D g, int nb_enemy) {
+    	var info = context.getScreenInfo();
+        int width = info.width();
+        int height = info.height();
+        
+    	g.drawImage(heroImage2, width/4, height/4, width, height, null);
+    }
+    
+    
+    
+    private void drawCorridor(Graphics2D g) {
+        var info = context.getScreenInfo();
+        int width = info.width();
+        int height = info.height();
+
+        // on étire corridor.png pour remplir toute la fenêtre
+        g.drawImage(corridorImage, 0, 0, width, height, null);
     }
 
 	/**
@@ -187,5 +251,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.BLACK);
 		graphics.fillRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
 	}
+
 
 }

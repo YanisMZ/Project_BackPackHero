@@ -71,10 +71,13 @@ public class MapDungeon {
     public boolean playerOnEnemyRoom() {
       return rooms.get(playerIndex).name().contains("Enemy");
   }
-
     
-
-
+    public boolean playerOnTreasureRoom() {
+    	return rooms.get(playerIndex).name().contains("Treasure");
+    }
     
+    public boolean playerOnCorridor() {
+    	return rooms.get(playerIndex).name().contains("Corridor");
+    }
     
 }
