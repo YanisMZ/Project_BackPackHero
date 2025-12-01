@@ -13,22 +13,6 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		Hero hero = new Hero().initCharacter();
-		Enemy boss = new Enemy(200);
-        Enemy goblin1 = new Enemy(50);
-        Enemy goblin2 = new Enemy(60);
-        Enemy orc = new Enemy(120);
-        
-        // Add the enemies to the boss
-        boss.add(goblin1);
-        boss.add(goblin2);
-        boss.add(orc);
-
-        // Print
-        System.out.println(hero);
-        System.out.println("Enemies list:");
-        System.out.println(boss.toString());
-	    
 	    Dungeon dungeon = new Dungeon();
 
 	    MapDungeon floor1 = dungeon.getFloor(0);
