@@ -15,13 +15,13 @@ public class Combat {
         this.enemies = new ArrayList<>(enemies);
     }
 
-
     public void attackEnemy() {
+        if (enemies.isEmpty()) return;
+
         Enemy target = enemies.get(0); // on attaque le premier ennemi
         System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
 
-        // dégâts fixes pour l'instant : 5
-        Enemy updated = target.takeDamage(5);
+        Enemy updated = target.takeDamage(25);
 
         if (!updated.isAlive()) {
             System.out.println("💥 Ennemi éliminé !");
@@ -33,28 +33,24 @@ public class Combat {
 
     public void defendHero() {
         System.out.println("🛡️ Le héros se protège (gagne 2 protection)");
-        hero.restoreMana(2);  // on utilise mana comme "protection"
+        hero.restoreMana(2);
     }
 
-    // ============================
-    //      TOUR DES ENNEMIS
-    // ============================
     public void enemyTurn() {
         System.out.println("\n---- Tour des ennemis ----");
 
         List<Enemy> updatedEnemies = new ArrayList<>();
 
         for (Enemy enemy : enemies) {
-            int action = random.nextInt(2);  // 0 = attaque, 1 = défense
+            int action = random.nextInt(2); // 0 = attaque, 1 = défense
 
             if (action == 0) {
                 System.out.println(enemy.getClass().getSimpleName() + " attaque le héros !");
-                hero.takeDamage(3); // dégâts simples pour l'instant
+                hero.takeDamage(3);
             } else {
                 System.out.println(enemy.getClass().getSimpleName() + " se protège !");
                 enemy = enemy.defend();
             }
-
             updatedEnemies.add(enemy);
         }
 
@@ -62,5 +58,9 @@ public class Combat {
         enemies.addAll(updatedEnemies);
 
         System.out.println("Héros : hp=" + hero.hp());
+    }
+
+    public boolean isRunning() {
+        return hero.hp() > 0 && !enemies.isEmpty();
     }
 }

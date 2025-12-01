@@ -1,17 +1,20 @@
 package fr.uge.graphics;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.github.forax.zen.ApplicationContext;
-import com.github.forax.zen.Event;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
 import fr.uge.implement.BackPack;
 import fr.uge.implement.Combat;
+import fr.uge.implement.Hero;
 import fr.uge.implement.MapDungeon;
+import fr.uge.implement.SmallWolfRat;
+import fr.uge.implement.WolfRat;
 
-/**
+/**a
  * Controls the game logic and handles user interactions.
  */
 public class GameController {
@@ -25,6 +28,7 @@ public class GameController {
     Boolean corridor;
     Boolean treasure;
     private boolean inCombat = false;
+    private final Hero hero;
 
     public GameController(ApplicationContext context, GameView view, MapDungeon floor,BackPack backpack) {
     	this.combat = false;
@@ -34,6 +38,8 @@ public class GameController {
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
         this.backpack = Objects.requireNonNull(backpack);
+        this.hero = new Hero(40, 0);
+       
         
     }
 
@@ -64,14 +70,14 @@ public class GameController {
                           System.out.println("🎯 ACTION → Le héros attaque !");
                           fight.attackEnemy();
                           fight.enemyTurn();
-                          //checkCombatEnd();
+                          checkCombatEnd();
                       }
 
                       case D -> {
                           System.out.println("🛡️ ACTION → Le héros se défend !");
                           fight.defendHero();
                           fight.enemyTurn();
-                          //checkCombatEnd();
+                          checkCombatEnd();
                       }
 
                       default -> {}
@@ -82,6 +88,8 @@ public class GameController {
         
     
           case PointerEvent pe -> {
+          	
+          		if (inCombat) return;
               // on vérifie que c’est un VRAI clic
               if (pe.action() != PointerEvent.Action.POINTER_DOWN) {
                   return;
@@ -108,6 +116,9 @@ public class GameController {
                 this.combat = true;
                 this.treasure = false;
                 this.corridor = false;
+                startCombat();
+               
+
             }
               
               if (floor.playerOnCorridor()) {
@@ -121,6 +132,39 @@ public class GameController {
             	  this.corridor = false;
               }
           }
+      }
+  }
+    
+    
+    
+    
+    
+    
+    private void startCombat() {
+      // Initialisation des ennemis
+      List<fr.uge.implement.Enemy> enemies = List.of(
+          new SmallWolfRat(),
+          new WolfRat()
+      );
+
+      fight = new Combat(hero, enemies);
+      inCombat = true;
+
+      System.out.println("=== MODE COMBAT ===");
+      System.out.println("Appuie sur A = Attaquer | D = Défendre");
+  }
+
+  // ==================================
+  //     VÉRIFIER FIN DE COMBAT
+  // ==================================
+  private void checkCombatEnd() {
+      if (fight == null) return;
+
+      if (!fight.isRunning()) {
+          inCombat = false;
+          System.out.println("✨ Combat terminé !");
+          // Optionnel : nettoyer les ennemis de la salle
+          //floor.clearEnemiesInRoom();
       }
   }
     
