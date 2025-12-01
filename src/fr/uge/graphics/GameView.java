@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -21,6 +22,7 @@ import fr.uge.implement.Room;
  */
 public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack) {
 
+<<<<<<< Updated upstream
 	private static BufferedImage loadImage(String fileName) {
 		try {
 			return ImageIO.read(Path.of("./data", fileName).toFile());
@@ -52,6 +54,50 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawCombat(g);
 			drawGrid(g); // 2) rooms + héros
 			drawBackPack(g); // 3) backpack
+=======
+	private static final BufferedImage corridorImage = loadImage("corridor2.png");
+	private static final BufferedImage treasureRoomImage = loadImage("treasureroom.png");
+	private static final BufferedImage treasureImage = loadImage("treasure.png");
+	private static final BufferedImage heroImage = loadImage("hero.png");
+	private static final BufferedImage heroImage2 = loadImage("hero2.png");
+	private static final BufferedImage enemyImage = loadImage("enemy.png");
+	private static final BufferedImage enemyImage2 = loadImage("enemy2miror.png");
+	private static final BufferedImage enemyRoomImage1 = loadImage("fight0.png");
+	private static final BufferedImage enemyRoomImage2 = loadImage("fight2.png");
+	private static final BufferedImage enemyRoomImage3 = loadImage("fight3.png");
+	private static final BufferedImage attackOrDefenseBanner = loadImage("attackdefend.png");
+	private static final BufferedImage attackBanner = loadImage("attack.png");
+	private static final BufferedImage defendBanner = loadImage("defendds.png");
+
+	private static BufferedImage loadImage(String fileName) {
+		try {
+			File file = Path.of("./data", fileName).toFile();
+			BufferedImage result = ImageIO.read(file);
+			if (result == null) {
+				throw new IllegalArgumentException("Error when loading image file" + file);
+			}
+			return result;
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to load data file: " + fileName, e);
+		}
+	}
+
+	public void render() {
+		context.renderFrame(g -> {
+			clearScreen(g);
+			drawGrid(g);
+			drawBackPack(g);
+		});
+	}
+
+	public void combatDisplay(int nb_enemies) {
+		context.renderFrame(g -> {
+			clearScreen(g);
+			// en fonction du nombre ICI:
+			drawCombat(g, 3);
+			drawGrid(g);
+			drawBackPack(g);
+>>>>>>> Stashed changes
 		});
 	}
 
@@ -59,9 +105,14 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawCorridor(g);
+<<<<<<< Updated upstream
 			drawHero(g);// 1) fond
 			drawGrid(g); // 2) rooms + héros
 			// 3) backpack
+=======
+			drawHero(g);
+			drawGrid(g);
+>>>>>>> Stashed changes
 		});
 	}
 
@@ -69,9 +120,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawTreasure(g);
+<<<<<<< Updated upstream
 			// 1) fond
 			drawGrid(g); // 2) rooms + héros
 			// 3) backpack
+=======
+			drawGrid(g);
+>>>>>>> Stashed changes
 		});
 	}
 
@@ -80,18 +135,44 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
+<<<<<<< Updated upstream
 		// on étire corridor.png pour remplir toute la fenêtre
+=======
+>>>>>>> Stashed changes
 		g.drawImage(treasureRoomImage, 0, 0, width, height, null);
 		g.drawImage(treasureImage, width / 2, height / 2, width / 2, height / 2, null);
 	}
 
+<<<<<<< Updated upstream
 	private void drawCombat(Graphics2D g) {
+=======
+	private void drawCombat(Graphics2D g, int nb_enemies) {
+>>>>>>> Stashed changes
 		var info = context.getScreenInfo();
 		int width = info.width();
 		int height = info.height();
 
+<<<<<<< Updated upstream
 		// on étire corridor.png pour remplir toute la fenêtre
 		g.drawImage(enemyImage2, 0, height / 3, width / 2, height / 2, null);
+=======
+		g.drawImage(switch (nb_enemies) {
+		case 1 -> enemyRoomImage1;
+		case 2 -> enemyRoomImage2;
+		case 3 -> enemyRoomImage3;
+		default -> throw new IllegalArgumentException("nb_enemies must be 1–3, got " + nb_enemies);
+		}, 0, 0, width, height, null);
+
+		int bannerWidth = width / 5;
+		int bannerHeight = height / 5;
+
+		int x = (width - bannerWidth) / 2;
+
+		int marginBottom = height / 50;
+		int y = height - bannerHeight - marginBottom;
+
+		g.drawImage(attackOrDefenseBanner, x, y, bannerWidth, bannerHeight, null);
+>>>>>>> Stashed changes
 	}
 
 	private void drawHero(Graphics2D g) {
@@ -99,6 +180,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
+<<<<<<< Updated upstream
 		// on étire corridor.png pour remplir toute la fenêtre
 		g.drawImage(heroImage2, width / 4, height / 4, width, height, null);
 	}
@@ -108,6 +190,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
+=======
+>>>>>>> Stashed changes
 		g.drawImage(heroImage2, width / 4, height / 4, width, height, null);
 	}
 
@@ -116,7 +200,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
+<<<<<<< Updated upstream
 		// on étire corridor.png pour remplir toute la fenêtre
+=======
+>>>>>>> Stashed changes
 		g.drawImage(corridorImage, 0, 0, width, height, null);
 	}
 
@@ -143,7 +230,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			int x = padding + col * (cellSize + padding);
 			int y = padding + row * (cellSize + padding);
 
+<<<<<<< Updated upstream
 			// couleur normale selon le type...
+=======
+>>>>>>> Stashed changes
 			Color color = switch (room.name()) {
 			case String s when s.contains("Enemy") -> new Color(200, 80, 80);
 			case String s when s.contains("Merchant") -> new Color(80, 180, 250);

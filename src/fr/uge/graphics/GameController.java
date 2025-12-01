@@ -19,6 +19,7 @@ import fr.uge.implement.WolfRat;
  */
 public class GameController {
 
+<<<<<<< Updated upstream
     private final ApplicationContext context;
     private final GameView view;
     private final MapDungeon floor;
@@ -42,30 +43,48 @@ public class GameController {
        
         
     }
+=======
+	private final ApplicationContext context;
+	private final GameView view;
+	private final MapDungeon floor;
+	private final BackPack backpack;
+	private Combat fight;
+	Boolean combat;
+	Boolean corridor;
+	Boolean treasure;
+	private boolean inCombat = false;
 
-    /** Called every frame to check player input */
-    public void update() {
-    	var event = context.pollOrWaitEvent(10);
+	public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack) {
+		this.combat = false;
+		this.corridor = false;
+		this.treasure = false;
+		this.context = Objects.requireNonNull(context);
+		this.view = Objects.requireNonNull(view);
+		this.floor = Objects.requireNonNull(floor);
+		this.backpack = Objects.requireNonNull(backpack);
+>>>>>>> Stashed changes
 
-      switch (event) {
+	}
 
-          case null -> {}
+	/** Called every frame to check player input */
+	public void update() {
+		var event = context.pollOrWaitEvent(10);
 
-          // ----------------------------------
-          //  1. Touche de sortie
-          // ----------------------------------
-          case KeyboardEvent ke -> {
+		switch (event) {
 
-              if (ke.key() == KeyboardEvent.Key.Q) {
-                  System.exit(0);
-              }
+		case null -> {
+		}
 
-              // ----------------------------------
-              // COMBAT : touches A et D 
-              // ----------------------------------
-              if (inCombat) {
-                  switch (ke.key()) {
+		// ----------------------------------
+		// 1. Touche de sortie
+		// ----------------------------------
+		case KeyboardEvent ke -> {
 
+			if (ke.key() == KeyboardEvent.Key.Q) {
+				System.exit(0);
+			}
+
+<<<<<<< Updated upstream
                       case A -> {
                           System.out.println("🎯 ACTION → Le héros attaque !");
                           fight.attackEnemy();
@@ -94,12 +113,40 @@ public class GameController {
               if (pe.action() != PointerEvent.Action.POINTER_DOWN) {
                   return;
               }
+=======
+			// ----------------------------------
+			// COMBAT : touches A et D
+			// ----------------------------------
+			if (inCombat) {
+				switch (ke.key()) {
+				case A -> {
+					System.out.println("🎯 ACTION → Le héros attaque !");
+					fight.attackEnemy();
+					fight.enemyTurn();
+					// checkCombatEnd();
+				}
 
-              var pos = pe.location();
-              int mouseX = pos.x();
-              int mouseY = pos.y();
-              System.out.println(mouseX);
+				case D -> {
+					System.out.println("🛡️ ACTION → Le héros se défend !");
+					fight.defendHero();
+					fight.enemyTurn();
+					// checkCombatEnd();
+				}
 
+				default -> {
+				}
+				}
+			}
+		}
+>>>>>>> Stashed changes
+
+		case PointerEvent pe -> {
+			// on vérifie que c’est un VRAI clic
+			if (pe.action() != PointerEvent.Action.POINTER_DOWN) {
+				return;
+			}
+
+<<<<<<< Updated upstream
               // On déduit quelle salle a été cliquée
               int clickedRoom = roomAt(mouseX, mouseY);
               if (floor.adjacentRooms().contains(clickedRoom)) {
@@ -173,20 +220,61 @@ public class GameController {
       int cols = 4;
       int cellSize = 120;
       int padding = 10;
+=======
+			var pos = pe.location();
+			int mouseX = pos.x();
+			int mouseY = pos.y();
+			System.out.println(mouseX);
+>>>>>>> Stashed changes
 
-      for (int i = 0; i < floor.rooms().size(); i++) {
-          int row = i / cols;
-          int col = i % cols;
+			// On déduit quelle salle a été cliquée
+			int clickedRoom = roomAt(mouseX, mouseY);
+			if (floor.adjacentRooms().contains(clickedRoom)) {
+				// Déplacement du joueur
+				floor.setPlayerIndex(clickedRoom);
+				System.out.println("Player moved to room " + clickedRoom);
+				this.combat = false;
+				this.corridor = true;
+				this.treasure = false;
+			}
 
-          int x = padding + col * (cellSize + padding);
-          int y = padding + row * (cellSize + padding);
+			if (floor.playerOnEnemyRoom()) {
+				System.out.println("⚠ Combat déclenché !");
+				this.combat = true;
+				this.treasure = false;
+				this.corridor = false;
+			}
 
-          if (mouseX >= x && mouseX <= x + cellSize &&
-              mouseY >= y && mouseY <= y + cellSize) {
-              return i;
-          }
-      }
-      return 0;
-  }
+			if (floor.playerOnCorridor()) {
+				this.corridor = true;
+				this.treasure = false;
+				this.combat = false;
+			}
+			if (floor.playerOnTreasureRoom()) {
+				this.treasure = true;
+				this.combat = false;
+				this.corridor = false;
+			}
+		}
+		}
+	}
 
+	public int roomAt(int mouseX, int mouseY) {
+		int cols = 4;
+		int cellSize = 120;
+		int padding = 10;
+
+		for (int i = 0; i < floor.rooms().size(); i++) {
+			int row = i / cols;
+			int col = i % cols;
+
+			int x = padding + col * (cellSize + padding);
+			int y = padding + row * (cellSize + padding);
+
+			if (mouseX >= x && mouseX <= x + cellSize && mouseY >= y && mouseY <= y + cellSize) {
+				return i;
+			}
+		}
+		return 0;
+	}
 }

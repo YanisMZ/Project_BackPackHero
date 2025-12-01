@@ -19,6 +19,10 @@ public class GameRun {
 	 */
 	public void run() {
 		Application.run(Color.WHITE, context -> {
+<<<<<<< Updated upstream
+=======
+			int nb_enemies = 2;
+>>>>>>> Stashed changes
 			Dungeon dungeon = new Dungeon();
 
 			BackPack backpack = dungeon.backpack();
@@ -34,9 +38,14 @@ public class GameRun {
 
 			while (true) {
 				controller.update();
+<<<<<<< Updated upstream
 
 				if (controller.combat) {
 					view.combatDisplay();
+=======
+				if (controller.combat) {
+					view.combatDisplay(nb_enemies);
+>>>>>>> Stashed changes
 				}
 				if (controller.corridor) {
 					view.corridorDisplay();
