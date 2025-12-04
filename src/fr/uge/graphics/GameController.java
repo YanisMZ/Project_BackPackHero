@@ -76,10 +76,11 @@ public class GameController {
                     switch (ke.key()) {
                         case A -> {
                             System.out.println("🎯 ACTION → Le héros attaque !");
-                            // AFFICHAGE A EN COULEUR
+                     
                             fight.attackEnemy();
                             fight.enemyTurn();
                             checkCombatEnd();
+                            
                         }
                         case D -> {
                             System.out.println("🛡️ ACTION → Le héros se défend !");

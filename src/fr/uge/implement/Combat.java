@@ -59,7 +59,6 @@ public class Combat {
 	public void enemyTurn() {
 		System.out.println("\n---- Tour des ennemis ----");
 
-		List<Enemy> updatedEnemies = new ArrayList<>();
 
 		for (Enemy enemy : enemies) {
 			int action = random.nextInt(2); // 0 = attaque, 1 = défense
@@ -71,11 +70,10 @@ public class Combat {
 				System.out.println(enemy.getClass().getSimpleName() + " se protège !");
 				enemy = enemy.defend();
 			}
-			updatedEnemies.add(enemy);
+			
 		}
 
-		enemies.clear();
-		enemies.addAll(updatedEnemies);
+		
 
 		System.out.println("Héros : hp=" + hero.hp());
 	}

@@ -29,6 +29,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final BufferedImage heroImage2 = loadImage("hero2.png");
 	private static final BufferedImage enemyImage = loadImage("enemy.png");
 	private static final BufferedImage enemyImage2 = loadImage("enemy2miror.png");
+	private static final BufferedImage enemyRoomImage0 = loadImage("fight0.png");
 	private static final BufferedImage enemyRoomImage1 = loadImage("fight1.png");
 	private static final BufferedImage enemyRoomImage2 = loadImage("fight2.png");
 	private static final BufferedImage enemyRoomImage3 = loadImage("fight3.png");
@@ -100,6 +101,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int height = info.height();
 		
 		g.drawImage(switch (nb_enemies) {
+		case 0 -> enemyRoomImage0;
 		case 1 -> enemyRoomImage1;
 		case 2 -> enemyRoomImage2;
 		case 3 -> enemyRoomImage3;
