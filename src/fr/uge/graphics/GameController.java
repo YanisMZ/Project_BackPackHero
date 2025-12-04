@@ -25,17 +25,18 @@ public class GameController {
     private final MapDungeon floor;
     private final BackPack backpack;
     private final Hero hero;
-    private Combat fight;
+    private final Combat fight;
     private boolean inCorridor = true;
-	private boolean inTreasure = false;
+    private boolean inTreasure = false;
     private boolean inCombat = false;
     
     
-    public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack) {
+    public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack,Combat fight) {
     	this.context = Objects.requireNonNull(context);
     	this.view = Objects.requireNonNull(view);
     	this.floor = Objects.requireNonNull(floor);
     	this.backpack = Objects.requireNonNull(backpack);
+    	this.fight = Objects.requireNonNull(fight);
     	this.hero = new Hero(40, 0);
     }
     
@@ -154,15 +155,8 @@ public class GameController {
     //   DÉBUT DE COMBAT
     // ==============================
     private void startCombat() {
-        // Initialisation des ennemis
-        List<Enemy> enemies = List.of(
-            new SmallWolfRat(),
-            new WolfRat()
-        );
-
-        fight = new Combat(hero, enemies);
+    		fight.initEnemies();
         inCombat = true;
-
         System.out.println("=== MODE COMBAT ===");
         System.out.println("Appuie sur A = Attaquer | D = Défendre");
     }
