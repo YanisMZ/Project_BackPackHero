@@ -21,7 +21,7 @@ import fr.uge.implement.Room;
  * Represents the visual representation of the game, handling rendering.
  */
 public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack) {
-
+	
 	private static final BufferedImage corridorImage = loadImage("corridor2.png");
 	private static final BufferedImage treasureRoomImage = loadImage("treasureroom.png");
 	private static final BufferedImage treasureImage = loadImage("treasure.png");
@@ -29,14 +29,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final BufferedImage heroImage2 = loadImage("hero2.png");
 	private static final BufferedImage enemyImage = loadImage("enemy.png");
 	private static final BufferedImage enemyImage2 = loadImage("enemy2miror.png");
-	private static final BufferedImage enemyRoomImage1 = loadImage("fight0.png");
+	private static final BufferedImage enemyRoomImage1 = loadImage("fight1.png");
 	private static final BufferedImage enemyRoomImage2 = loadImage("fight2.png");
 	private static final BufferedImage enemyRoomImage3 = loadImage("fight3.png");
 	private static final BufferedImage attackOrDefenseBanner = loadImage("attackdefend.png");
 	private static final BufferedImage attackBanner = loadImage("attack.png");
 	private static final BufferedImage defendBanner = loadImage("defend.png");
-
-
+	
 
 	private static BufferedImage loadImage(String fileName) {
 		try {
@@ -58,12 +57,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawBackPack(g);
 		});
 	}
+	
 
-	public void combatDisplay(int nb_enemies) {
+	public void combatDisplay(int nb_enemies, int status) {
 		context.renderFrame(g -> {
 			clearScreen(g);
-			// en fonction du nombre ICI:
-			drawCombat(g, 3);
+			drawCombat(g, nb_enemies, status);
 			drawGrid(g);
 			drawBackPack(g);
 		});
@@ -73,9 +72,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawCorridor(g);
-			drawHero(g);// 1) fond
-			drawGrid(g); // 2) rooms + héros
-			// 3) backpack
 			drawHero(g);
 			drawGrid(g);
 		});
@@ -85,9 +81,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawTreasure(g);
-			// 1) fond
-			drawGrid(g); // 2) rooms + héros
-			// 3) backpack
 			drawGrid(g);
 		});
 	}
@@ -97,18 +90,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
-		// on étire corridor.png pour remplir toute la fenêtre
 		g.drawImage(treasureRoomImage, 0, 0, width, height, null);
 		g.drawImage(treasureImage, width / 2, height / 2, width / 2, height / 2, null);
 	}
 
-	private void drawCombat(Graphics2D g, int nb_enemies) {
+	private void drawCombat(Graphics2D g, int nb_enemies, int status) {
 		var info = context.getScreenInfo();
 		int width = info.width();
 		int height = info.height();
-
-		// on étire corridor.png pour remplir toute la fenêtre
-		g.drawImage(enemyImage2, 0, height / 3, width / 2, height / 2, null);
+		
 		g.drawImage(switch (nb_enemies) {
 		case 1 -> enemyRoomImage1;
 		case 2 -> enemyRoomImage2;
@@ -123,8 +113,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 		int marginBottom = height / 50;
 		int y = height - bannerHeight - marginBottom;
-
-		g.drawImage(attackOrDefenseBanner, x, y, bannerWidth, bannerHeight, null);
+		switch (status) {
+		case 0 -> g.drawImage(attackOrDefenseBanner, x, y, bannerWidth, bannerHeight, null);
+		case 1 -> g.drawImage(attackBanner, x, y, bannerWidth, bannerHeight, null);
+		case 2 -> g.drawImage(defendBanner, x, y, bannerWidth, bannerHeight, null);
+		default -> 
+			throw new IllegalArgumentException("Unexpected value: " + status);
+		}
 	}
 
 	private void drawHero(Graphics2D g) {
@@ -132,7 +127,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
-		// on étire corridor.png pour remplir toute la fenêtre
 		g.drawImage(heroImage2, width / 4, height / 4, width, height, null);
 	}
 
@@ -141,7 +135,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int width = info.width();
 		int height = info.height();
 
-		// on étire corridor.png pour remplir toute la fenêtre
 		g.drawImage(corridorImage, 0, 0, width, height, null);
 	}
 

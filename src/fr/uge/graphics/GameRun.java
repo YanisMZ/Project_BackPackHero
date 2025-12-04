@@ -11,17 +11,18 @@ import fr.uge.implement.Dungeon;
  * Lance l'application de jeu et gère la boucle principale.
  */
 public class GameRun {
-  public GameRun() {
-  }
+		public GameRun() {
+		
+	}
 
-  /**
-   * Démarre l'application de jeu et gère la boucle principale.
-   */
+
   public void run() {
     Application.run(Color.WHITE, context -> {
-      int nbEnemies = 2; // nombre d’ennemis pour l’affichage du combat
+      int nbEnemies = 3;
+      int status = 2;
+      
       Dungeon dungeon = new Dungeon();
-
+      
       BackPack backpack = dungeon.backpack();
       BackPack.fillBackPackForTest(backpack);
 
@@ -33,16 +34,16 @@ public class GameRun {
       GameController controller = new GameController(context, view, floor0, backpack);
 
       view.corridorDisplay();
-
+      
       while (true) {
-        controller.update();
+    	  controller.update();
 
-        if (controller.isInCombat()) {
-          view.combatDisplay(nbEnemies);
+    	  if (controller.isInCombat()) {
+        	view.combatDisplay(nbEnemies, status);
         } else if (controller.isInCorridor()) {
-          view.corridorDisplay();
+        	view.corridorDisplay();
         } else if (controller.isInTreasure()) {
-          view.treasureDisplay();
+        	view.treasureDisplay();
         }
       }
     });

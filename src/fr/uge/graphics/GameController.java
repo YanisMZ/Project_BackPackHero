@@ -30,6 +30,15 @@ public class GameController {
 	private boolean inTreasure = false;
     private boolean inCombat = false;
     
+    
+    public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack) {
+    	this.context = Objects.requireNonNull(context);
+    	this.view = Objects.requireNonNull(view);
+    	this.floor = Objects.requireNonNull(floor);
+    	this.backpack = Objects.requireNonNull(backpack);
+    	this.hero = new Hero(40, 0);
+    }
+    
     public boolean isInCorridor() {
 		return inCorridor;
 	}
@@ -42,13 +51,6 @@ public class GameController {
     	return this.inCombat;
     }
 
-    public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack) {
-        this.context = Objects.requireNonNull(context);
-        this.view = Objects.requireNonNull(view);
-        this.floor = Objects.requireNonNull(floor);
-        this.backpack = Objects.requireNonNull(backpack);
-        this.hero = new Hero(40, 0);
-    }
 
     public void update() {
         var event = context.pollOrWaitEvent(10);
