@@ -80,6 +80,11 @@ public class GameController {
                             fight.attackEnemy();
                             fight.enemyTurn();
                             checkCombatEnd();
+                            try {
+                              Thread.sleep(100);
+                          } catch (InterruptedException ignored) {
+                              // On ignore l'interruption volontairement
+                          }
                             
                         }
                         case D -> {
@@ -122,6 +127,7 @@ public class GameController {
                 // Déplacement si la salle est adjacente
                 if (floor.adjacentRooms().contains(clickedRoom)) {
                     floor.setPlayerIndex(clickedRoom);
+                    // room visited
                     System.out.println("Player moved to room " + clickedRoom);
                     this.inCombat = false;
                     this.inCorridor = true;
@@ -129,7 +135,7 @@ public class GameController {
                 }
 
                 // On vérifie sur quel type de salle le joueur se trouve
-                if (floor.playerOnEnemyRoom()) {
+                if (floor.playerOnEnemyRoom() && !floor.isVisited(floor.playerIndex())) {
                     System.out.println("⚠ Combat déclenché !");
                     this.inCombat = true;
                     this.inTreasure = false;
@@ -172,9 +178,8 @@ public class GameController {
 
         if (!fight.isRunning()) {
             inCombat = false;
+            floor.markVisited(floor.playerIndex());
             System.out.println("✨ Combat terminé !");
-            // Éventuellement : supprimer les ennemis de la salle actuelle
-            // floor.clearEnemiesInRoom();
         }
     }
 
