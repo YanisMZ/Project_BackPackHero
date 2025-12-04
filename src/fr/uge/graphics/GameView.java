@@ -85,6 +85,23 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawGrid(g);
 		});
 	}
+	
+	public void emptyRoomDisplay() {
+		context.renderFrame(g -> {
+			clearScreen(g);
+			drawEmptyRoom(g);
+			drawHero(g);
+			drawGrid(g);
+		});
+	}
+	
+	private void drawEmptyRoom(Graphics2D g) {
+		var info = context.getScreenInfo();
+		int width = info.width();
+		int height = info.height();
+
+		g.drawImage(enemyRoomImage0, 0, 0, width, height, null);
+	}
 
 	private void drawTreasure(Graphics2D g) {
 		var info = context.getScreenInfo();

@@ -38,7 +38,7 @@ public class Combat {
 		if (enemies.isEmpty())
 			return;
 
-		Enemy target = enemies.get(0); // on attaque le premier ennemi
+		Enemy target = enemies.getFirst(); // on attaque le premier ennemi
 		System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
 
 		Enemy updated = target.takeDamage(25);
@@ -47,7 +47,7 @@ public class Combat {
 			System.out.println("💥 Ennemi éliminé !");
 			enemies.remove(target);
 		} else {
-			enemies.set(enemies.indexOf(target), updated);
+			enemies.set(0, updated);
 		}
 	}
 

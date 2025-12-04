@@ -70,26 +70,20 @@ public class GameController {
                 if (ke.key() == KeyboardEvent.Key.Q) {
                     System.exit(0);
                 }
+                
 
                 // Si on est en combat, on gère A (attaque) et D (défense)
-                if (inCombat) {
+                if (inCombat && ke.action().equals(KeyboardEvent.Action.KEY_RELEASED)) {
                     switch (ke.key()) {
                         case A -> {
                             System.out.println("🎯 ACTION → Le héros attaque !");
-                     
                             fight.attackEnemy();
                             fight.enemyTurn();
                             checkCombatEnd();
-                            try {
-                              Thread.sleep(100);
-                          } catch (InterruptedException ignored) {
-                              // On ignore l'interruption volontairement
-                          }
                             
                         }
                         case D -> {
                             System.out.println("🛡️ ACTION → Le héros se défend !");
-                            // AFFICHAGE B EN COULEUR
                             fight.defendHero();
                             fight.enemyTurn();
                             checkCombatEnd();
