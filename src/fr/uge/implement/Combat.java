@@ -6,79 +6,75 @@ import java.util.Random;
 
 public class Combat {
 
-	private final Hero hero;
-	private final List<Enemy> enemies;
-	private final Random random = new Random();
+  private final Hero hero;
+  private final List<Enemy> enemies;
+  private final Random random = new Random();
 
-	public Combat(Hero hero) {
-		this.hero = hero;
-		this.enemies = new ArrayList<>();
-	}
+  public Combat(Hero hero) {
+    this.hero = hero;
+    this.enemies = new ArrayList<>();
+  }
 
-	public void initEnemies() {
+  public void initEnemies() {
 
-		var nb_enemies = random.nextInt(3) + 1;
-		System.out.println("le nombre " + nb_enemies);
-		for (int i = 0; i < nb_enemies; i++) {
-			var type = random.nextBoolean();
-			if (type)
-				enemies.add(new SmallWolfRat());
-			else
-				enemies.add(new WolfRat());
-		}
-		
-	
-	}
-	
-	public int nbEnemy() {
-		return enemies.size();
-	}
+    var nb_enemies = random.nextInt(3) + 1;
+    System.out.println("le nombre " + nb_enemies);
+    for (int i = 0; i < nb_enemies; i++) {
+      var type = random.nextBoolean();
+      if (type)
+        enemies.add(new SmallWolfRat());
+      else
+        enemies.add(new WolfRat());
+    }
 
-	public void attackEnemy() {
-		if (enemies.isEmpty())
-			return;
+  }
 
-		Enemy target = enemies.getFirst(); // on attaque le premier ennemi
-		System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
+  public int nbEnemy() {
+    return enemies.size();
+  }
 
-		Enemy updated = target.takeDamage(25);
+  public void attackEnemy() {
+    if (enemies.isEmpty())
+      return;
 
-		if (!updated.isAlive()) {
-			System.out.println("💥 Ennemi éliminé !");
-			enemies.remove(target);
-		} else {
-			enemies.set(0, updated);
-		}
-	}
+    Enemy target = enemies.getFirst(); // on attaque le premier ennemi
+    System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
 
-	public void defendHero() {
-		System.out.println("🛡️ Le héros se protège (gagne 2 protection)");
-		hero.restoreMana(2);
-	}
+    Enemy updated = target.takeDamage(25);
 
-	public void enemyTurn() {
-		System.out.println("\n---- Tour des ennemis ----");
+    if (!updated.isAlive()) {
+      System.out.println("💥 Ennemi éliminé !");
+      enemies.remove(target);
+    } else {
+      enemies.set(0, updated);
+    }
+  }
 
+  public void defendHero() {
+    System.out.println("🛡️ Le héros se protège (gagne 2 protection)");
+    hero.restoreMana(2);
+  }
 
-		for (Enemy enemy : enemies) {
-			int action = random.nextInt(2); // 0 = attaque, 1 = défense
+  public void enemyTurn() {
+    System.out.println("\n---- Tour des ennemis ----");
 
-			if (action == 0) {
-				System.out.println(enemy.getClass().getSimpleName() + " attaque le héros !");
-				hero.takeDamage(3);
-			} else {
-				System.out.println(enemy.getClass().getSimpleName() + " se protège !");
-				enemy = enemy.defend();
-			}
-			
-		}
+    for (Enemy enemy : enemies) {
+      int action = random.nextInt(2); // 0 = attaque, 1 = défense
 
-		
+      if (action == 0) {
+        System.out.println(enemy.getClass().getSimpleName() + " attaque le héros !");
+        hero.takeDamage(3);
+      } else {
+        System.out.println(enemy.getClass().getSimpleName() + " se protège !");
+        enemy = enemy.defend();
+      }
 
-		System.out.println("Héros : hp=" + hero.hp());
-	}
+    }
 
-	public boolean isRunning() {
-		return hero.hp() > 0 && !enemies.isEmpty();
-	}
+    System.out.println("Héros : hp=" + hero.hp());
+  }
+
+  public boolean isRunning() {
+    return hero.hp() > 0 && !enemies.isEmpty();
+  }
 }

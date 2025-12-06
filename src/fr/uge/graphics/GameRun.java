@@ -9,9 +9,6 @@ import fr.uge.implement.Combat;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Hero;
 
-/**
- * Lance l'application de jeu et gère la boucle principale.
- */
 public class GameRun {
   public GameRun() {
 
@@ -51,7 +48,6 @@ public class GameRun {
         } else {
           view.emptyRoomDisplay();
         }
-        
       }
     });
   }
