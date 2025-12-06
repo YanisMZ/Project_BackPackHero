@@ -9,10 +9,12 @@ public class Combat {
   private final Hero hero;
   private final List<Enemy> enemies;
   private final Random random = new Random();
+  
 
   public Combat(Hero hero) {
     this.hero = hero;
     this.enemies = new ArrayList<>();
+
   }
 
   public void initEnemies() {
@@ -33,22 +35,27 @@ public class Combat {
     return enemies.size();
   }
 
-  public void attackEnemy() {
-    if (enemies.isEmpty())
-      return;
+  public void attackEnemy(Item item) {
+    if (enemies.isEmpty()) return;
 
-    Enemy target = enemies.getFirst(); // on attaque le premier ennemi
-    System.out.println("⚔️ Le héros attaque " + target.getClass().getSimpleName());
+    int damage = 1; // base
+    if (item != null) damage += item.attackValue(); 
 
-    Enemy updated = target.takeDamage(25);
+    Enemy target = enemies.get(0);
+    System.out.println("⚔️ Héros attaque " + target.getClass().getSimpleName() +
+                       " avec " + (item != null ? item.name() : "main nue") +
+                       " pour " + damage + " dégâts");
+
+    Enemy updated = target.takeDamage(damage);
 
     if (!updated.isAlive()) {
-      System.out.println("💥 Ennemi éliminé !");
-      enemies.remove(target);
+        System.out.println("💥 Ennemi éliminé !");
+        enemies.remove(target);
     } else {
-      enemies.set(0, updated);
+        enemies.set(0, updated);
     }
-  }
+}
+
 
   public void defendHero() {
     System.out.println("🛡️ Le héros se protège (gagne 2 protection)");

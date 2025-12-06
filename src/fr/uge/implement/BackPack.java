@@ -39,7 +39,7 @@ public class BackPack {
       return grid;
   }
 
-  /** Déplace un objet de fromIndex → toIndex */
+
   public boolean move(int fromIndex, int toIndex) {
       if (fromIndex < 0 || fromIndex >= 15) return false;
       if (toIndex < 0 || toIndex >= 15) return false;

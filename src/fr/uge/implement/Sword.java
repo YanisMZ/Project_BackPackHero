@@ -13,4 +13,10 @@ public record Sword(String name, int dmg) implements Item {
   public String name() {
     return this.name;
   }
+
+	@Override
+	public int attackValue() {
+		// TODO Auto-generated method stub
+		return dmg;
+	}
 }

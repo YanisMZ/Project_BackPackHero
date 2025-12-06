@@ -64,10 +64,11 @@ public class GameController {
 			System.exit(0);
 		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
 			return;
-
+		Item selectedItem = selectedBackpackIndex != null ? backpack.grid()[selectedBackpackIndex] : null;
+		selectedBackpackIndex = null; 
 		switch (ke.key()) {
 		case A -> {
-			fight.attackEnemy();
+			fight.attackEnemy(selectedItem);
 			fight.enemyTurn();
 			checkCombatEnd();
 		}
@@ -82,20 +83,26 @@ public class GameController {
 	}
 
 	private void handlePointer(PointerEvent pe) {
-		if (inCombat || pe.action() != PointerEvent.Action.POINTER_DOWN)
-			return;
+    if (pe.action() != PointerEvent.Action.POINTER_DOWN)
+        return;
 
-		int mouseX = pe.location().x(), mouseY = pe.location().y();
-		int slot = backpackSlotAt(mouseX, mouseY);
-		if (slot != -1) {
-			handleBackpackClick(slot);
-			return;
-		}
+    int mouseX = pe.location().x(), mouseY = pe.location().y();
+    int slot = backpackSlotAt(mouseX, mouseY);
 
-		int room = roomAt(mouseX, mouseY);
-		if (room != -1)
-			handleRoomClick(room);
-	}
+    // Toujours gérer le clic sur le sac
+    if (slot != -1) {
+        handleBackpackClick(slot);
+        return;
+    }
+
+    // Ne gérer le clic sur les salles que si on n'est pas en combat
+    if (!inCombat) {
+        int room = roomAt(mouseX, mouseY);
+        if (room != -1)
+            handleRoomClick(room);
+    }
+}
+
 
 	private void handleBackpackClick(int slot) {
 		Item[] slots = backpack.grid();
