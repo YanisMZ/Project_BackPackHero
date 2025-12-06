@@ -1,19 +1,11 @@
 package fr.uge.graphics;
 
 import java.util.Objects;
-
 import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
+import fr.uge.implement.*;
 
-import fr.uge.implement.BackPack;
-import fr.uge.implement.Combat;
-import fr.uge.implement.Hero;
-import fr.uge.implement.MapDungeon;
-
-/**
- * Contrôle la logique du jeu et gère les interactions utilisateur.
- */
 public class GameController {
 
     private final ApplicationContext context;
@@ -25,8 +17,12 @@ public class GameController {
     private boolean inCorridor = true;
     private boolean inTreasure = false;
     private boolean inCombat = false;
+    private Integer selectedBackpackIndex = null; 
+    private final int backpackOriginX = 20, backpackOriginY = 550;
+    private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
 
-    public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Combat fight) {
+    public GameController(ApplicationContext context, GameView view, MapDungeon floor,
+                          BackPack backpack, Combat fight) {
         this.context = Objects.requireNonNull(context);
         this.view = Objects.requireNonNull(view);
         this.floor = Objects.requireNonNull(floor);
@@ -35,173 +31,114 @@ public class GameController {
         this.hero = new Hero(40, 0);
     }
 
-    public boolean isInCorridor() {
-        return inCorridor;
-    }
-
-    public boolean isInTreasure() {
-        return inTreasure;
-    }
-
-    public boolean isInCombat() {
-        return this.inCombat;
-    }
+    public boolean isInCorridor() { return inCorridor; }
+    public boolean isInTreasure() { return inTreasure; }
+    public boolean isInCombat() { return inCombat; }
+    public Integer getSelectedBackpackIndex() { return selectedBackpackIndex; }
 
     public void update() {
         var event = context.pollOrWaitEvent(10);
-
-        if (event == null) {
-            return;
-        }
+        if (event == null) return;
 
         switch (event) {
-            // ==============================
-            // ÉVÈNEMENTS CLAVIER
-            // ==============================
-            case KeyboardEvent ke -> {
-                if (ke.key() == KeyboardEvent.Key.Q) {
-                    System.exit(0);
-                }
-
-                // Si on est en combat, on gère A (attaque) et D (défense)
-                if (inCombat && ke.action().equals(KeyboardEvent.Action.KEY_RELEASED)) {
-                    switch (ke.key()) {
-                        case A -> {
-                            System.out.println("🎯 ACTION → Le héros attaque !");
-                            fight.attackEnemy();
-                            fight.enemyTurn();
-                            checkCombatEnd();
-                        }
-                        case D -> {
-                            System.out.println("🛡️ ACTION → Le héros se défend !");
-                            fight.defendHero();
-                            fight.enemyTurn();
-                            checkCombatEnd();
-                        }
-                        default -> {
-                            // autres touches ignorées en combat
-                        }
-                    }
-                }
-            }
-
-            // ==============================
-            // ÉVÈNEMENTS SOURIS
-            // ==============================
-            case PointerEvent pe -> {
-                // Si on est en combat, on ignore les clics
-                if (inCombat) {
-                    return;
-                }
-
-                // On vérifie que c’est un vrai clic (pression)
-                if (pe.action() != PointerEvent.Action.POINTER_DOWN) {
-                    return;
-                }
-
-                var pos = pe.location();
-                int mouseX = pos.x();
-                int mouseY = pos.y();
-                System.out.println("Clic à : " + mouseX + ", " + mouseY);
-
-                // On déduit quelle salle a été cliquée
-                int clickedRoom = roomAt(mouseX, mouseY);
-                System.out.println("Room détectée : " + clickedRoom);
-
-                if (clickedRoom == -1) {
-                    return; // clic hors grille
-                }
-
-                // Déplacement si la salle est adjacente
-                if (floor.adjacentRooms().contains(clickedRoom)) {
-                    floor.setPlayerIndex(clickedRoom);
-                    System.out.println("Player moved to room " + clickedRoom);
-
-                    // ---- IMPORTANT : Ne PAS marquer visited ici si c'est une salle ennemie ----
-                    if (floor.playerOnEnemyRoom() && !floor.isVisited(floor.playerIndex())) {
-                        System.out.println("⚠ Combat déclenché !");
-                        this.inCombat = true;
-                        this.inTreasure = false;
-                        this.inCorridor = false;
-                        startCombat();
-                        // La salle ennemie sera marquée à la fin du combat (checkCombatEnd)
-                    } else if (floor.playerOnCorridor()) {
-                      
-                        floor.markVisited(floor.playerIndex());
-                        this.inCorridor = true;
-                        this.inTreasure = false;
-                        this.inCombat = false;
-                    } else if (floor.playerOnTreasureRoom()) {
-                        
-                        floor.markVisited(floor.playerIndex());
-                        this.inTreasure = true;
-                        this.inCombat = false;
-                        this.inCorridor = false;
-                    } else {
-       
-                        floor.markVisited(floor.playerIndex());
-                        this.inCorridor = false;
-                        this.inTreasure = false;
-                        this.inCombat = false;
-                    }
-                }
-            }
-
-            default -> {
-                // autres types d’évènements ignorés
-            }
+            case KeyboardEvent ke -> handleKeyboard(ke);
+            case PointerEvent pe -> handlePointer(pe);
+            default -> {}
         }
     }
 
-    // ==============================
-    //   DÉBUT DE COMBAT
-    // ==============================
+    private void handleKeyboard(KeyboardEvent ke) {
+        if (ke.key() == KeyboardEvent.Key.Q) System.exit(0);
+        if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED) return;
+
+        switch (ke.key()) {
+            case A -> { fight.attackEnemy(); fight.enemyTurn(); checkCombatEnd(); }
+            case D -> { fight.defendHero(); fight.enemyTurn(); checkCombatEnd(); }
+            default -> {}
+        }
+    }
+
+    private void handlePointer(PointerEvent pe) {
+        if (inCombat || pe.action() != PointerEvent.Action.POINTER_DOWN) return;
+
+        int mouseX = pe.location().x(), mouseY = pe.location().y();
+        int slot = backpackSlotAt(mouseX, mouseY);
+        if (slot != -1) { handleBackpackClick(slot); return; }
+
+        int room = roomAt(mouseX, mouseY);
+        if (room != -1) handleRoomClick(room);
+    }
+
+    private void handleBackpackClick(int slot) {
+        Item[] slots = backpack.grid();
+        Item clicked = slots[slot];
+
+        if (selectedBackpackIndex == null) {
+            if (clicked != null) selectedBackpackIndex = slot;
+        } else {
+            backpack.move(selectedBackpackIndex, slot);
+            selectedBackpackIndex = null;
+        }
+    }
+
+    private void handleRoomClick(int clickedRoom) {
+        if (!floor.adjacentRooms().contains(clickedRoom)) return;
+        floor.setPlayerIndex(clickedRoom);
+
+        if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) startCombat();
+        else if (floor.playerOnCorridor()) setCorridorState();
+        else if (floor.playerOnTreasureRoom()) setTreasureState();
+        else setEmptyRoomState();
+
+        floor.markVisited(clickedRoom);
+    }
+
     private void startCombat() {
         fight.initEnemies();
         inCombat = true;
-        System.out.println("=== MODE COMBAT ===");
-        System.out.println("Appuie sur A = Attaquer | D = Défendre");
     }
 
-    // ==============================
-    //   VÉRIFICATION FIN DE COMBAT
-    // ==============================
     private void checkCombatEnd() {
-        if (fight == null) {
-            return;
-        }
-
-        if (!fight.isRunning()) {
-            inCombat = false;
-            // marquer visitée la salle ennemie maintenant que le combat est terminé
-            floor.markVisited(floor.playerIndex());
-            System.out.println("✨ Combat terminé !");
-        }
+        if (fight != null && !fight.isRunning()) inCombat = false;
     }
 
-    /**
-     * Calcule l’index de la salle cliquée à partir de la position de la souris.
-     *
-     * @param mouseX position X de la souris
-     * @param mouseY position Y de la souris
-     * @return index de la salle, ou -1 si aucune salle ne correspond
-     */
+    private void setCorridorState() {
+        inCorridor = true;
+        inTreasure = false;
+        inCombat = false;
+    }
+
+    private void setTreasureState() {
+        inTreasure = true;
+        inCorridor = false;
+        inCombat = false;
+    }
+
+    private void setEmptyRoomState() {
+        inTreasure = false;
+        inCorridor = false;
+        inCombat = false;
+    }
+
     public int roomAt(int mouseX, int mouseY) {
-        int cols = 4;
-        int cellSize = 120;
-        int padding = 10;
-
+        int cols = 4, cellSize = 120, padding = 10;
         for (int i = 0; i < floor.rooms().size(); i++) {
-            int row = i / cols;
-            int col = i % cols;
-
+            int row = i / cols, col = i % cols;
             int x = padding + col * (cellSize + padding);
             int y = padding + row * (cellSize + padding);
-
-            if (mouseX >= x && mouseX <= x + cellSize &&
-                mouseY >= y && mouseY <= y + cellSize) {
+            if (mouseX >= x && mouseX <= x + cellSize && mouseY >= y && mouseY <= y + cellSize)
                 return i;
-            }
+        }
+        return -1;
+    }
+
+    private int backpackSlotAt(int mouseX, int mouseY) {
+        for (int i = 0; i < backpack.grid().length; i++) {
+            int row = i / backpackCols, col = i % backpackCols;
+            int x = backpackOriginX + col * (backpackCellSize + backpackPadding);
+            int y = backpackOriginY + row * (backpackCellSize + backpackPadding);
+            if (mouseX >= x && mouseX <= x + backpackCellSize &&
+                mouseY >= y && mouseY <= y + backpackCellSize) return i;
         }
         return -1;
     }

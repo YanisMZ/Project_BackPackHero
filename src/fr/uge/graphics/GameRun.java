@@ -8,6 +8,7 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.Combat;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Hero;
+import fr.uge.implement.Sword;
 
 public class GameRun {
   public GameRun() {
@@ -22,10 +23,11 @@ public class GameRun {
       Dungeon dungeon = new Dungeon();
 
       BackPack backpack = dungeon.backpack();
-      BackPack.fillBackPackForTest(backpack);
-
-      System.out.println(backpack.BackPackDisplay());
-
+      
+      for (int i = 0; i < 4 ; i++) {
+        backpack.add(new Sword("Épée " + (i + 1), 10 + i));
+    }
+    
       var floor0 = dungeon.getFloor(0);
       var hero = new Hero(40, 0);
       var fight = new Combat(hero);
@@ -33,20 +35,17 @@ public class GameRun {
       GameView view = new GameView(context, floor0, backpack);
       GameController controller = new GameController(context, view, floor0, backpack, fight);
 
-      view.corridorDisplay();
-
       while (true) {
-
         controller.update();
-
+        Integer selectedIndex = controller.getSelectedBackpackIndex();
         if (controller.isInCombat()) {
-          view.combatDisplay(fight.nbEnemy(), status);
+            view.combatDisplay(fight.nbEnemy(), status, selectedIndex);
         } else if (controller.isInCorridor()) {
-          view.corridorDisplay();
+            view.corridorDisplay(selectedIndex);
         } else if (controller.isInTreasure()) {
-          view.treasureDisplay();
+            view.treasureDisplay(selectedIndex);
         } else {
-          view.emptyRoomDisplay();
+            view.emptyRoomDisplay(selectedIndex);
         }
       }
     });
