@@ -8,6 +8,8 @@ public sealed interface Enemy permits SmallWolfRat, WolfRat {
   int protection();
 
   boolean isAlive();
+  
+  int attackDamage();
 
   Enemy takeDamage(int dmg);
 

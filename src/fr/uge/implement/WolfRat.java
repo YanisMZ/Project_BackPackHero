@@ -28,4 +28,10 @@ public record WolfRat(int hp, int protection) implements Enemy {
     return "WolfRat";
   }
 
+	@Override
+	public int attackDamage() {
+		// TODO Auto-generated method stub
+		return 8;
+	}
+
 }

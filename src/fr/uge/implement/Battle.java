@@ -38,27 +38,34 @@ public class Battle {
     if (enemies.isEmpty())
       return;
 
-    int damage = 1; // base
+    int damage = 1;
     int defense = 0;
+
     if (items != null) {
       for (Item it : items) {
         damage += it.attackValue();
         defense += it.defendValue();
       }
     }
+
+    if (defense > 0) {
+      hero.addProtection(defense);
+      System.out.println("Le héros gagne " + defense + " points de protection !");
+    }
+
     Enemy target = enemies.get(0);
-    System.out
-        .println("Attaque avec " + items.size() + " objets pour " + damage + " degats et se defend avec " + defense);
+    System.out.println("Attaque pour " + damage + " dégâts");
 
     Enemy updated = target.takeDamage(damage);
 
     if (!updated.isAlive()) {
-      System.out.println("Ennemi éliminé ");
+      System.out.println("Ennemi éliminé !");
       enemies.remove(target);
     } else {
       enemies.set(0, updated);
     }
   }
+
 
   public void defendHero() {
     System.out.println("Le héros se protège (gagne 2 protection)");
@@ -73,14 +80,14 @@ public class Battle {
 
       if (action == 0) {
         System.out.println(enemy.name() + " attaque le héros !");
-        hero.takeDamage(3);
+        hero.takeDamage(enemy.attackDamage());
       } else {
         System.out.println(enemy.name() + " se protège !");
         enemy = enemy.defend();
       }
 
     }
-
+    hero.resetProtection();
     System.out.println("Héros : hp=" + hero.hp());
   }
 
