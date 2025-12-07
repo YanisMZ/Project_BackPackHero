@@ -1,6 +1,11 @@
 package fr.uge.implement;
 
+import java.util.Objects;
+
 public record Gold(String name) implements Item {
+	public Gold{
+		Objects.requireNonNull(name);
+	}
 
   @Override
   public int attackValue() {

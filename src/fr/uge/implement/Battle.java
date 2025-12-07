@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Combat {
+public class Battle {
 
   private final Hero hero;
   private final List<Enemy> enemies;
   private final Random random = new Random();
 
-  public Combat(Hero hero) {
+  public Battle(Hero hero) {
     this.hero = hero;
     this.enemies = new ArrayList<>();
 

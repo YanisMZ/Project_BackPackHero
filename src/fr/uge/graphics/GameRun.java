@@ -6,7 +6,7 @@ import java.util.List;
 import com.github.forax.zen.Application;
 
 import fr.uge.implement.BackPack;
-import fr.uge.implement.Combat;
+import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Shield;
@@ -33,7 +33,7 @@ public class GameRun {
 
       var floor0 = dungeon.getFloor(0);
       var hero = new Hero(40, 0);
-      var fight = new Combat(hero);
+      var fight = new Battle(hero);
 
       GameView view = new GameView(context, floor0, backpack);
       GameController controller = new GameController(context, view, floor0, backpack, fight);

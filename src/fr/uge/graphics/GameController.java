@@ -15,7 +15,7 @@ public class GameController {
   private final MapDungeon floor;
   private final BackPack backpack;
   private final Hero hero;
-  private final Combat fight;
+  private final Battle fight;
   private boolean inCorridor = true;
   private boolean inTreasure = false;
   private boolean inCombat = false;
@@ -23,7 +23,7 @@ public class GameController {
   private final int backpackOriginX = 20, backpackOriginY = 550;
   private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
 
-  public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Combat fight) {
+  public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight) {
     this.context = Objects.requireNonNull(context);
     this.view = Objects.requireNonNull(view);
     this.floor = Objects.requireNonNull(floor);
