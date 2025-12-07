@@ -196,9 +196,10 @@ public class GameController {
 
 		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
 			startCombat();
-		} else if (floor.playerOnTreasureRoom()) {
+		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
 			generateTreasure();
 			setTreasureState();
+			floor.markVisited(clickedRoom);
 		} else if (floor.playerOnCorridor()) {
 			setCorridorState();
 		} else {
