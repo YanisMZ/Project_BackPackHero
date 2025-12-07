@@ -50,6 +50,10 @@ public class GameRun {
         } else {
           view.emptyRoomDisplay(selectedSlots);
         }
+        if (hero.hp() <= 0) {
+          System.out.println("Votre personnage est MORT !");
+          System.exit(0); // Show new image and leave
+        }
       }
     });
   }

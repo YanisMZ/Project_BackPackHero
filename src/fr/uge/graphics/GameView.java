@@ -29,6 +29,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
   private static final BufferedImage enemyRoomImage1 = loadImage("fight1.png");
   private static final BufferedImage enemyRoomImage2 = loadImage("fight2.png");
   private static final BufferedImage enemyRoomImage3 = loadImage("fight3.png");
+  private static final BufferedImage enemyRoomImage4 = loadImage("fight3.png");
   private static final BufferedImage attackOrDefenseBanner = loadImage("attackdefend.png");
   private static final BufferedImage attackBanner = loadImage("attack.png");
   private static final BufferedImage defendBanner = loadImage("defend.png");
@@ -63,6 +64,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
       drawBackPack(g, selectedSlots);
     });
   }
+  
 
   public void corridorDisplay(List<Integer> selectedSlots) {
     context.renderFrame(g -> {
@@ -117,7 +119,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     case 1 -> enemyRoomImage1;
     case 2 -> enemyRoomImage2;
     case 3 -> enemyRoomImage3;
-    default -> throw new IllegalArgumentException("nb_enemies must be 0–3, got " + nb_enemies);
+    default -> enemyRoomImage3;
     }, 0, 0, width, height, null);
 
     int bannerWidth = width / 5;
