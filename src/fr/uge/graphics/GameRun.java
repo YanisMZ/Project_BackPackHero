@@ -1,6 +1,7 @@
 package fr.uge.graphics;
 
 import java.awt.Color;
+import java.util.List;
 
 import com.github.forax.zen.Application;
 
@@ -37,15 +38,15 @@ public class GameRun {
 
       while (true) {
         controller.update();
-        Integer selectedIndex = controller.getSelectedBackpackIndex();
+        List<Integer> selectedSlots = controller.getSelectedSlots();
         if (controller.isInCombat()) {
-            view.combatDisplay(fight.nbEnemy(), status, selectedIndex);
+            view.combatDisplay(fight.nbEnemy(), status, selectedSlots);
         } else if (controller.isInCorridor()) {
-            view.corridorDisplay(selectedIndex);
+            view.corridorDisplay(selectedSlots);
         } else if (controller.isInTreasure()) {
-            view.treasureDisplay(selectedIndex);
+            view.treasureDisplay(selectedSlots);
         } else {
-            view.emptyRoomDisplay(selectedIndex);
+            view.emptyRoomDisplay(selectedSlots);
         }
       }
     });

@@ -1,5 +1,7 @@
 package fr.uge.graphics;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
@@ -17,7 +19,7 @@ public class GameController {
 	private boolean inCorridor = true;
 	private boolean inTreasure = false;
 	private boolean inCombat = false;
-	private Integer selectedBackpackIndex = null;
+	private final List<Integer> selectedItems = new ArrayList<>();
 	private final int backpackOriginX = 20, backpackOriginY = 550;
 	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
 
@@ -42,8 +44,8 @@ public class GameController {
 		return inCombat;
 	}
 
-	public Integer getSelectedBackpackIndex() {
-		return selectedBackpackIndex;
+	public List<Integer> getSelectedSlots() {
+		return selectedItems;
 	}
 
 	public void update() {
@@ -64,11 +66,10 @@ public class GameController {
 			System.exit(0);
 		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
 			return;
-		Item selectedItem = selectedBackpackIndex != null ? backpack.grid()[selectedBackpackIndex] : null;
-		selectedBackpackIndex = null; 
+		List<Item> itemsUsed = selectedItems.stream().map(i -> backpack.grid()[i]).filter(Objects::nonNull).toList();
 		switch (ke.key()) {
 		case A -> {
-			fight.attackEnemy(selectedItem);
+			fight.attackEnemy(itemsUsed);
 			fight.enemyTurn();
 			checkCombatEnd();
 		}
@@ -83,38 +84,57 @@ public class GameController {
 	}
 
 	private void handlePointer(PointerEvent pe) {
-    if (pe.action() != PointerEvent.Action.POINTER_DOWN)
-        return;
+		if (pe.action() != PointerEvent.Action.POINTER_DOWN)
+			return;
 
-    int mouseX = pe.location().x(), mouseY = pe.location().y();
-    int slot = backpackSlotAt(mouseX, mouseY);
+		int mouseX = pe.location().x(), mouseY = pe.location().y();
+		int slot = backpackSlotAt(mouseX, mouseY);
 
-    // Toujours gérer le clic sur le sac
-    if (slot != -1) {
-        handleBackpackClick(slot);
-        return;
-    }
+		// Toujours gérer le clic sur le sac
+		if (slot != -1) {
+			handleBackpackClick(slot);
+			return;
+		}
 
-    // Ne gérer le clic sur les salles que si on n'est pas en combat
-    if (!inCombat) {
-        int room = roomAt(mouseX, mouseY);
-        if (room != -1)
-            handleRoomClick(room);
-    }
-}
+		if (!inCombat) {
+			int room = roomAt(mouseX, mouseY);
+			if (room != -1)
+				handleRoomClick(room);
+		}
+	}
 
+	private void toggleSelection(int slot, Item clicked) {
+		if (clicked == null)
+			return;
+
+		if (selectedItems.contains(slot)) {
+			selectedItems.remove(Integer.valueOf(slot));
+		} else {
+			selectedItems.add(slot);
+		}
+	}
 
 	private void handleBackpackClick(int slot) {
 		Item[] slots = backpack.grid();
 		Item clicked = slots[slot];
 
-		if (selectedBackpackIndex == null) {
-			if (clicked != null)
-				selectedBackpackIndex = slot;
-		} else {
-			backpack.move(selectedBackpackIndex, slot);
-			selectedBackpackIndex = null;
+		// un element sélectionné
+		if (selectedItems.size() != 1) {
+			toggleSelection(slot, clicked);
+			return;
 		}
+
+		int selected = selectedItems.get(0);
+		if (selected == slot) {
+			toggleSelection(slot, clicked);
+			return;
+		}
+		if (slots[slot] == null) {
+			backpack.move(selected, slot);
+			selectedItems.clear();
+			return;
+		}
+		toggleSelection(slot, clicked);
 	}
 
 	private void handleRoomClick(int clickedRoom) {

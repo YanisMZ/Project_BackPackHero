@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -48,49 +49,49 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     // ------------------------
     // Rendu principal
     // ------------------------
-    public void render(Integer selectedBackpackIndex) {
+    public void render(List<Integer> selectedSlots) {
         context.renderFrame(g -> {
             clearScreen(g);
             drawGrid(g);
-            drawBackPack(g, selectedBackpackIndex);
+            drawBackPack(g, selectedSlots);
         });
     }
 
-    public void combatDisplay(int nb_enemies, int status, Integer selectedBackpackIndex) {
+    public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots) {
         context.renderFrame(g -> {
             clearScreen(g);
             drawCombat(g, nb_enemies, status);
             drawGrid(g);
-            drawBackPack(g, selectedBackpackIndex);
+            drawBackPack(g, selectedSlots);
         });
     }
 
-    public void corridorDisplay(Integer selectedBackpackIndex) {
+    public void corridorDisplay(List<Integer> selectedSlots) {
         context.renderFrame(g -> {
             clearScreen(g);
             drawCorridor(g);
             drawHero(g);
             drawGrid(g);
-            drawBackPack(g, selectedBackpackIndex);
+            drawBackPack(g, selectedSlots);
         });
     }
 
-    public void treasureDisplay(Integer selectedBackpackIndex) {
+    public void treasureDisplay(List<Integer> selectedSlots) {
         context.renderFrame(g -> {
             clearScreen(g);
             drawTreasure(g);
             drawGrid(g);
-            drawBackPack(g, selectedBackpackIndex);
+            drawBackPack(g, selectedSlots);
         });
     }
 
-    public void emptyRoomDisplay(Integer selectedBackpackIndex) {
+    public void emptyRoomDisplay(List<Integer> selectedSlots) {
         context.renderFrame(g -> {
             clearScreen(g);
             drawEmptyRoom(g);
             drawHero(g);
             drawGrid(g);
-            drawBackPack(g, selectedBackpackIndex);
+            drawBackPack(g, selectedSlots);
         });
     }
 
@@ -186,43 +187,44 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         }
     }
 
-    private void drawBackPack(Graphics2D graphics, Integer selectedBackpackIndex) {
-        int originX = 20;
-        int originY = 550;
-        int cols = 5;
-        int cellSize = 60;
-        int padding = 8;
-        Item[] slots = backpack.grid();
+    private void drawBackPack(Graphics2D graphics, List<Integer> selectedSlots) {
+      int originX = 20;
+      int originY = 550;
+      int cols = 5;
+      int cellSize = 60;
+      int padding = 8;
+      Item[] slots = backpack.grid();
 
-        graphics.setColor(Color.BLACK);
-        graphics.drawString("Backpack :", originX, originY - 10);
+      graphics.setColor(Color.BLACK);
+      graphics.drawString("Backpack :", originX, originY - 10);
 
-        for (int i = 0; i < slots.length; i++) {
-            int row = i / cols;
-            int col = i % cols;
-            int x = originX + col * (cellSize + padding);
-            int y = originY + row * (cellSize + padding);
+      for (int i = 0; i < slots.length; i++) {
+          int row = i / cols;
+          int col = i % cols;
+          int x = originX + col * (cellSize + padding);
+          int y = originY + row * (cellSize + padding);
 
-            graphics.setColor(slots[i] == null ? Color.YELLOW : Color.CYAN);
-            graphics.fill(new Rectangle2D.Float(x, y, cellSize, cellSize));
+          graphics.setColor(slots[i] == null ? Color.YELLOW : Color.CYAN);
+          graphics.fill(new Rectangle2D.Float(x, y, cellSize, cellSize));
 
-            graphics.setColor(Color.BLACK);
-            graphics.draw(new Rectangle2D.Float(x, y, cellSize, cellSize));
+          graphics.setColor(Color.BLACK);
+          graphics.draw(new Rectangle2D.Float(x, y, cellSize, cellSize));
 
-            // cadre rouge si sélectionné
-            if (selectedBackpackIndex != null && selectedBackpackIndex == i) {
-                graphics.setColor(Color.RED);
-                graphics.drawRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
-            }
+          // ⭐ Cadre rouge si ce slot est sélectionné
+          if (selectedSlots != null && selectedSlots.contains(i)) {
+              graphics.setColor(Color.RED);
+              graphics.drawRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
+          }
 
-            if (slots[i] != null) {
-                graphics.setColor(Color.BLACK);
-                String name = slots[i].name();
-                if (name.length() > 8) name = name.substring(0, 7) + "...";
-                graphics.drawString(name, x + 5, y + cellSize / 2);
-            }
-        }
-    }
+          if (slots[i] != null) {
+              graphics.setColor(Color.BLACK);
+              String name = slots[i].name();
+              if (name.length() > 8) name = name.substring(0, 7) + "...";
+              graphics.drawString(name, x + 5, y + cellSize / 2);
+          }
+      }
+  }
+
 
     private void clearScreen(Graphics2D graphics) {
         graphics.setColor(Color.BLACK);
