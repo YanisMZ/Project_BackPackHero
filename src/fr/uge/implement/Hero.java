@@ -18,6 +18,9 @@ public class Hero {
 		return mana;
 	}
 
+	/**
+	 * @param amount
+	 */
 	public void takeDamage(int amount) {
     if (shieldProtection > 0) {
         int used = Math.min(amount, shieldProtection);
