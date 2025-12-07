@@ -23,6 +23,16 @@ public class GameController {
   private final int backpackOriginX = 20, backpackOriginY = 550;
   private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
 
+  /**
+   * Creates a new game controller responsible for handling input events, updating
+   * states, and interacting with the game model.
+   *
+   * @param context  Zen application context
+   * @param view     graphics part
+   * @param floor    dungeon map
+   * @param backpack player's inventory
+   * @param fight    battle system
+   */
   public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight) {
     this.context = Objects.requireNonNull(context);
     this.view = Objects.requireNonNull(view);
@@ -48,6 +58,10 @@ public class GameController {
     return selectedItems;
   }
 
+  /**
+   * main loop where evey pressed key/point will get redirected to an other
+   * function
+   */
   public void update() {
     var event = context.pollOrWaitEvent(10);
     if (event == null)
@@ -61,6 +75,11 @@ public class GameController {
     }
   }
 
+  /**
+   * this function will manage every keyboard inputs in the game
+   * 
+   * @param ke keyboard event received from the user
+   */
   private void handleKeyboard(KeyboardEvent ke) {
     if (ke.key() == KeyboardEvent.Key.Q)
       System.exit(0);
@@ -83,6 +102,11 @@ public class GameController {
     }
   }
 
+  /**
+   * this function will manage every pointer input in the game
+   * 
+   * @param pe pointer event received from the user
+   */
   private void handlePointer(PointerEvent pe) {
     if (pe.action() != PointerEvent.Action.POINTER_DOWN)
       return;
@@ -90,7 +114,6 @@ public class GameController {
     int mouseX = pe.location().x(), mouseY = pe.location().y();
     int slot = backpackSlotAt(mouseX, mouseY);
 
-    // Toujours gérer le clic sur le sac
     if (slot != -1) {
       handleBackpackClick(slot);
       return;
@@ -102,7 +125,12 @@ public class GameController {
         handleRoomClick(room);
     }
   }
-
+  /**
+   * add or remove an item from selection in the backpack
+   *
+   * @param slot index clicked
+   * @param clicked item in that slot (may be null)
+   */
   private void toggleSelection(int slot, Item clicked) {
     if (clicked == null)
       return;
@@ -113,12 +141,15 @@ public class GameController {
       selectedItems.add(slot);
     }
   }
-
+  /**
+   * manage clicking inside the inventory and selection and swap or move behavior
+   *
+   * @param slot index of the clicked backpack slot
+   */
   private void handleBackpackClick(int slot) {
     Item[] slots = backpack.grid();
     Item clicked = slots[slot];
 
-    // un element sélectionné
     if (selectedItems.size() != 1) {
       toggleSelection(slot, clicked);
       return;
@@ -136,7 +167,11 @@ public class GameController {
     }
     toggleSelection(slot, clicked);
   }
-
+  /**
+   * same has handleBackpackClick but a click on a room if it's adjacent and it update hte game state
+   *
+   * @param clickedRoom index of the room clicked
+   */
   private void handleRoomClick(int clickedRoom) {
     if (!floor.adjacentRooms().contains(clickedRoom))
       return;
@@ -181,7 +216,13 @@ public class GameController {
     inCorridor = false;
     inCombat = false;
   }
-
+  /**
+   * Computes the room located under a mouse click.
+   *
+   * @param mouseX x coordinate
+   * @param mouseY y coordinate
+   * @return the room index or -1 if no room has been found
+   */
   public int roomAt(int mouseX, int mouseY) {
     int cols = 4, cellSize = 120, padding = 10;
     for (int i = 0; i < floor.rooms().size(); i++) {
