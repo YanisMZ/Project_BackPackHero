@@ -10,8 +10,6 @@ public record WolfRat(int hp, int protection) implements Enemy {
   public boolean isAlive() {
     return hp > 0;
   }
-  
-  
 
   @Override
   public Enemy takeDamage(int dmg) {
@@ -24,10 +22,10 @@ public record WolfRat(int hp, int protection) implements Enemy {
     return new WolfRat(hp, protection + 2);
   }
 
-	@Override
-	public String name() {
-		// TODO Auto-generated method stub
-		return "WolfRat";
-	}
+  @Override
+  public String name() {
+    // TODO Auto-generated method stub
+    return "WolfRat";
+  }
 
 }

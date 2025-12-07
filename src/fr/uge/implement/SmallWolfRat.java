@@ -22,10 +22,10 @@ public record SmallWolfRat(int hp, int protection) implements Enemy {
     return new SmallWolfRat(hp, protection + 2);
   }
 
-	@Override
-	public String name() {
-		// TODO Auto-generated method stub
-		return "SmallWolfRat";
-	}
+  @Override
+  public String name() {
+    // TODO Auto-generated method stub
+    return "SmallWolfRat";
+  }
 
 }
