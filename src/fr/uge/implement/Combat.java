@@ -39,13 +39,15 @@ public class Combat {
     if (enemies.isEmpty()) return;
 
     int damage = 1; // base
+    int defense = 0;
     if (items != null) {
       for (Item it : items) {
           damage += it.attackValue();
+          defense += it.defendValue();
       }
   }
     Enemy target = enemies.get(0);
-    System.out.println("Attaque avec " + items.size() + " objets pour " + damage + " dégâts");
+    System.out.println("Attaque avec " + items.size() + " objets pour " + damage + " degats et se defend avec " + defense);
 
     Enemy updated = target.takeDamage(damage);
 

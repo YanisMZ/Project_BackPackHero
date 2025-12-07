@@ -9,6 +9,7 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.Combat;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Hero;
+import fr.uge.implement.Shield;
 import fr.uge.implement.Sword;
 
 public class GameRun {
@@ -25,8 +26,9 @@ public class GameRun {
 
       BackPack backpack = dungeon.backpack();
       
-      for (int i = 0; i < 4 ; i++) {
+      for (int i = 0; i < 2 ; i++) {
         backpack.add(new Sword("Épée " + (i + 1), 10 + i));
+        backpack.add(new Shield("Shield", 10));
     }
     
       var floor0 = dungeon.getFloor(0);

@@ -19,4 +19,10 @@ public record Sword(String name, int dmg) implements Item {
 		// TODO Auto-generated method stub
 		return dmg;
 	}
+
+	@Override
+	public int defendValue() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

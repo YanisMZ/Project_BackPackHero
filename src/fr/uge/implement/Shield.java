@@ -8,4 +8,10 @@ public record Shield(String name, int hp) implements Item {
 		return 0;
 	}
 
+	@Override
+	public int defendValue() {
+		// TODO Auto-generated method stub
+		return 10;
+	}
+
 }
