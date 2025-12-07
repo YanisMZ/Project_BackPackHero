@@ -9,6 +9,7 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Hero;
+import fr.uge.implement.Item;
 import fr.uge.implement.Shield;
 import fr.uge.implement.Sword;
 
@@ -41,12 +42,13 @@ public class GameRun {
       while (true) {
         controller.update();
         List<Integer> selectedSlots = controller.getSelectedSlots();
+        List<Item> treasureItems = controller.getTreasure() ;   
         if (controller.isInCombat()) {
           view.combatDisplay(fight.nbEnemy(), status, selectedSlots);
         } else if (controller.isInCorridor()) {
           view.corridorDisplay(selectedSlots);
         } else if (controller.isInTreasure()) {
-          view.treasureDisplay(selectedSlots);
+          view.treasureDisplay(selectedSlots,treasureItems);
         } else {
           view.emptyRoomDisplay(selectedSlots);
         }

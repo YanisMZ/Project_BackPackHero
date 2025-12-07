@@ -16,6 +16,7 @@ public class Battle {
 
   }
 
+  
   public void initEnemies() {
 
     var nb_enemies = random.nextInt(3) + 1;
@@ -34,6 +35,9 @@ public class Battle {
     return enemies.size();
   }
 
+  /**
+   * @param items
+   */
   public void attackEnemy(List<Item> items) {
     if (enemies.isEmpty())
       return;
