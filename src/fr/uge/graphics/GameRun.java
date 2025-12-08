@@ -44,13 +44,13 @@ public class GameRun {
         List<Integer> selectedSlots = controller.getSelectedSlots();
         List<Item> treasureItems = controller.getTreasure() ;   
         if (controller.isInCombat()) {
-          view.combatDisplay(fight.nbEnemy(), status, selectedSlots);
+          view.combatDisplay(fight.nbEnemy(), status, selectedSlots,hero,fight.getEnemy());
         } else if (controller.isInCorridor()) {
-          view.corridorDisplay(selectedSlots);
+          view.corridorDisplay(selectedSlots,hero);
         } else if (controller.isInTreasure()) {
-          view.treasureDisplay(selectedSlots,treasureItems);
+          view.treasureDisplay(selectedSlots,treasureItems,hero);
         } else {
-          view.emptyRoomDisplay(selectedSlots);
+          view.emptyRoomDisplay(selectedSlots,hero);
         }
         if (hero.hp() <= 0) {
           System.out.println("Votre personnage est MORT !");

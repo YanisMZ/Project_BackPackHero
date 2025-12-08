@@ -1,7 +1,7 @@
 package fr.uge.implement;
 
 public record WolfRat(int hp, int protection) implements Enemy {
-
+	private static final int MAX_HP = 25;
   public WolfRat() {
     this(25, 0);
   }
@@ -32,6 +32,12 @@ public record WolfRat(int hp, int protection) implements Enemy {
 	public int attackDamage() {
 		// TODO Auto-generated method stub
 		return 8;
+	}
+
+	@Override
+	public int maxHp() {
+		// TODO Auto-generated method stub
+		return MAX_HP;
 	}
 
 }

@@ -90,6 +90,11 @@ public class GameController {
   private void handleKeyboard(KeyboardEvent ke) {
     if (ke.key() == KeyboardEvent.Key.Q)
       System.exit(0);
+   
+    if (ke.key() == KeyboardEvent.Key.X)
+    	handleDeleteSelectedItems();
+      
+    
     if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
       return;
     List<Item> itemsUsed = selectedItems.stream().map(i -> backpack.grid()[i]).filter(Objects::nonNull).toList();
@@ -114,6 +119,11 @@ public class GameController {
    * 
    * @param pe pointer event received from the user
    */
+  /**
+   * this function will manage every pointer input in the game
+   * 
+   * @param pe pointer event received from the user
+   */
 	private void handlePointer(PointerEvent pe) {
 		if (pe.action() != PointerEvent.Action.POINTER_DOWN)
 			return;
@@ -131,6 +141,12 @@ public class GameController {
 			int treasureIndex = treasureSlotAt(mouseX, mouseY);
 			if (treasureIndex != -1) {
 				takeFromTreasure(treasureIndex);
+				return;
+			}
+			int room = roomAt(mouseX, mouseY);
+			if (room != -1) {
+				leaveTreasureRoom();
+				handleRoomClick(room);
 				return;
 			}
 		}
@@ -208,6 +224,33 @@ public class GameController {
 
 		floor.markVisited(clickedRoom);
 	}
+	
+	
+	/**
+	 * Exits the treasure room state and returns to the appropriate game state
+	 * based on the current room type.
+	 */
+	private void leaveTreasureRoom() {
+	    treasureChest.clear();
+	    
+	    if (floor.playerOnCorridor()) {
+	        setCorridorState();
+	    } else {
+	        setEmptyRoomState();
+	    }
+	}
+	
+	
+	private void handleDeleteSelectedItems() {
+    if (selectedItems.isEmpty())
+      return;
+    
+    selectedItems.stream()
+      .sorted((a, b) -> b - a)
+      .forEach(this::dropBackpackItem);
+    
+    selectedItems.clear();
+  }
 
 	private void startCombat() {
 		fight.initEnemies();
@@ -234,7 +277,6 @@ public class GameController {
     inCorridor = false;
     inCombat = false;
 
-    // Calcul dynamique de la position du coffre
     var info = context.getScreenInfo();
     int chestWidth = 200;
     int chestHeight = 150;

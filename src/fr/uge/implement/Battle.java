@@ -94,6 +94,11 @@ public class Battle {
     hero.resetProtection();
     System.out.println("Héros : hp=" + hero.hp());
   }
+  
+  
+  public List<Enemy> getEnemy() {
+		return List.copyOf(enemies);
+	}
 
   public boolean isRunning() {
     return hero.hp() > 0 && !enemies.isEmpty();

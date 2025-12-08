@@ -2,6 +2,7 @@ package fr.uge.implement;
 
 public sealed interface Enemy permits SmallWolfRat, WolfRat {
   int hp();
+  int maxHp();
 
   String name();
 

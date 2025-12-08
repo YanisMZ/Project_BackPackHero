@@ -4,6 +4,7 @@ public class Hero {
 	private int hp;
 	private int mana;
 	private int shieldProtection = 0;
+	private int maxHp = 40;
 
 	public Hero(int hp, int mana) {
 		this.hp = hp;
@@ -53,5 +54,9 @@ public class Hero {
 	@Override
 	public String toString() {
 		return "Hero(hp=" + hp + ", mana=" + mana + ")";
+	}
+	
+	public int HeroMaxHp() {
+		return maxHp;
 	}
 }

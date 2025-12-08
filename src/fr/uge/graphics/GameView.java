@@ -1,6 +1,7 @@
 package fr.uge.graphics;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -14,6 +15,8 @@ import javax.imageio.ImageIO;
 import com.github.forax.zen.ApplicationContext;
 
 import fr.uge.implement.BackPack;
+import fr.uge.implement.Enemy;
+import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.MapDungeon;
 import fr.uge.implement.Room;
@@ -63,47 +66,51 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
    * @param status
    * @param selectedSlots
    */
-  public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots) {
+  public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots,Hero hero, List<Enemy> enemies) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawCombat(g, nb_enemies, status);
+      drawEnemyHealthBars(g,enemies);
+      drawHeroHealthBar( g,hero);
       drawGrid(g);
       drawBackPack(g, selectedSlots);
     });
   }
 
-  public void corridorDisplay(List<Integer> selectedSlots) {
+  public void corridorDisplay(List<Integer> selectedSlots,Hero hero) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawCorridor(g);
+      drawHeroHealthBar( g,hero);
       drawHero(g);
       drawGrid(g);
       drawBackPack(g, selectedSlots);
     });
   }
 
-  public void treasureDisplay(List<Integer> selectedSlots, List<Item> treasureItems) {
+  public void treasureDisplay(List<Integer> selectedSlots, List<Item> treasureItems,Hero hero) {
     context.renderFrame(g -> {
         clearScreen(g);
-        drawTreasure(g); // d'abord le fond / coffre
-        drawTreasureChest(g, treasureItems, selectedSlots); // ensuite les items
+        drawHeroHealthBar( g,hero);
+        drawTreasure(g); 
+        drawTreasureChest(g, treasureItems, selectedSlots); 
         drawGrid(g);
         drawBackPack(g, selectedSlots);
     });
 }
 
 
-  public void emptyRoomDisplay(List<Integer> selectedSlots) {
+  public void emptyRoomDisplay(List<Integer> selectedSlots,Hero hero) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawEmptyRoom(g);
+      drawHeroHealthBar( g,hero);
       drawHero(g);
       drawGrid(g);
       drawBackPack(g, selectedSlots);
     });
   }
 
-  // Methodes
   /**
    * @param g
    */
@@ -305,6 +312,78 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
         }
     }
 }
+  
+  
+  
+  private void drawHeroHealthBar(Graphics2D g, Hero hero) {
+    var info = context.getScreenInfo();
+    int width = info.width();
+    int startX = width - 250; 
+    int startY = 20; 
+    int barWidth = 200;
+
+    int heroMaxHp = hero.HeroMaxHp();
+    double hpPercent = hero.hp() / (double) heroMaxHp;
+
+    g.setColor(Color.WHITE);
+    g.drawString("HERO", startX, startY + 15);
+
+    int heroHpBarWidth = (int)(hpPercent * barWidth);
+
+    g.setColor(Color.RED); 
+    g.fillRect(startX, startY + 20, barWidth, 15);
+
+    g.setColor(Color.GREEN); 
+    g.fillRect(startX, startY + 20, Math.max(0, heroHpBarWidth), 15);
+
+    g.setColor(Color.WHITE);
+    g.drawRect(startX, startY + 20, barWidth, 15);
+    g.drawString(hero.hp() + " HP", startX + barWidth / 2 - 20, startY + 32);
+}
+  
+  
+  
+  
+  private void drawEnemyHealthBars(Graphics2D g, List<Enemy> enemies) {
+    if (enemies == null || enemies.isEmpty()) return; 
+
+    var info = context.getScreenInfo();
+    int width = info.width();
+    int startX = width - 250; 
+    int startY = 80; 
+    int barWidth = 200;
+    int barHeight = 30;
+    int spacing = 10;
+
+    int currentY = startY;
+
+    for (int i = 0; i < enemies.size(); i++) {
+        Enemy enemy = enemies.get(i);
+        if (enemy.isAlive()) {
+
+            g.setColor(Color.WHITE);
+            g.drawString(enemy.name() + (i + 1), startX, currentY + 15);
+
+            int maxHp = enemy.maxHp();
+            double enemyPercent = enemy.hp() / (double) maxHp;
+            int enemyHpBarWidth = (int)(enemyPercent * barWidth);
+
+            g.setColor(Color.RED); // back Health
+            g.fillRect(startX, currentY + 20, barWidth, 15);
+
+            g.setColor(Color.MAGENTA);
+            g.fillRect(startX, currentY + 20, Math.max(0, enemyHpBarWidth), 15);
+
+            g.setColor(Color.WHITE);
+            g.drawRect(startX, currentY + 20, barWidth, 15);
+            g.drawString(enemy.hp() + " HP", startX + barWidth / 2 - 20, currentY + 32);
+
+            currentY += barHeight + spacing;
+        }
+    }
+}
+
+
 
   /**
    * @param graphics
