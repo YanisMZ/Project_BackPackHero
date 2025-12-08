@@ -42,7 +42,7 @@ public class Battle {
     if (enemies.isEmpty())
       return;
 
-    int damage = 1;
+    int damage = 0;
     int defense = 0;
 
     if (items != null) {

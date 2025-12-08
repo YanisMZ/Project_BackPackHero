@@ -253,6 +253,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
       if (selectedSlots != null && selectedSlots.contains(i)) {
         graphics.setColor(Color.RED);
         graphics.drawRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
+        graphics.drawString("Appuyez sur X pour supprimer l'item sélectionné (définitif)",
+            originX, originY + (slots.length / cols + 1) * (cellSize + padding));
       }
 
       if (slots[i] != null) {

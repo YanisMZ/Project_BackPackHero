@@ -11,7 +11,7 @@ public record Shield(String name, int hp) implements Item {
   @Override
   public int defendValue() {
     // TODO Auto-generated method stub
-    return 10;
+    return 5;
   }
 
 }
