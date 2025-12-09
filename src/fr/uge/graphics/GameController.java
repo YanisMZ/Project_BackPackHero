@@ -329,8 +329,6 @@ public class GameController {
 		return -1;
 	}
 
-
-
 	private int treasureSlotAt(int mouseX, int mouseY) {
     for (int i = 0; i < treasureChest.size(); i++) {
         int row = i / treasureCols;
@@ -342,8 +340,6 @@ public class GameController {
     }
     return -1;
 }
-
-
 
 	private boolean takeFromTreasure(int treasureIndex) {
 		if (treasureIndex < 0 || treasureIndex >= treasureChest.size())
@@ -373,8 +369,6 @@ public class GameController {
 			treasureChest.add(ItemFactory.randomItem());
 		}
 	}
-	
-	
 	
 	private void goToNextFloor() {
     if (floorIndex + 1 >= 3) {
