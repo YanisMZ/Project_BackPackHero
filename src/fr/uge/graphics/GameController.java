@@ -29,6 +29,9 @@ public class GameController {
 	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
 	private int treasureStartX, treasureStartY;
 	private final int treasureCols = 5;
+	private final Dungeon dungeon;
+	private int floorIndex = 0;
+
 
   /**
    * Creates a new game controller responsible for handling input events, updating
@@ -40,13 +43,14 @@ public class GameController {
    * @param backpack player's inventory
    * @param fight    battle system
    */
-  public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight) {
+  public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight,Dungeon dungeon) {
     this.context = Objects.requireNonNull(context);
     this.view = Objects.requireNonNull(view);
     this.floor = Objects.requireNonNull(floor);
     this.backpack = Objects.requireNonNull(backpack);
     this.fight = Objects.requireNonNull(fight);
     this.hero = new Hero(40, 0);
+    this.dungeon = dungeon;
   }
 
 	public boolean isInCorridor() {
@@ -218,6 +222,9 @@ public class GameController {
 			floor.markVisited(clickedRoom);
 		} else if (floor.playerOnCorridor()) {
 			setCorridorState();
+		}
+			else if (floor.rooms().get(clickedRoom).type() == Room.Type.EXIT) {
+		    goToNextFloor();
 		} else {
 			setEmptyRoomState();
 		}
@@ -366,6 +373,24 @@ public class GameController {
 			treasureChest.add(ItemFactory.randomItem());
 		}
 	}
+	
+	
+	
+	private void goToNextFloor() {
+    if (floorIndex + 1 >= 3) {
+        System.out.println("Fin du donjon ! Il n'y a plus d'étages.");
+        System.exit(0);
+        return;
+    }
+    floorIndex++;
+    MapDungeon next = dungeon.getFloor(floorIndex);
+    floor.rooms().clear();
+    floor.rooms().addAll(next.rooms());
+    floor.setPlayerIndex(0);
+    floor.clearVisited();
+    setCorridorState();   
+}
+
 
 	public List<Item> getTreasure() {
 		return List.copyOf(treasureChest);

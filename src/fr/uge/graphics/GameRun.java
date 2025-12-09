@@ -25,7 +25,7 @@ public class GameRun {
 
       Dungeon dungeon = new Dungeon();
 
-      BackPack backpack = dungeon.backpack();
+      BackPack backpack = new BackPack();
 
       for (int i = 0; i < 2; i++) {
         backpack.add(new Sword("Épée " + (i + 1), 10 + i));
@@ -37,7 +37,7 @@ public class GameRun {
       var fight = new Battle(hero);
 
       GameView view = new GameView(context, floor0, backpack);
-      GameController controller = new GameController(context, view, floor0, backpack, fight);
+      GameController controller = new GameController(context, view, floor0, backpack, fight,dungeon);
 
       while (true) {
         controller.update();

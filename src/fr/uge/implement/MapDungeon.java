@@ -96,5 +96,10 @@ public class MapDungeon {
   public List<Integer> visitedRooms() {
     return List.copyOf(visited);
   }
+  
+  public void clearVisited() {
+    visited.clear();
+}
+
 
 }
