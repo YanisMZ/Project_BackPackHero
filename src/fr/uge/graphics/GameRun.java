@@ -24,7 +24,7 @@ public class GameRun {
 			Dungeon dungeon = new Dungeon();
 			BackPack backpack = new BackPack(5, 5);
 
-			// ★ Ajout manuel des objets au sac (coordonnées x,y)
+			// Ajout manuel des objets au sac (coordonnées x,y)
 			backpack.addAt(new Sword("Épée 1", 10, 1, 2), 0, 0);
 			backpack.addAt(new Shield("Bouclier", 5, 1, 1), 2, 0);
 			backpack.addAt(new Sword("Épée 2", 15, 1, 2), 3, 0);
@@ -41,7 +41,7 @@ public class GameRun {
 
 				// Récupération de l'état du controller
 				List<Integer> selectedSlots = controller.getSelectedSlots();
-				List<Item> treasureItems = controller.getTreasure();
+				Item[][] treasureGrid = controller.getTreasureGrid(); // Changement : grille 2D au lieu de List
 				boolean isDragging = controller.isDragging();
 				Item draggedItem = controller.getDraggedItem();
 				int dragOffsetX = controller.getDragOffsetX();
@@ -54,7 +54,8 @@ public class GameRun {
 				} else if (controller.isInCorridor()) {
 					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 				} else if (controller.isInTreasure()) {
-					view.treasureDisplay(selectedSlots, treasureItems, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+					// Changement : passer la grille 2D au lieu d'une liste
+					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 				} else {
 					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 				}
