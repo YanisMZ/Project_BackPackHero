@@ -20,11 +20,9 @@ public class GameRun {
 
   public void run() {
     Application.run(Color.BLACK, context -> {
-
+    	
       int status = 0;
-
       Dungeon dungeon = new Dungeon();
-
       BackPack backpack = new BackPack();
 
       for (int i = 0; i < 2; i++) {

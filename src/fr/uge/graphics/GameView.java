@@ -99,7 +99,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     });
 }
 
-
   public void emptyRoomDisplay(List<Integer> selectedSlots,Hero hero) {
     context.renderFrame(g -> {
       clearScreen(g);

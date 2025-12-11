@@ -101,7 +101,10 @@ public class GameController {
     
     if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
       return;
-    List<Item> itemsUsed = selectedItems.stream().map(i -> backpack.grid()[i]).filter(Objects::nonNull).toList();
+    List<Item> itemsUsed = selectedItems.stream()
+    		.map(i -> backpack.grid()[i]) //On récupère dans backpack.grid() l’élément situé à la position i.
+    																				//Donc, on transforme une liste d’indices en une liste d’objets Item.
+    		.filter(Objects::nonNull).toList();
     switch (ke.key()) {
     case A -> {
       fight.attackEnemy(itemsUsed);
@@ -253,8 +256,8 @@ public class GameController {
       return;
     
     selectedItems.stream()
-      .sorted((a, b) -> b - a)
-      .forEach(this::dropBackpackItem);
+      .sorted((a, b) -> b - a)  //tri du plus grand au plus petit
+      .forEach(this::dropBackpackItem); //Pour chaque élément trié, on appelle la méthode dropBackpackItem  cela revient a faire x -> this.dropBackpackItem(x)
     
     selectedItems.clear();
   }
