@@ -50,7 +50,7 @@ public class GameRun {
 				// Rendu selon l'état du jeu avec support du drag and drop
 				if (controller.isInCombat()) {
 					view.combatDisplay(fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
-							dragOffsetX, dragOffsetY);
+							dragOffsetX, dragOffsetY, controller.getLastAttackTime());
 				} else if (controller.isInCorridor()) {
 					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 				} else if (controller.isInTreasure()) {
