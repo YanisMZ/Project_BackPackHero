@@ -25,9 +25,9 @@ public class GameRun {
 			BackPack backpack = new BackPack(5, 5);
 
 			// ★ Ajout manuel des objets au sac (coordonnées x,y)
-			backpack.addAt(new Sword("Épée 1", 10, 1, 2), 0, 0);
+			backpack.addAt(new Sword("Epee 1", 10, 1, 2), 0, 0);
 			backpack.addAt(new Shield("Bouclier", 5, 1, 1), 2, 0);
-			backpack.addAt(new Sword("Épée 2", 15, 1, 2), 3, 0);
+			backpack.addAt(new Sword("Epee 2", 15, 1, 2), 3, 0);
 
 			var floor0 = dungeon.getFloor(0);
 			var hero = new Hero(40, 0);
