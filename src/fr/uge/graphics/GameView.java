@@ -53,11 +53,11 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
   /**
    * @param selectedSlots
    */
-  public void render(List<Integer> selectedSlots) {
+  public void render(List<Integer> selectedSlots, boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawGrid(g);
-      drawBackPack(g, selectedSlots);
+      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
     });
   }
 
@@ -66,47 +66,51 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
    * @param status
    * @param selectedSlots
    */
-  public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots,Hero hero, List<Enemy> enemies) {
+  public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots, Hero hero, List<Enemy> enemies, 
+                           boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawCombat(g, nb_enemies, status);
-      drawEnemyHealthBars(g,enemies);
-      drawHeroHealthBar( g,hero);
+      drawEnemyHealthBars(g, enemies);
+      drawHeroHealthBar(g, hero);
       drawGrid(g);
-      drawBackPack(g, selectedSlots);
+      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
     });
   }
 
-  public void corridorDisplay(List<Integer> selectedSlots,Hero hero) {
+  public void corridorDisplay(List<Integer> selectedSlots, Hero hero, 
+                              boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawCorridor(g);
-      drawHeroHealthBar( g,hero);
+      drawHeroHealthBar(g, hero);
       drawHero(g);
       drawGrid(g);
-      drawBackPack(g, selectedSlots);
+      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
     });
   }
 
-  public void treasureDisplay(List<Integer> selectedSlots, List<Item> treasureItems,Hero hero) {
+  public void treasureDisplay(List<Integer> selectedSlots, List<Item> treasureItems, Hero hero,
+                              boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     context.renderFrame(g -> {
         clearScreen(g);
-        drawHeroHealthBar( g,hero);
+        drawHeroHealthBar(g, hero);
         drawTreasure(g); 
         drawTreasureChest(g, treasureItems, selectedSlots); 
         drawGrid(g);
-        drawBackPack(g, selectedSlots);
+        drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
     });
-}
+  }
 
-  public void emptyRoomDisplay(List<Integer> selectedSlots,Hero hero) {
+  public void emptyRoomDisplay(List<Integer> selectedSlots, Hero hero,
+                               boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     context.renderFrame(g -> {
       clearScreen(g);
       drawEmptyRoom(g);
-      drawHeroHealthBar( g,hero);
+      drawHeroHealthBar(g, hero);
       drawHero(g);
       drawGrid(g);
-      drawBackPack(g, selectedSlots);
+      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
     });
   }
 
@@ -223,46 +227,107 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
   }
 
   /**
+   * Enhanced backpack drawing with drag and drop support
    * @param graphics
    * @param selectedSlots
+   * @param isDragging
+   * @param draggedItem
+   * @param dragOffsetX
+   * @param dragOffsetY
    */
-  private void drawBackPack(Graphics2D graphics, List<Integer> selectedSlots) {
+  private void drawBackPack(Graphics2D graphics, List<Integer> selectedSlots, 
+                            boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY) {
     int originX = 20;
     int originY = 550;
-    int cols = 5;
+    int cols = backpack.width();
     int cellSize = 60;
     int padding = 8;
-    Item[] slots = backpack.grid();
+    Item[][] grid = backpack.grid();
 
     graphics.setColor(Color.BLACK);
     graphics.drawString("Backpack :", originX, originY - 10);
 
-    for (int i = 0; i < slots.length; i++) {
-      int row = i / cols;
-      int col = i % cols;
-      int x = originX + col * (cellSize + padding);
-      int y = originY + row * (cellSize + padding);
+    // Draw all backpack cells
+    for (int y = 0; y < backpack.height(); y++) {
+      for (int x = 0; x < backpack.width(); x++) {
+        int cellX = originX + x * (cellSize + padding);
+        int cellY = originY + y * (cellSize + padding);
+        
+        Item item = grid[y][x];
+        
+        // Skip drawing if this item is being dragged
+        if (isDragging && item == draggedItem) {
+          graphics.setColor(Color.YELLOW);
+          graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+          graphics.setColor(Color.BLACK);
+          graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+          continue;
+        }
+        
+        // Draw cell background
+        graphics.setColor(item == null ? Color.YELLOW : Color.CYAN);
+        graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-      graphics.setColor(slots[i] == null ? Color.YELLOW : Color.CYAN);
-      graphics.fill(new Rectangle2D.Float(x, y, cellSize, cellSize));
-
-      graphics.setColor(Color.BLACK);
-      graphics.draw(new Rectangle2D.Float(x, y, cellSize, cellSize));
-
-      if (selectedSlots != null && selectedSlots.contains(i)) {
-        graphics.setColor(Color.RED);
-        graphics.drawRect(x - 2, y - 2, cellSize + 4, cellSize + 4);
-        graphics.drawString("Appuyez sur X pour supprimer l'item sélectionné (définitif)",
-            originX, originY + (slots.length / cols + 1) * (cellSize + padding));
-      }
-
-      if (slots[i] != null) {
         graphics.setColor(Color.BLACK);
-        String name = slots[i].name();
-        if (name.length() > 8)
-          name = name.substring(0, 7) + "...";
-        graphics.drawString(name, x + 5, y + cellSize / 2);
+        graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+
+        // Draw selection indicator
+        int slot = y * cols + x;
+        if (selectedSlots != null && selectedSlots.contains(slot)) {
+          graphics.setColor(Color.RED);
+          graphics.drawRect(cellX - 2, cellY - 2, cellSize + 4, cellSize + 4);
+        }
+
+        // Draw item name (only for top-left cell of multi-cell items)
+        if (item != null) {
+          // Check if this is the top-left cell of the item
+          boolean isTopLeft = true;
+          if (x > 0 && grid[y][x - 1] == item) isTopLeft = false;
+          if (y > 0 && grid[y - 1][x] == item) isTopLeft = false;
+          
+          if (isTopLeft) {
+            graphics.setColor(Color.BLACK);
+            String name = item.name();
+            if (name.length() > 8)
+              name = name.substring(0, 7) + "...";
+            graphics.drawString(name, cellX + 5, cellY + cellSize / 2);
+            
+            // Draw item size indicator
+            graphics.setColor(new Color(0, 0, 0, 100));
+            int itemWidth = item.width() * (cellSize + padding) - padding;
+            int itemHeight = item.height() * (cellSize + padding) - padding;
+            graphics.drawRect(cellX, cellY, itemWidth, itemHeight);
+          }
+        }
       }
+    }
+    
+    // Draw dragged item on top
+    if (isDragging && draggedItem != null) {
+      int mouseX = dragOffsetX;
+      int mouseY = dragOffsetY;
+      
+      // Draw semi-transparent dragged item
+      graphics.setColor(new Color(100, 200, 255, 200));
+      int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
+      int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
+      graphics.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+      
+      graphics.setColor(new Color(0, 0, 0, 200));
+      graphics.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+      
+      // Draw item name
+      String name = draggedItem.name();
+      if (name.length() > 8)
+        name = name.substring(0, 7) + "...";
+      graphics.drawString(name, mouseX + 5, mouseY + cellSize / 2);
+    }
+    
+    // Draw delete instruction if items selected
+    if (selectedSlots != null && !selectedSlots.isEmpty()) {
+      graphics.setColor(Color.BLACK);
+      graphics.drawString("Appuyez sur X pour supprimer l'item sélectionné (définitif)",
+          originX, originY + (backpack.height() + 1) * (cellSize + padding));
     }
   }
 

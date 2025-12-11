@@ -7,5 +7,7 @@ public interface Item {
   int attackValue();
 
   int defendValue();
+  int width();   
+  int height();
 
 }

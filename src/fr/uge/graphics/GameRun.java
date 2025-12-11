@@ -14,47 +14,57 @@ import fr.uge.implement.Shield;
 import fr.uge.implement.Sword;
 
 public class GameRun {
-  public GameRun() {
+	public GameRun() {
+	}
 
-  }
+	public void run() {
+		Application.run(Color.BLACK, context -> {
 
-  public void run() {
-    Application.run(Color.BLACK, context -> {
-    	
-      int status = 0;
-      Dungeon dungeon = new Dungeon();
-      BackPack backpack = new BackPack();
+			int status = 0;
+			Dungeon dungeon = new Dungeon();
+			BackPack backpack = new BackPack(5, 5);
 
-      for (int i = 0; i < 2; i++) {
-        backpack.add(new Sword("Épée " + (i + 1), 10 + i));
-        backpack.add(new Shield("Shield", 10));
-      }
+			// ★ Ajout manuel des objets au sac (coordonnées x,y)
+			backpack.addAt(new Sword("Épée 1", 10, 1, 2), 0, 0);
+			backpack.addAt(new Shield("Bouclier", 5, 1, 1), 2, 0);
+			backpack.addAt(new Sword("Épée 2", 15, 1, 2), 3, 0);
 
-      var floor0 = dungeon.getFloor(0);
-      var hero = new Hero(40, 0);
-      var fight = new Battle(hero);
+			var floor0 = dungeon.getFloor(0);
+			var hero = new Hero(40, 0);
+			var fight = new Battle(hero);
 
-      GameView view = new GameView(context, floor0, backpack);
-      GameController controller = new GameController(context, view, floor0, backpack, fight,dungeon);
+			GameView view = new GameView(context, floor0, backpack);
+			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon);
 
-      while (true) {
-        controller.update();
-        List<Integer> selectedSlots = controller.getSelectedSlots();
-        List<Item> treasureItems = controller.getTreasure() ;   
-        if (controller.isInCombat()) {
-          view.combatDisplay(fight.nbEnemy(), status, selectedSlots,hero,fight.getEnemy());
-        } else if (controller.isInCorridor()) {
-          view.corridorDisplay(selectedSlots,hero);
-        } else if (controller.isInTreasure()) {
-          view.treasureDisplay(selectedSlots,treasureItems,hero);
-        } else {
-          view.emptyRoomDisplay(selectedSlots,hero);
-        }
-        if (hero.hp() <= 0) {
-          System.out.println("Votre personnage est MORT !");
-          System.exit(0); // Show new image and leave
-        }
-      }
-    });
-  }
+			while (true) {
+				controller.update();
+
+				// Récupération de l'état du controller
+				List<Integer> selectedSlots = controller.getSelectedSlots();
+				List<Item> treasureItems = controller.getTreasure();
+				boolean isDragging = controller.isDragging();
+				Item draggedItem = controller.getDraggedItem();
+				int dragOffsetX = controller.getDragOffsetX();
+				int dragOffsetY = controller.getDragOffsetY();
+
+				// Rendu selon l'état du jeu avec support du drag and drop
+				if (controller.isInCombat()) {
+					view.combatDisplay(fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
+							dragOffsetX, dragOffsetY);
+				} else if (controller.isInCorridor()) {
+					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+				} else if (controller.isInTreasure()) {
+					view.treasureDisplay(selectedSlots, treasureItems, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+				} else {
+					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+				}
+
+				// Vérification de la mort du héros
+				if (hero.hp() <= 0) {
+					System.out.println("Votre personnage est MORT !");
+					System.exit(0);
+				}
+			}
+		});
+	}
 }

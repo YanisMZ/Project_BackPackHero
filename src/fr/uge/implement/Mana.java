@@ -22,4 +22,16 @@ public record Mana(String name, int amount) implements Item {
     return 0;
   }
 
+	@Override
+	public int width() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int height() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

@@ -18,4 +18,16 @@ public record Magical(String name) implements Item {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	@Override
+	public int width() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int height() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
