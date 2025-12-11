@@ -17,7 +17,7 @@ public class ItemFactory {
 
         return switch (type) {
         case 0 -> new Sword("Sword+" + power, power, 1, 2);
-            default -> new Shield("Shield+" + power, power,1,2);
+            default -> new Shield("Shield+" + power, power,2,2);
         };
     }
 }
