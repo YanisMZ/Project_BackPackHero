@@ -36,6 +36,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final BufferedImage attackOrDefenseBanner = loadImage("attackdefend.png");
 	private static final BufferedImage attackBanner = loadImage("attack.png");
 	private static final BufferedImage defendBanner = loadImage("defend.png");
+	private static final BufferedImage sword = loadImage("./weapons/sword90.png");
+	private static final BufferedImage shield = loadImage("./weapons/shield.png");
 	// private static final List<BufferedImage> fightingAnnimation1 =
 	// loadAttackFrames(1, 157);
 	// private static final List<BufferedImage> fightingAnnimation2 =
@@ -307,85 +309,112 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.BLACK);
 		graphics.drawString("Backpack :", originX, originY - 10);
 
-		// Draw all backpack cells
+		// =================================================================
+		// COUCHE 1 : LE FOND ET LA GRILLE (Derrière)
+		// =================================================================
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				int cellX = originX + x * (cellSize + padding);
 				int cellY = originY + y * (cellSize + padding);
-
 				Item item = grid[y][x];
 
-				// Skip drawing if this item is being dragged
+				// 1. Couleur de fond
 				if (isDragging && item == draggedItem) {
-					graphics.setColor(Color.YELLOW);
-					graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
-					graphics.setColor(Color.BLACK);
-					graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
-					continue;
+					graphics.setColor(Color.YELLOW); // Trou laissé par l'item déplacé
+				} else if (item == null) {
+					graphics.setColor(Color.YELLOW); // Case vide
+				} else {
+					graphics.setColor(new Color(200, 200, 200, 50)); // Gris transparent pour item posé
 				}
-
-				// Draw cell background
-				graphics.setColor(item == null ? Color.YELLOW : Color.CYAN);
 				graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
+				// 2. Grille noire
 				graphics.setColor(Color.BLACK);
 				graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-				// Draw selection indicator
+				// 3. Sélection rouge
 				int slot = y * cols + x;
 				if (selectedSlots != null && selectedSlots.contains(slot)) {
 					graphics.setColor(Color.RED);
 					graphics.drawRect(cellX - 2, cellY - 2, cellSize + 4, cellSize + 4);
 				}
+			}
+		}
 
-				// Draw item name (only for top-left cell of multi-cell items)
-				if (item != null) {
-					// Check if this is the top-left cell of the item
-					boolean isTopLeft = true;
-					if (x > 0 && grid[y][x - 1] == item)
-						isTopLeft = false;
-					if (y > 0 && grid[y - 1][x] == item)
-						isTopLeft = false;
+		// =================================================================
+		// COUCHE 2 : LES ITEMS DANS LE SAC (Au milieu)
+		// =================================================================
+		for (int y = 0; y < backpack.height(); y++) {
+			for (int x = 0; x < backpack.width(); x++) {
+				Item item = grid[y][x];
 
-					if (isTopLeft) {
-						graphics.setColor(Color.BLACK);
-						String name = item.name();
-						if (name.length() > 8)
-							name = name.substring(0, 7) + "...";
-						graphics.drawString(name, cellX + 5, cellY + cellSize / 2);
+				// On ignore l'item vide ou celui qu'on est en train de déplacer (il sera
+				// dessiné en couche 3)
+				if (item == null || (isDragging && item == draggedItem))
+					continue;
 
-						// Draw item size indicator
-						graphics.setColor(new Color(0, 0, 0, 100));
-						int itemWidth = item.width() * (cellSize + padding) - padding;
-						int itemHeight = item.height() * (cellSize + padding) - padding;
-						graphics.drawRect(cellX, cellY, itemWidth, itemHeight);
+				// Vérification Top-Left pour ne dessiner qu'une fois
+				boolean isTopLeft = true;
+				if (x > 0 && grid[y][x - 1] == item)
+					isTopLeft = false;
+				if (y > 0 && grid[y - 1][x] == item)
+					isTopLeft = false;
+
+				if (isTopLeft) {
+					int cellX = originX + x * (cellSize + padding);
+					int cellY = originY + y * (cellSize + padding);
+
+					int finalWidth = item.width() * (cellSize + padding) - padding;
+					int finalHeight = item.height() * (cellSize + padding) - padding;
+
+					// Dessin de l'image de l'épée ou texte par défaut
+					if (item.name().contains("Epee")) {
+						// Assure-toi que la variable 'sword' est bien accessible ici
+						graphics.drawImage(sword, cellX, cellY, finalWidth, finalHeight, null);
+					} else {
+						graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
 					}
 				}
 			}
 		}
 
-		// Draw dragged item on top
+		// =================================================================
+		// COUCHE 3 : L'ITEM DÉPLACÉ / DRAGGED ITEM (Tout devant)
+		// =================================================================
 		if (isDragging && draggedItem != null) {
 			int mouseX = dragOffsetX;
 			int mouseY = dragOffsetY;
 
-			// Draw semi-transparent dragged item
-			graphics.setColor(new Color(100, 200, 255, 200));
 			int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
 			int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
-			graphics.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
 
-			graphics.setColor(new Color(0, 0, 0, 200));
+			// Active la transparence (70% visible)
+			graphics.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
+
+			if (draggedItem.name().equals("Sword")) {
+				// Si c'est l'épée, on dessine l'image
+				graphics.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else {
+				// Sinon, on dessine le rectangle bleu générique
+				graphics.setColor(new Color(100, 200, 255));
+				graphics.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+
+				graphics.setColor(Color.BLACK);
+				String name = draggedItem.name();
+				if (name.length() > 8)
+					name = name.substring(0, 7) + "...";
+				graphics.drawString(name, mouseX + 5, mouseY + cellSize / 2);
+			}
+
+			// Désactive la transparence (retour à la normale)
+			graphics.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
+
+			// Bordure noire autour de l'item déplacé
+			graphics.setColor(Color.BLACK);
 			graphics.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
-
-			// Draw item name
-			String name = draggedItem.name();
-			if (name.length() > 8)
-				name = name.substring(0, 7) + "...";
-			graphics.drawString(name, mouseX + 5, mouseY + cellSize / 2);
 		}
 
-		// Draw delete instruction if items selected
+		// Instructions en bas
 		if (selectedSlots != null && !selectedSlots.isEmpty()) {
 			graphics.setColor(Color.BLACK);
 			graphics.drawString("Appuyez sur X pour supprimer l'item sélectionné (définitif)", originX,
