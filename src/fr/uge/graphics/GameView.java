@@ -36,9 +36,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final BufferedImage attackOrDefenseBanner = loadImage("attackdefend.png");
 	private static final BufferedImage attackBanner = loadImage("attack.png");
 	private static final BufferedImage defendBanner = loadImage("defend.png");
-	private static final List<BufferedImage> fightingAnnimation1 = loadAttackFrames(1, 157);
-	private static final List<BufferedImage> fightingAnnimation2 = loadAttackFrames(2, 157);
-	private static final List<BufferedImage> fightingAnnimation3 = loadAttackFrames(3, 78);
+	// private static final List<BufferedImage> fightingAnnimation1 =
+	// loadAttackFrames(1, 157);
+	// private static final List<BufferedImage> fightingAnnimation2 =
+	// loadAttackFrames(2, 78);
+	// private static final List<BufferedImage> fightingAnnimation3 =
+	// loadAttackFrames(3, 78);
 
 	private static BufferedImage loadImage(String fileName) {
 		try {
@@ -80,28 +83,36 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	 */
 	public void combatDisplay(int nb_enemies, int status, List<Integer> selectedSlots, Hero hero, List<Enemy> enemies,
 			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY, long lastAttackTime) {
+//		context.renderFrame(g -> {
+//			clearScreen(g);
+//			int totalTime = 4500;
+//			long timeElapsed = System.currentTimeMillis() - lastAttackTime;
+//			if (timeElapsed < totalTime) {
+//				drawEnemyHealthBars(g, enemies);
+//				drawHeroHealthBar(g, hero);
+//				drawGrid(g);
+//				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+//				drawAnimation(g, lastAttackTime, totalTime, switch (nb_enemies) {
+//				case 1 -> fightingAnnimation1;
+//				case 2 -> fightingAnnimation2;
+//				case 3 -> fightingAnnimation3;
+//				default -> null;
+//				});
+//			} else {
+//				drawCombat(g, nb_enemies, status);
+//				drawEnemyHealthBars(g, enemies);
+//				drawHeroHealthBar(g, hero);
+//				drawGrid(g);
+//				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+//			}
+//		});
 		context.renderFrame(g -> {
 			clearScreen(g);
-			int totalTime = 4500;
-			long timeElapsed = System.currentTimeMillis() - lastAttackTime;
-			if (timeElapsed < totalTime) {
-				drawAnimation(g, lastAttackTime, totalTime, switch (nb_enemies) {
-				case 1 -> fightingAnnimation1;
-				case 2 -> fightingAnnimation2;
-				case 3 -> fightingAnnimation3;
-				default -> null;
-				});
-				drawEnemyHealthBars(g, enemies);
-				drawHeroHealthBar(g, hero);
-				drawGrid(g);
-				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-			} else {
-				drawCombat(g, nb_enemies, status);
-				drawEnemyHealthBars(g, enemies);
-				drawHeroHealthBar(g, hero);
-				drawGrid(g);
-				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-			}
+			drawCombat(g, nb_enemies, status);
+			drawHeroHealthBar(g, hero);
+			drawEnemyHealthBars(g, enemies);
+			drawGrid(g);
+			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 		});
 
 	}
@@ -199,8 +210,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		if (timeElapsed > duration) {
 			return;
 		}
-		
-		int totalFrames = fightingAnnimation1.size();
+
+		int totalFrames = name.size();
 
 		int frameIndex = (int) ((timeElapsed * totalFrames) / duration);
 
@@ -265,8 +276,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			if (i == floor.playerIndex()) {
 				graphics.setColor(Color.RED);
 				int imgSize = cellSize / 2;
-				graphics.drawImage(heroImage, x + (cellSize - imgSize) / 2, y + (cellSize - imgSize) / 2, imgSize,
-						imgSize, null);
+				graphics.drawImage(heroImage, x + (cellSize - imgSize) / 2, y + (cellSize - imgSize) / 2, imgSize, imgSize,
+						null);
 			}
 
 			graphics.setColor(Color.BLACK);
