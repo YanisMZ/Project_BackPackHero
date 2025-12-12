@@ -24,13 +24,8 @@ public class GameRun {
 			Dungeon dungeon = new Dungeon();
 			BackPack backpack = new BackPack(5, 5);
 
-<<<<<<< HEAD
-			// ★ Ajout manuel des objets au sac (coordonnées x,y)
-			backpack.addAt(new Sword("Epee 1", 10, 1, 2), 0, 0);
-=======
 			// Ajout manuel des objets au sac (coordonnées x,y)
-			backpack.addAt(new Sword("Épée 1", 10, 1, 2), 0, 0);
->>>>>>> 74389acd4db188f8a6fea10d09a38987f83e6dfa
+			backpack.addAt(new Sword("Epee 1", 10, 1, 2), 0, 0);
 			backpack.addAt(new Shield("Bouclier", 5, 1, 1), 2, 0);
 			backpack.addAt(new Sword("Epee 2", 15, 1, 2), 3, 0);
 
