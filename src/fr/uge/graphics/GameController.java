@@ -6,7 +6,7 @@ import java.util.Objects;
 import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
-import fr.uge.implement.*;
+import fr.uge.implement.*; // Assurez-vous d'importer la nouvelle classe TreasureChest
 
 /**
  * Controls the main game logic, including movement between rooms, combat flow,
@@ -20,21 +20,21 @@ public class GameController {
 	private final BackPack backpack;
 	private final Hero hero;
 	private final Battle fight;
+	private final Dungeon dungeon;
 	private boolean inCorridor = true;
 	private boolean inTreasure = false;
 	private boolean inCombat = false;
 	private final List<Integer> selectedItems = new ArrayList<>();
-	private final Item[][] treasureGrid = new Item[3][5]; // 3 lignes, 5 colonnes
-	private final int treasureRows = 3;
-	private final int treasureCols = 5;
-	private final int backpackOriginX = 20, backpackOriginY = 550;
-	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
-	private int treasureStartX, treasureStartY;
-	private final Dungeon dungeon;
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
-	
-	// Drag and drop state
+
+
+	private final TreasureChest treasureChest; 
+
+
+	private final int backpackOriginX = 20, backpackOriginY = 550;
+	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
+	private int treasureStartX, treasureStartY; // Position de l'affichage du trésor (pour le clic)
 	private Item draggedItem = null;
 	private int dragStartX = -1;
 	private int dragStartY = -1;
@@ -59,8 +59,10 @@ public class GameController {
 		this.floor = Objects.requireNonNull(floor);
 		this.backpack = Objects.requireNonNull(backpack);
 		this.fight = Objects.requireNonNull(fight);
-		this.hero = new Hero(40, 0);
 		this.dungeon = dungeon;
+		this.hero = new Hero(40, 0);
+		setTreasureDisplayCoords();
+		this.treasureChest = new TreasureChest(3, 5, treasureStartX, treasureStartY);
 	}
 
 	public boolean isInCorridor() {
@@ -94,35 +96,33 @@ public class GameController {
 	public int getDragOffsetY() {
 		return dragMouseY;
 	}
-	
+
 	public long getLastAttackTime() {
-	    return lastAttackTime;
+		return lastAttackTime;
 	}
 
+	/** Retourne la grille du trésor gérée par l'objet TreasureChest. */
 	public Item[][] getTreasureGrid() {
-		return treasureGrid;
+		return treasureChest.getGrid();
 	}
 
+	/**
+	 * main loop where every pressed key/point will get redirected to another
+	 * function
+	 */
+	public void update(int pollTimeout) {
 
-/**
-* main loop where every pressed key/point will get redirected to another function
-* * @param pollTimeout The maximum time (in milliseconds) to wait for an event.
-* Set to 0 for maximum responsiveness (during dragging).
-*/
-public void update(int pollTimeout) { 
-   
+		var event = context.pollOrWaitEvent(pollTimeout);
+		if (event == null)
+			return;
 
-   var event = context.pollOrWaitEvent(pollTimeout); 
-   if (event == null)
-       return;
-
-   switch (event) {
-   case KeyboardEvent ke -> handleKeyboard(ke);
-   case PointerEvent pe -> handlePointer(pe);
-   default -> {
-   }
-   }
-}
+		switch (event) {
+		case KeyboardEvent ke -> handleKeyboard(ke);
+		case PointerEvent pe -> handlePointer(pe);
+		default -> {
+		}
+		}
+	}
 
 	/**
 	 * this function will manage every keyboard inputs in the game
@@ -185,21 +185,21 @@ public void update(int pollTimeout) {
 			if (treasureCoords != null) {
 				int x = treasureCoords[0];
 				int y = treasureCoords[1];
-				Item item = treasureGrid[y][x];
-				
+				Item item = treasureChest.getGrid()[y][x]; // Utilise le getter de la grille
+
 				if (item != null) {
 					// Trouver le coin supérieur gauche de l'item
 					int itemStartX = x;
 					int itemStartY = y;
-					
+
 					// Chercher vers la gauche et vers le haut
-					while (itemStartX > 0 && treasureGrid[y][itemStartX - 1] == item) {
+					while (itemStartX > 0 && treasureChest.getGrid()[y][itemStartX - 1] == item) {
 						itemStartX--;
 					}
-					while (itemStartY > 0 && treasureGrid[itemStartY - 1][x] == item) {
+					while (itemStartY > 0 && treasureChest.getGrid()[itemStartY - 1][x] == item) {
 						itemStartY--;
 					}
-					
+
 					draggedItem = item;
 					dragFromTreasure = true;
 					dragStartX = itemStartX;
@@ -268,7 +268,7 @@ public void update(int pollTimeout) {
 				isDragging = true;
 
 				if (dragFromTreasure) {
-					removeItemFromTreasure(draggedItem);
+					treasureChest.removeItem(draggedItem); // Utilise la méthode de TreasureChest
 				} else {
 					backpack.remove(draggedItem);
 				}
@@ -310,7 +310,7 @@ public void update(int pollTimeout) {
 
 				if (backpack.place(draggedItem, targetX, targetY)) {
 					placed = true;
-					if (dragFromTreasure && isTreasureEmpty()) {
+					if (dragFromTreasure && treasureChest.isEmpty()) { // Utilise la méthode de TreasureChest
 						setEmptyRoomState();
 					}
 				}
@@ -322,13 +322,9 @@ public void update(int pollTimeout) {
 				if (treasureCoords != null) {
 					int targetX = treasureCoords[0];
 					int targetY = treasureCoords[1];
-					
-					if (canPlaceInTreasure(draggedItem, targetX, targetY)) {
-						for (int dy = 0; dy < draggedItem.height(); dy++) {
-							for (int dx = 0; dx < draggedItem.width(); dx++) {
-								treasureGrid[targetY + dy][targetX + dx] = draggedItem;
-							}
-						}
+
+					// Utilise la méthode de placement dans TreasureChest
+					if (treasureChest.placeItemAt(draggedItem, targetX, targetY)) {
 						placed = true;
 					}
 				}
@@ -337,11 +333,7 @@ public void update(int pollTimeout) {
 			if (!placed) {
 				if (dragFromTreasure) {
 					// Return to treasure at original position
-					for (int dy = 0; dy < draggedItem.height(); dy++) {
-						for (int dx = 0; dx < draggedItem.width(); dx++) {
-							treasureGrid[dragStartY + dy][dragStartX + dx] = draggedItem;
-						}
-					}
+					treasureChest.placeItemAt(draggedItem, dragStartX, dragStartY); // Utilise la méthode de TreasureChest
 				} else {
 					if (!backpack.place(draggedItem, dragStartX, dragStartY)) {
 						if (!backpack.autoAdd(draggedItem)) {
@@ -396,7 +388,7 @@ public void update(int pollTimeout) {
 		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
 			startCombat();
 		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
-			generateTreasure();
+			treasureChest.generateTreasure(); // Utilise la méthode de TreasureChest
 			setTreasureState();
 			floor.markVisited(clickedRoom);
 		} else if (floor.playerOnCorridor()) {
@@ -411,11 +403,7 @@ public void update(int pollTimeout) {
 	}
 
 	private void leaveTreasureRoom() {
-		for (int y = 0; y < treasureRows; y++) {
-			for (int x = 0; x < treasureCols; x++) {
-				treasureGrid[y][x] = null;
-			}
-		}
+		treasureChest.clear(); // Utilise la méthode de TreasureChest
 
 		if (floor.playerOnCorridor()) {
 			setCorridorState();
@@ -432,8 +420,8 @@ public void update(int pollTimeout) {
 	private void checkCombatEnd() {
 		if (fight != null && !fight.isRunning()) {
 			inCombat = false;
-			generateTreasure();
-			if (!isTreasureEmpty())
+			treasureChest.generateTreasure(); // Utilise la méthode de TreasureChest
+			if (!treasureChest.isEmpty()) // Utilise la méthode de TreasureChest
 				setTreasureState();
 		}
 	}
@@ -449,6 +437,14 @@ public void update(int pollTimeout) {
 		inCorridor = false;
 		inCombat = false;
 
+		// Recalcule et met à jour les coordonnées d'affichage
+		setTreasureDisplayCoords();
+
+		// Met à jour les coordonnées dans l'objet TreasureChest
+		treasureChest.setCoordinates(treasureStartX, treasureStartY);
+	}
+
+	private void setTreasureDisplayCoords() {
 		var info = context.getScreenInfo();
 		int chestWidth = 200;
 		int chestHeight = 150;
@@ -493,86 +489,20 @@ public void update(int pollTimeout) {
 	}
 
 	private int[] treasureSlotCoordsAt(int mouseX, int mouseY) {
+		int treasureRows = treasureChest.getRows();
+		int treasureCols = treasureChest.getCols();
+
 		for (int y = 0; y < treasureRows; y++) {
 			for (int x = 0; x < treasureCols; x++) {
 				int cellX = treasureStartX + x * (backpackCellSize + backpackPadding);
 				int cellY = treasureStartY + y * (backpackCellSize + backpackPadding);
-				if (mouseX >= cellX && mouseX <= cellX + backpackCellSize && 
-				    mouseY >= cellY && mouseY <= cellY + backpackCellSize) {
+				if (mouseX >= cellX && mouseX <= cellX + backpackCellSize && mouseY >= cellY
+						&& mouseY <= cellY + backpackCellSize) {
 					return new int[] { x, y };
 				}
 			}
 		}
 		return null;
-	}
-
-	private void generateTreasure() {
-		// Clear the grid
-		for (int y = 0; y < treasureRows; y++) {
-			for (int x = 0; x < treasureCols; x++) {
-				treasureGrid[y][x] = null;
-			}
-		}
-		
-		int numItems = 1 + (int) (Math.random() * 5); // 1-5 items
-		for (int i = 0; i < numItems; i++) {
-			Item item = ItemFactory.randomItem();
-			if (!placeItemInTreasure(item)) {
-				break;
-			}
-		}
-	}
-
-	private boolean placeItemInTreasure(Item item) {
-		for (int y = 0; y < treasureRows; y++) {
-			for (int x = 0; x < treasureCols; x++) {
-				if (canPlaceInTreasure(item, x, y)) {
-					for (int dy = 0; dy < item.height(); dy++) {
-						for (int dx = 0; dx < item.width(); dx++) {
-							treasureGrid[y + dy][x + dx] = item;
-						}
-					}
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean canPlaceInTreasure(Item item, int x, int y) {
-		if (x + item.width() > treasureCols || y + item.height() > treasureRows) {
-			return false;
-		}
-		
-		for (int dy = 0; dy < item.height(); dy++) {
-			for (int dx = 0; dx < item.width(); dx++) {
-				if (treasureGrid[y + dy][x + dx] != null) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private void removeItemFromTreasure(Item item) {
-		for (int y = 0; y < treasureRows; y++) {
-			for (int x = 0; x < treasureCols; x++) {
-				if (treasureGrid[y][x] == item) {
-					treasureGrid[y][x] = null;
-				}
-			}
-		}
-	}
-
-	private boolean isTreasureEmpty() {
-		for (int y = 0; y < treasureRows; y++) {
-			for (int x = 0; x < treasureCols; x++) {
-				if (treasureGrid[y][x] != null) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 	private void goToNextFloor() {
