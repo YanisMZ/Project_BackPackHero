@@ -283,9 +283,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	                int finalWidth = item.width() * (cellSize + padding) - padding;
 	                int finalHeight = item.height() * (cellSize + padding) - padding;
 
-	                if (item.name().contains("Epee")) {
+	                if (item.name().contains("Sword")) {
 	                    graphics.drawImage(sword, cellX, cellY, finalWidth, finalHeight, null);
-	                } else if (item.name().contains("Bouclier")) { // Ajout du bouclier ici si besoin
+	                } else if (item.name().contains("Shield")) {
 	                    graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
 	                } else {
 	                    graphics.setColor(new Color(0, 0, 0, 50));
