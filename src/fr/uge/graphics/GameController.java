@@ -103,21 +103,26 @@ public class GameController {
 		return treasureGrid;
 	}
 
-	/**
-	 * main loop where every pressed key/point will get redirected to another function
-	 */
-	public void update() {
-		var event = context.pollOrWaitEvent(10);
-		if (event == null)
-			return;
 
-		switch (event) {
-		case KeyboardEvent ke -> handleKeyboard(ke);
-		case PointerEvent pe -> handlePointer(pe);
-		default -> {
-		}
-		}
-	}
+/**
+* main loop where every pressed key/point will get redirected to another function
+* * @param pollTimeout The maximum time (in milliseconds) to wait for an event.
+* Set to 0 for maximum responsiveness (during dragging).
+*/
+public void update(int pollTimeout) { 
+   
+
+   var event = context.pollOrWaitEvent(pollTimeout); 
+   if (event == null)
+       return;
+
+   switch (event) {
+   case KeyboardEvent ke -> handleKeyboard(ke);
+   case PointerEvent pe -> handlePointer(pe);
+   default -> {
+   }
+   }
+}
 
 	/**
 	 * this function will manage every keyboard inputs in the game
