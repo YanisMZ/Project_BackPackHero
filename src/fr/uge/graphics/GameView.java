@@ -99,7 +99,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			clearScreen(g);
 			drawHeroHealthBar(g, hero);
 			drawTreasure(g);
-			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem);
+			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY); // Mis à jour pour inclure les offsets
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 		});
@@ -240,6 +240,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.BLACK);
 		graphics.drawString("Backpack :", originX, originY - 10);
 
+		// 1. Dessin des cellules vides et des bordures
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				int cellX = originX + x * (cellSize + padding);
@@ -266,6 +267,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
+		// 2. Dessin des objets (images ou texte)
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
@@ -273,6 +275,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				if (item == null || (isDragging && item == draggedItem))
 					continue;
 
+				// Vérifie si c'est le coin supérieur gauche de l'objet
 				boolean isTopLeft = true;
 				if (x > 0 && grid[y][x - 1] == item)
 					isTopLeft = false;
@@ -322,6 +325,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
+		// 3. Dessin de l'objet glissé (draggedItem)
 		if (isDragging && draggedItem != null) {
 			int mouseX = dragOffsetX;
 			int mouseY = dragOffsetY;
@@ -331,9 +335,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 			graphics.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
 
-			if (draggedItem.name().contains("Epee")) {
+			if (draggedItem.name().contains("Sword")) {
 				graphics.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
-			} else if (draggedItem.name().contains("Bouclier")) {
+			} else if (draggedItem.name().contains("Shield")) {
 				graphics.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else {
 				graphics.setColor(new Color(100, 200, 255));
@@ -358,8 +362,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
+	// Signature de la méthode mise à jour pour inclure dragOffsetX et dragOffsetY
 	public void drawTreasureChest(Graphics2D g, Item[][] treasureGrid, List<Integer> selectedSlots, boolean isDragging,
-			Item draggedItem) {
+			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		var info = context.getScreenInfo();
 		int width = info.width();
 		int height = info.height();
@@ -379,6 +384,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.setColor(Color.BLACK);
 		g.drawString("Coffre au trésor :", startX, startY - 10);
 
+		// 1. Dessin des cellules vides et des bordures
 		for (int y = 0; y < treasureRows; y++) {
 			for (int x = 0; x < treasureCols; x++) {
 				int cellX = startX + x * (cellSize + padding);
@@ -388,26 +394,43 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 				if (isDragging && item == draggedItem) {
 					g.setColor(Color.ORANGE);
-					g.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
-					g.setColor(Color.BLACK);
-					g.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
-					continue;
+				} else {
+					g.setColor(item == null ? Color.ORANGE : new Color(255, 200, 100));
 				}
-
-				g.setColor(item == null ? Color.ORANGE : new Color(255, 200, 100));
 				g.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
 				g.setColor(Color.BLACK);
 				g.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+			}
+		}
 
-				if (item != null) {
-					boolean isTopLeft = true;
-					if (x > 0 && treasureGrid[y][x - 1] == item)
-						isTopLeft = false;
-					if (y > 0 && treasureGrid[y - 1][x] == item)
-						isTopLeft = false;
+		// 2. Dessin des objets (images ou texte)
+		for (int y = 0; y < treasureRows; y++) {
+			for (int x = 0; x < treasureCols; x++) {
+				Item item = treasureGrid[y][x];
 
-					if (isTopLeft) {
+				if (item == null || (isDragging && item == draggedItem))
+					continue;
+
+				// Vérifie si c'est le coin supérieur gauche de l'objet
+				boolean isTopLeft = true;
+				if (x > 0 && treasureGrid[y][x - 1] == item)
+					isTopLeft = false;
+				if (y > 0 && treasureGrid[y - 1][x] == item)
+					isTopLeft = false;
+
+				if (isTopLeft) {
+					int cellX = startX + x * (cellSize + padding);
+					int cellY = startY + y * (cellSize + padding);
+					int itemWidth = item.width() * (cellSize + padding) - padding;
+					int itemHeight = item.height() * (cellSize + padding) - padding;
+
+					if (item.name().contains("Sword")) {
+						g.drawImage(sword, cellX, cellY, itemWidth, itemHeight, null);
+					} else if (item.name().contains("Shield")) {
+						g.drawImage(shield, cellX, cellY, itemWidth, itemHeight, null);
+					} else {
+						// Affichage par défaut (texte) pour les autres objets
 						String name = item.name();
 						if (name.length() > 8)
 							name = name.substring(0, 7) + "...";
@@ -415,12 +438,40 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 						g.drawString(name, cellX + 5, cellY + cellSize / 2);
 
 						g.setColor(new Color(0, 0, 0, 150));
-						int itemWidth = item.width() * (cellSize + padding) - padding;
-						int itemHeight = item.height() * (cellSize + padding) - padding;
 						g.drawRect(cellX, cellY, itemWidth, itemHeight);
 					}
 				}
 			}
+		}
+
+		// 3. Dessin de l'objet glissé (draggedItem)
+		if (isDragging && draggedItem != null) {
+			int mouseX = dragOffsetX;
+			int mouseY = dragOffsetY;
+
+			int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
+			int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
+
+			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
+
+			if (draggedItem.name().contains("Sword")) {
+				g.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else if (draggedItem.name().contains("Shield")) {
+				g.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else {
+				g.setColor(new Color(100, 200, 255));
+				g.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+
+				g.setColor(Color.BLACK);
+				String name = draggedItem.name();
+				if (name.length() > 8)
+					name = name.substring(0, 7) + "...";
+				g.drawString(name, mouseX + 5, mouseY + cellSize / 2);
+			}
+
+			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
+			g.setColor(Color.BLACK);
+			g.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
 		}
 	}
 
