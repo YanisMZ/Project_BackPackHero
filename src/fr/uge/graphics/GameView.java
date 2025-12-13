@@ -38,6 +38,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final BufferedImage defendBanner = loadImage("defend.png");
 	private static final BufferedImage sword = loadImage("./weapons/sword90.png");
 	private static final BufferedImage shield = loadImage("./weapons/shield.png");
+	private static final BufferedImage injuredEnemy = loadImage("./injuredRat.jpg");
+	private static final List<BufferedImage> fightingAnnimation1 = loadAttackFrames(1, 157);
+	private static final List<BufferedImage> fightingAnnimation2 = loadAttackFrames(2, 78);
+	private static final List<BufferedImage> fightingAnnimation3 = loadAttackFrames(3, 78);
 
 	private static BufferedImage loadImage(String fileName) {
 		try {
@@ -73,11 +77,33 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY, long lastAttackTime) {
 		context.renderFrame(g -> {
 			clearScreen(g);
-			drawCombat(g, nb_enemies, status);
-			drawHeroHealthBar(g, hero);
-			drawEnemyHealthBars(g, enemies);
-			drawGrid(g);
-			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			int totalTime = 4500;
+			long timeElapsed = System.currentTimeMillis() - lastAttackTime;
+			if (timeElapsed < totalTime) {
+				drawAnimation(g, lastAttackTime, totalTime, switch (nb_enemies) {
+				case 1 -> fightingAnnimation1;
+				case 2 -> fightingAnnimation2;
+				case 3 -> fightingAnnimation3;
+				default -> null;
+				});
+
+				drawEnemyHealthBars(g, enemies);
+				drawHeroHealthBar(g, hero);
+				drawGrid(g);
+				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			} else {
+				if (nb_enemies > 0) {
+					if (enemies.get(0).hp() < enemies.get(0).maxHp()) {
+						drawInjuredRat(g, nb_enemies, status);
+					} else {
+						drawCombat(g, nb_enemies, status);
+					}
+				}
+				drawEnemyHealthBars(g, enemies);
+				drawHeroHealthBar(g, hero);
+				drawGrid(g);
+				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			}
 		});
 	}
 
@@ -99,7 +125,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			clearScreen(g);
 			drawHeroHealthBar(g, hero);
 			drawTreasure(g);
-			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY); // Mis à jour pour inclure les offsets
+			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 		});
@@ -128,6 +154,32 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int height = info.height();
 		g.drawImage(treasureRoomImage, 0, 0, width, height, null);
 		g.drawImage(treasureImage, width / 2, height / 2, width / 2, height / 2, null);
+	}
+
+	private void drawInjuredRat(Graphics2D g, int nb_enemies, int status) {
+		var info = context.getScreenInfo();
+		int width = info.width();
+		int height = info.height();
+
+		g.drawImage(switch (nb_enemies) {
+		case 0 -> enemyRoomImage0;
+		case 1 -> injuredEnemy;
+		case 2 -> enemyRoomImage2;
+		case 3 -> enemyRoomImage3;
+		default -> enemyRoomImage3;
+		}, 0, 0, width, height, null);
+
+		int bannerWidth = width / 5;
+		int bannerHeight = height / 5;
+		int x = (width - bannerWidth) / 2;
+		int y = height - bannerHeight - height / 50;
+
+		switch (status) {
+		case 0 -> g.drawImage(attackOrDefenseBanner, x, y, bannerWidth, bannerHeight, null);
+		case 1 -> g.drawImage(attackBanner, x, y, bannerWidth, bannerHeight, null);
+		case 2 -> g.drawImage(defendBanner, x, y, bannerWidth, bannerHeight, null);
+		default -> throw new IllegalArgumentException("Unexpected status: " + status);
+		}
 	}
 
 	private void drawCombat(Graphics2D g, int nb_enemies, int status) {
@@ -240,7 +292,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.BLACK);
 		graphics.drawString("Backpack :", originX, originY - 10);
 
-		// 1. Dessin des cellules vides et des bordures
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				int cellX = originX + x * (cellSize + padding);
@@ -252,11 +303,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				} else if (item == null) {
 					graphics.setColor(Color.YELLOW);
 				} else {
-					graphics.setColor(new Color(200, 200, 200, 50));
+					graphics.setColor(Color.BLACK);
 				}
 				graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-				graphics.setColor(Color.BLACK);
+				if (item != null && item != draggedItem) {
+					graphics.setColor(Color.GRAY);
+				} else {
+					graphics.setColor(Color.BLACK);
+				}
 				graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
 				int slot = y * cols + x;
@@ -267,7 +322,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
-		// 2. Dessin des objets (images ou texte)
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
@@ -275,7 +329,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				if (item == null || (isDragging && item == draggedItem))
 					continue;
 
-				// Vérifie si c'est le coin supérieur gauche de l'objet
 				boolean isTopLeft = true;
 				if (x > 0 && grid[y][x - 1] == item)
 					isTopLeft = false;
@@ -307,9 +360,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 						graphics.drawRect(cellX - 3, cellY - 3, finalWidth + 6, finalHeight + 6);
 					}
 
-					if (item.name().contains("Sword")) {
+					if (item.name().contains("Sword") || item.name().contains("Epee")) {
 						graphics.drawImage(sword, cellX, cellY, finalWidth, finalHeight, null);
-					} else if (item.name().contains("Shield")) {
+					} else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
 						graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
 					} else {
 						graphics.setColor(new Color(0, 0, 0, 50));
@@ -325,7 +378,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
-		// 3. Dessin de l'objet glissé (draggedItem)
 		if (isDragging && draggedItem != null) {
 			int mouseX = dragOffsetX;
 			int mouseY = dragOffsetY;
@@ -335,9 +387,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 			graphics.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
 
-			if (draggedItem.name().contains("Sword")) {
+			if (draggedItem.name().contains("Sword") || draggedItem.name().contains("Epee")) {
 				graphics.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
-			} else if (draggedItem.name().contains("Shield")) {
+			} else if (draggedItem.name().contains("Shield") || draggedItem.name().contains("Bouclier")) {
 				graphics.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else {
 				graphics.setColor(new Color(100, 200, 255));
@@ -362,7 +414,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	// Signature de la méthode mise à jour pour inclure dragOffsetX et dragOffsetY
 	public void drawTreasureChest(Graphics2D g, Item[][] treasureGrid, List<Integer> selectedSlots, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		var info = context.getScreenInfo();
