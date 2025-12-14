@@ -3,10 +3,20 @@ package fr.uge.graphics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
-import fr.uge.implement.*; // Assurez-vous d'importer la nouvelle classe TreasureChest
+
+// Assurez-vous d'importer la nouvelle classe TreasureChest
+import fr.uge.implement.BackPack;
+import fr.uge.implement.Battle;
+import fr.uge.implement.Dungeon;
+import fr.uge.implement.Hero;
+import fr.uge.implement.Item;
+import fr.uge.implement.MapDungeon;
+import fr.uge.implement.Room;
+import fr.uge.implement.TreasureChest;
 
 /**
  * Controls the main game logic, including movement between rooms, combat flow,
@@ -28,9 +38,7 @@ public class GameController {
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
 
-
-	private final TreasureChest treasureChest; 
-
+	private final TreasureChest treasureChest;
 
 	private final int backpackOriginX = 20, backpackOriginY = 550;
 	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
@@ -386,7 +394,7 @@ public class GameController {
 		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
 			startCombat();
 		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
-			treasureChest.generateTreasure(); // Utilise la méthode de TreasureChest
+			treasureChest.generateTreasure();
 			setTreasureState();
 			floor.markVisited(clickedRoom);
 		} else if (floor.playerOnCorridor()) {
