@@ -185,14 +185,12 @@ public class GameController {
 			if (treasureCoords != null) {
 				int x = treasureCoords[0];
 				int y = treasureCoords[1];
-				Item item = treasureChest.getGrid()[y][x]; // Utilise le getter de la grille
+				Item item = treasureChest.getGrid()[y][x];
 
 				if (item != null) {
-					// Trouver le coin supérieur gauche de l'item
 					int itemStartX = x;
 					int itemStartY = y;
 
-					// Chercher vers la gauche et vers le haut
 					while (itemStartX > 0 && treasureChest.getGrid()[y][itemStartX - 1] == item) {
 						itemStartX--;
 					}
@@ -420,8 +418,8 @@ public class GameController {
 	private void checkCombatEnd() {
 		if (fight != null && !fight.isRunning()) {
 			inCombat = false;
-			treasureChest.generateTreasure(); // Utilise la méthode de TreasureChest
-			if (!treasureChest.isEmpty()) // Utilise la méthode de TreasureChest
+			treasureChest.generateTreasure();
+			if (!treasureChest.isEmpty())
 				setTreasureState();
 		}
 	}
@@ -437,10 +435,8 @@ public class GameController {
 		inCorridor = false;
 		inCombat = false;
 
-		// Recalcule et met à jour les coordonnées d'affichage
 		setTreasureDisplayCoords();
 
-		// Met à jour les coordonnées dans l'objet TreasureChest
 		treasureChest.setCoordinates(treasureStartX, treasureStartY);
 	}
 

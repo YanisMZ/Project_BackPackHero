@@ -5,6 +5,7 @@ public class Hero {
 	private int mana;
 	private int shieldProtection = 0;
 	private int maxHp = 40;
+	private int maxMana = 100;
 
 	public Hero(int hp, int mana) {
 		this.hp = hp;
@@ -23,17 +24,18 @@ public class Hero {
 	 * @param amount
 	 */
 	public void takeDamage(int amount) {
-    if (shieldProtection > 0) {
-        int used = Math.min(amount, shieldProtection);
-        shieldProtection -= used;
-        amount -= used;
-        System.out.println("Le héros utilise " + used + " points de protection. Protection restante : " + shieldProtection);
-    }
+		if (shieldProtection > 0) {
+			int used = Math.min(amount, shieldProtection);
+			shieldProtection -= used;
+			amount -= used;
+			System.out
+					.println("Le héros utilise " + used + " points de protection. Protection restante : " + shieldProtection);
+		}
 
-    hp = Math.max(0, hp - amount);
-    System.out.println("Le héros subit " + amount + " dégâts. (hp = " + hp + ")");
-}
-
+		hp = Math.max(0, hp - amount);
+		System.out.println("Le héros subit " + amount + " dégâts. (hp = " + hp + ")");
+	}
+	
 
 	public int shieldProtection() {
 		return shieldProtection;
@@ -42,21 +44,25 @@ public class Hero {
 	public void addProtection(int amount) {
 		shieldProtection += amount;
 	}
-	
-	 public void resetProtection() {
-	    shieldProtection = 0;
-	  }
+
+	public void resetProtection() {
+		shieldProtection = 0;
+	}
 
 	public void restoreMana(int amount) {
 		mana += amount;
 	}
 
+	public int HeroMaxHp() {
+		return maxHp;
+	}
+
+	public int HeroMaxMana() {
+		return maxMana;
+	}
+
 	@Override
 	public String toString() {
 		return "Hero(hp=" + hp + ", mana=" + mana + ")";
-	}
-	
-	public int HeroMaxHp() {
-		return maxHp;
 	}
 }

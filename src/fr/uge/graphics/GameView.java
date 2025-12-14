@@ -86,7 +86,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				case 3 -> fightingAnnimation3;
 				default -> null;
 				});
-
+				drawHeroManaBar(g, hero);
 				drawEnemyHealthBars(g, enemies);
 				drawHeroHealthBar(g, hero);
 				drawGrid(g);
@@ -112,6 +112,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawCorridor(g);
+			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawHero(g);
 			drawGrid(g);
@@ -123,6 +124,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		context.renderFrame(g -> {
 			clearScreen(g);
+			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawTreasure(g);
 			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
@@ -136,6 +138,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
+			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawHero(g);
 			drawGrid(g);
@@ -525,19 +528,46 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
 		}
 	}
-
-	private void drawHeroHealthBar(Graphics2D g, Hero hero) {
+	
+	private void drawHeroManaBar(Graphics2D g, Hero hero) {
 		var info = context.getScreenInfo();
 		int width = info.width();
 		int startX = width - 250;
-		int startY = 20;
+		int startY = 50;
 		int barWidth = 200;
 
 		int heroMaxHp = hero.HeroMaxHp();
 		double hpPercent = hero.hp() / (double) heroMaxHp;
 
 		g.setColor(Color.WHITE);
-		g.drawString("HERO", startX, startY + 15);
+		g.drawString(" HERO", startX, startY + 15);
+
+		int heroHpBarWidth = (int) (hpPercent * barWidth);
+
+		g.setColor(Color.RED);
+		g.fillRect(startX, startY + 20, barWidth, 15);
+
+		g.setColor(Color.BLUE);
+		g.fillRect(startX, startY + 20, Math.max(0, heroHpBarWidth), 15);
+
+		g.setColor(Color.BLACK);
+		g.drawRect(startX, startY + 20, barWidth, 15);
+		g.drawString(hero.mana() + " MANA", startX + barWidth / 2 - 20, startY + 32);
+	}
+
+
+	private void drawHeroHealthBar(Graphics2D g, Hero hero) {
+		var info = context.getScreenInfo();
+		int width = info.width();
+		int startX = width - 250;
+		int startY = 10;
+		int barWidth = 200;
+
+		int heroMaxHp = hero.HeroMaxHp();
+		double hpPercent = hero.hp() / (double) heroMaxHp;
+
+		g.setColor(Color.WHITE);
+		g.drawString(" HERO", startX, startY + 15);
 
 		int heroHpBarWidth = (int) (hpPercent * barWidth);
 
@@ -547,7 +577,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.setColor(Color.GREEN);
 		g.fillRect(startX, startY + 20, Math.max(0, heroHpBarWidth), 15);
 
-		g.setColor(Color.WHITE);
+		g.setColor(Color.BLACK);
 		g.drawRect(startX, startY + 20, barWidth, 15);
 		g.drawString(hero.hp() + " HP", startX + barWidth / 2 - 20, startY + 32);
 	}
@@ -559,7 +589,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		var info = context.getScreenInfo();
 		int width = info.width();
 		int startX = width - 250;
-		int startY = 80;
+		int startY = 90;
 		int barWidth = 200;
 		int barHeight = 30;
 		int spacing = 10;
