@@ -16,7 +16,7 @@ public class ItemFactory {
         int power = 5 + RANDOM.nextInt(16); // 5..20
 
         return switch (type) {
-        case 0 -> new Sword("Sword+" + power, power, 1, 2);
+        case 0 -> new Sword("Sword+" + power, power,1, 1, 2);
             default -> new Shield("Shield+" + power, power,2,2);
         };
     }

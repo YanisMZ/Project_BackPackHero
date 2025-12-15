@@ -84,9 +84,11 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				case 1 -> fightingAnnimation1;
 				case 2 -> fightingAnnimation2;
 				case 3 -> fightingAnnimation3;
-				default -> null;
+				default -> fightingAnnimation1;
 				});
 				drawHeroManaBar(g, hero);
+				drawHeroHealthBar(g, hero);
+				drawHeroStaminaBar(g, hero);
 				drawEnemyHealthBars(g, enemies);
 				drawHeroHealthBar(g, hero);
 				drawGrid(g);
@@ -99,6 +101,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 						drawCombat(g, nb_enemies, status);
 					}
 				}
+				drawHeroManaBar(g, hero);
+				drawHeroHealthBar(g, hero);
+				drawHeroStaminaBar(g, hero);
 				drawEnemyHealthBars(g, enemies);
 				drawHeroHealthBar(g, hero);
 				drawGrid(g);
@@ -112,6 +117,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawCorridor(g);
+			drawHeroStaminaBar(g, hero);
 			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawHero(g);
@@ -124,6 +130,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		context.renderFrame(g -> {
 			clearScreen(g);
+			drawHeroStaminaBar(g, hero);
 			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawTreasure(g);
@@ -138,6 +145,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
+			drawHeroStaminaBar(g, hero);
 			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
 			drawHero(g);
@@ -581,6 +589,43 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.drawRect(startX, startY + 20, barWidth, 15);
 		g.drawString(hero.hp() + " HP", startX + barWidth / 2 - 20, startY + 32);
 	}
+	
+	
+	private void drawHeroStaminaBar(Graphics2D g, Hero hero) {
+    var info = context.getScreenInfo();
+    int width = info.width();
+
+    int startX = width - 250;
+    int startY = 50; // juste sous la barre HP
+    int barWidth = 200;
+    int barHeight = 15;
+
+    double staminaPercent =
+        hero.currentStamina() / (double) hero.maxStamina();
+    int staminaWidth = (int) (staminaPercent * barWidth);
+
+    g.setColor(Color.WHITE);
+    g.drawString("STAMINA", startX, startY - 5);
+
+    // fond
+    g.setColor(Color.DARK_GRAY);
+    g.fillRect(startX, startY, barWidth, barHeight);
+
+    // barre stamina
+    g.setColor(Color.ORANGE);
+    g.fillRect(startX, startY, staminaWidth, barHeight);
+
+    // contour
+    g.setColor(Color.BLACK);
+    g.drawRect(startX, startY, barWidth, barHeight);
+
+    g.drawString(
+        hero.currentStamina() + " / " + hero.maxStamina(),
+        startX + barWidth / 2 - 15,
+        startY + 12
+    );
+}
+
 
 	private void drawEnemyHealthBars(Graphics2D g, List<Enemy> enemies) {
 		if (enemies == null || enemies.isEmpty())

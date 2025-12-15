@@ -8,7 +8,6 @@ import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
-// Assurez-vous d'importer la nouvelle classe TreasureChest
 import fr.uge.implement.BackPack;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
@@ -42,7 +41,7 @@ public class GameController {
 
 	private final int backpackOriginX = 20, backpackOriginY = 550;
 	private final int backpackCols = 5, backpackCellSize = 60, backpackPadding = 8;
-	private int treasureStartX, treasureStartY; // Position de l'affichage du trésor (pour le clic)
+	private int treasureStartX, treasureStartY;
 	private Item draggedItem = null;
 	private int dragStartX = -1;
 	private int dragStartY = -1;
@@ -68,7 +67,7 @@ public class GameController {
 		this.backpack = Objects.requireNonNull(backpack);
 		this.fight = Objects.requireNonNull(fight);
 		this.dungeon = dungeon;
-		this.hero = new Hero(40, 0);
+		this.hero = new Hero(40, 0, 3);
 		setTreasureDisplayCoords();
 		this.treasureChest = new TreasureChest(3, 5, treasureStartX, treasureStartY);
 	}
@@ -109,6 +108,14 @@ public class GameController {
 		return lastAttackTime;
 	}
 
+	public Hero getHero() {
+		return hero;
+	}
+
+	public Battle getBattle() {
+		return fight;
+	}
+
 	/** Retourne la grille du trésor gérée par l'objet TreasureChest. */
 	public Item[][] getTreasureGrid() {
 		return treasureChest.getGrid();
@@ -119,7 +126,6 @@ public class GameController {
 	 * function
 	 */
 	public void update(int pollTimeout) {
-
 		var event = context.pollOrWaitEvent(pollTimeout);
 		if (event == null)
 			return;
@@ -139,29 +145,25 @@ public class GameController {
 		if (ke.key() == KeyboardEvent.Key.Q)
 			System.exit(0);
 
-		if (ke.key() == KeyboardEvent.Key.X)
+		// Supprimer des items uniquement hors combat
+		if (ke.key() == KeyboardEvent.Key.X && !inCombat)
 			handleDeleteSelectedItems();
 
 		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
 			return;
-		List<Item> itemsUsed = selectedItems.stream().map(i -> {
-			int x = i % backpack.width();
-			int y = i / backpack.width();
-			return backpack.grid()[y][x];
-		}).filter(Objects::nonNull).toList();
+
 		switch (ke.key()) {
-		case A -> {
-			lastAttackTime = System.currentTimeMillis();
-			fight.attackEnemy(itemsUsed);
-			fight.attackEnemy(itemsUsed);
-			fight.enemyTurn();
-			checkCombatEnd();
+		
+		// CTRL : Terminer le tour du joueur (les ennemis attaquent automatiquement)
+		case KeyboardEvent.Key.CTRL -> {
+			if (fight.isPlayerTurnActive()) {
+				fight.endPlayerTurn();
+				checkCombatEnd();
+			} else {
+				System.out.println("Votre tour est déjà terminé !");
+			}
 		}
-		case D -> {
-			fight.defendHero();
-			fight.enemyTurn();
-			checkCombatEnd();
-		}
+		
 		default -> {
 		}
 		}
@@ -274,7 +276,7 @@ public class GameController {
 				isDragging = true;
 
 				if (dragFromTreasure) {
-					treasureChest.removeItem(draggedItem); // Utilise la méthode de TreasureChest
+					treasureChest.removeItem(draggedItem);
 				} else {
 					backpack.remove(draggedItem);
 				}
@@ -288,8 +290,25 @@ public class GameController {
 	}
 
 	private void handlePointerUp(int mouseX, int mouseY) {
+		// Simple clic sans drag
 		if (draggedItem != null && !isDragging) {
-			if (!dragFromTreasure) {
+			// EN COMBAT : Utiliser l'item directement au clic
+			if (inCombat && !dragFromTreasure) {
+				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+				if (slotCoords != null) {
+					int x = slotCoords[0];
+					int y = slotCoords[1];
+					Item clickedItem = backpack.grid()[y][x];
+					
+					if (clickedItem != null && fight.isPlayerTurnActive()) {
+						// Utiliser l'item directement
+						fight.useItem(clickedItem);
+						lastAttackTime = System.currentTimeMillis();
+					}
+				}
+			}
+			// HORS COMBAT : Sélectionner l'item
+			else if (!inCombat && !dragFromTreasure) {
 				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
 				if (slotCoords != null) {
 					toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
@@ -305,6 +324,7 @@ public class GameController {
 			return;
 		}
 
+		// Drag en cours
 		if (isDragging && draggedItem != null) {
 			boolean placed = false;
 
@@ -316,7 +336,7 @@ public class GameController {
 
 				if (backpack.place(draggedItem, targetX, targetY)) {
 					placed = true;
-					if (dragFromTreasure && treasureChest.isEmpty()) { // Utilise la méthode de TreasureChest
+					if (dragFromTreasure && treasureChest.isEmpty()) {
 						setEmptyRoomState();
 					}
 				}
@@ -329,7 +349,6 @@ public class GameController {
 					int targetX = treasureCoords[0];
 					int targetY = treasureCoords[1];
 
-					// Utilise la méthode de placement dans TreasureChest
 					if (treasureChest.placeItemAt(draggedItem, targetX, targetY)) {
 						placed = true;
 					}
@@ -339,7 +358,7 @@ public class GameController {
 			if (!placed) {
 				if (dragFromTreasure) {
 					// Return to treasure at original position
-					treasureChest.placeItemAt(draggedItem, dragStartX, dragStartY); // Utilise la méthode de TreasureChest
+					treasureChest.placeItemAt(draggedItem, dragStartX, dragStartY);
 				} else {
 					if (!backpack.place(draggedItem, dragStartX, dragStartY)) {
 						if (!backpack.autoAdd(draggedItem)) {
@@ -409,7 +428,7 @@ public class GameController {
 	}
 
 	private void leaveTreasureRoom() {
-		treasureChest.clear(); // Utilise la méthode de TreasureChest
+		treasureChest.clear();
 
 		if (floor.playerOnCorridor()) {
 			setCorridorState();

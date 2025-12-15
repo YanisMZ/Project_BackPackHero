@@ -14,4 +14,10 @@ public record Shield(String name, int hp,int width, int height) implements Item 
     return 5;
   }
 
+	@Override
+	public int staminaCost() {
+		// TODO Auto-generated method stub
+		return 1;
+	}
+
 }

@@ -31,4 +31,10 @@ public record Gold(String name) implements Item {
 		return 0;
 	}
 
+	@Override
+	public int staminaCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

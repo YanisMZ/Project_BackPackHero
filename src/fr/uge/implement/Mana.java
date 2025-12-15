@@ -34,4 +34,10 @@ public record Mana(String name, int amount) implements Item {
 		return 0;
 	}
 
+	@Override
+	public int staminaCost() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }
