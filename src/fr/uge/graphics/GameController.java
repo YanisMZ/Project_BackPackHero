@@ -416,27 +416,29 @@ public class GameController {
 	}
 
 	private void handleRoomClick(int clickedRoom) {
-		if (!floor.adjacentRooms().contains(clickedRoom))
-			return;
+    if (!floor.adjacentRooms().contains(clickedRoom))
+        return;
 
-		floor.setPlayerIndex(clickedRoom);
+    floor.setPlayerIndex(clickedRoom);
 
-		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
-			startCombat();
-		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
-			treasureChest.generateTreasure();
-			setTreasureState();
-			floor.markVisited(clickedRoom);
-		} else if (floor.playerOnCorridor()) {
-			setCorridorState();
-		} else if (floor.rooms().get(clickedRoom).type() == Room.Type.EXIT) {
-			goToNextFloor();
-		} else {
-			setEmptyRoomState();
-		}
+    // On supprime les items flottants à chaque changement de salle
+    floatingItems.clear();
 
-		floor.markVisited(clickedRoom);
-	}
+    if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
+        startCombat();
+    } else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
+        treasureChest.generateTreasure();
+        setTreasureState();
+        floor.markVisited(clickedRoom);
+    } else if (floor.playerOnCorridor()) {
+        setCorridorState();
+    } else {
+        setEmptyRoomState();
+    }
+
+    floor.markVisited(clickedRoom);
+}
+
 
 	private void leaveTreasureRoom() {
     treasureChest.clear();
