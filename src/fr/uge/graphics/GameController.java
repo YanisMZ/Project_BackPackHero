@@ -1,5 +1,6 @@
 package fr.uge.graphics;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import com.github.forax.zen.PointerEvent;
 import fr.uge.implement.BackPack;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
+import fr.uge.implement.FloatingItem;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.MapDungeon;
@@ -54,6 +56,7 @@ public class GameController {
 	private int pointerDownX = -1;
 	private int pointerDownY = -1;
 	private static final int DRAG_THRESHOLD = 5;
+	private final List<FloatingItem> floatingItems = new ArrayList<>();
 
 	/**
 	 * Creates a new game controller responsible for handling input events, updating
@@ -120,6 +123,8 @@ public class GameController {
 	public Item[][] getTreasureGrid() {
 		return treasureChest.getGrid();
 	}
+	
+	 public List<FloatingItem> getFloatingItems() { return floatingItems; }
 
 	/**
 	 * main loop where every pressed key/point will get redirected to another
@@ -168,6 +173,22 @@ public class GameController {
 		}
 		}
 	}
+	
+	
+	
+	private FloatingItem findFloatingItemAt(int mouseX, int mouseY) {
+    for (FloatingItem f : floatingItems) {
+        int x = f.position.x;
+        int y = f.position.y;
+        int width = f.item.width() * (backpackCellSize + backpackPadding) - backpackPadding;
+        int height = f.item.height() * (backpackCellSize + backpackPadding) - backpackPadding;
+
+        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+            return f;
+        }
+    }
+    return null;
+}
 
 	/**
 	 * this function will manage every pointer input in the game
@@ -188,6 +209,18 @@ public class GameController {
 	private void handlePointerDown(int mouseX, int mouseY) {
 		pointerDownX = mouseX;
 		pointerDownY = mouseY;
+
+    // Vérifie si on clique sur un item flottant
+    FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
+    if (fItem != null) {
+        draggedItem = fItem.item;
+        dragOffsetX = mouseX - fItem.position.x;
+        dragOffsetY = mouseY - fItem.position.y;
+        isDragging = true;
+        floatingItems.remove(fItem);
+        dragFromTreasure = false;
+        return;
+    }
 
 		// Check treasure chest click for potential drag (priority)
 		if (inTreasure) {
@@ -268,115 +301,93 @@ public class GameController {
 	}
 
 	private void handlePointerMove(int mouseX, int mouseY) {
-		if (draggedItem != null && !isDragging) {
-			int deltaX = Math.abs(mouseX - pointerDownX);
-			int deltaY = Math.abs(mouseY - pointerDownY);
+    if (draggedItem != null && !isDragging) {
+        int deltaX = Math.abs(mouseX - pointerDownX);
+        int deltaY = Math.abs(mouseY - pointerDownY);
 
-			if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-				isDragging = true;
+        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+            isDragging = true;
 
-				if (dragFromTreasure) {
-					treasureChest.removeItem(draggedItem);
-				} else {
-					backpack.remove(draggedItem);
-				}
-			}
-		}
+            // Retirer l'item du sac ou du coffre uniquement au début du drag
+            if (dragFromTreasure) {
+                treasureChest.removeItem(draggedItem);
+            } else {
+                backpack.remove(draggedItem);
+            }
+        }
+    }
 
-		if (isDragging && draggedItem != null) {
-			dragMouseX = mouseX - dragOffsetX;
-			dragMouseY = mouseY - dragOffsetY;
-		}
-	}
+    if (isDragging && draggedItem != null) {
+        dragMouseX = mouseX - dragOffsetX;
+        dragMouseY = mouseY - dragOffsetY;
+    }
+}
+
 
 	private void handlePointerUp(int mouseX, int mouseY) {
-		// Simple clic sans drag
-		if (draggedItem != null && !isDragging) {
-			// EN COMBAT : Utiliser l'item directement au clic
-			if (inCombat && !dragFromTreasure) {
-				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-				if (slotCoords != null) {
-					int x = slotCoords[0];
-					int y = slotCoords[1];
-					Item clickedItem = backpack.grid()[y][x];
-					
-					if (clickedItem != null && fight.isPlayerTurnActive()) {
-						// Utiliser l'item directement
-						fight.useItem(clickedItem);
-						lastAttackTime = System.currentTimeMillis();
-					}
-				}
-			}
-			// HORS COMBAT : Sélectionner l'item
-			else if (!inCombat && !dragFromTreasure) {
-				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-				if (slotCoords != null) {
-					toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
-				}
-			}
+    // Clic simple sans drag
+    if (draggedItem != null && !isDragging) {
+        if (inCombat && !dragFromTreasure) {
+            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+            if (slotCoords != null) {
+                int x = slotCoords[0];
+                int y = slotCoords[1];
+                Item clickedItem = backpack.grid()[y][x];
+                if (clickedItem != null && fight.isPlayerTurnActive()) {
+                    fight.useItem(clickedItem);
+                    lastAttackTime = System.currentTimeMillis();
+                }
+            }
+        } else if (!inCombat && !dragFromTreasure) {
+            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+            if (slotCoords != null) {
+                toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
+            }
+        }
 
-			draggedItem = null;
-			dragStartX = -1;
-			dragStartY = -1;
-			dragFromTreasure = false;
-			pointerDownX = -1;
-			pointerDownY = -1;
-			return;
-		}
+        draggedItem = null;
+        dragStartX = -1;
+        dragStartY = -1;
+        dragFromTreasure = false;
+        pointerDownX = -1;
+        pointerDownY = -1;
+        return;
+    }
 
-		// Drag en cours
-		if (isDragging && draggedItem != null) {
-			boolean placed = false;
+    // Drag en cours
+    if (isDragging && draggedItem != null) {
+        boolean placed = false;
 
-			// Try to place in backpack
-			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
-			if (targetCoords != null) {
-				int targetX = targetCoords[0];
-				int targetY = targetCoords[1];
+        // Essayer de placer dans le sac
+        int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
+        if (targetCoords != null && backpack.place(draggedItem, targetCoords[0], targetCoords[1])) {
+            placed = true;
+        }
 
-				if (backpack.place(draggedItem, targetX, targetY)) {
-					placed = true;
-					if (dragFromTreasure && treasureChest.isEmpty()) {
-						setEmptyRoomState();
-					}
-				}
-			}
+        // Essayer de placer dans le coffre
+        if (!placed && inTreasure && !dragFromTreasure) {
+            int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
+            if (treasureCoords != null && treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1])) {
+                placed = true;
+            }
+        }
 
-			// Try to place in treasure if coming from backpack
-			if (!placed && inTreasure && !dragFromTreasure) {
-				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
-				if (treasureCoords != null) {
-					int targetX = treasureCoords[0];
-					int targetY = treasureCoords[1];
+        // Si pas placé, item devient flottant
+        if (!placed) {
+            floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
+        }
 
-					if (treasureChest.placeItemAt(draggedItem, targetX, targetY)) {
-						placed = true;
-					}
-				}
-			}
+        draggedItem = null;
+        dragStartX = -1;
+        dragStartY = -1;
+        dragFromTreasure = false;
+        pointerDownX = -1;
+        pointerDownY = -1;
+        isDragging = false;
+    }
+}
 
-			if (!placed) {
-				if (dragFromTreasure) {
-					// Return to treasure at original position
-					treasureChest.placeItemAt(draggedItem, dragStartX, dragStartY);
-				} else {
-					if (!backpack.place(draggedItem, dragStartX, dragStartY)) {
-						if (!backpack.autoAdd(draggedItem)) {
-							// Item is lost
-						}
-					}
-				}
-			}
-		}
 
-		isDragging = false;
-		draggedItem = null;
-		dragStartX = -1;
-		dragStartY = -1;
-		dragFromTreasure = false;
-		pointerDownX = -1;
-		pointerDownY = -1;
-	}
 
 	private void toggleSelection(int x, int y, Item clicked) {
 		if (clicked == null)
@@ -428,14 +439,11 @@ public class GameController {
 	}
 
 	private void leaveTreasureRoom() {
-		treasureChest.clear();
-
-		if (floor.playerOnCorridor()) {
-			setCorridorState();
-		} else {
-			setEmptyRoomState();
-		}
-	}
+    treasureChest.clear();
+    floatingItems.clear(); // supprime tous les items flottants
+    if (floor.playerOnCorridor()) setCorridorState();
+    else setEmptyRoomState();
+}
 
 	private void startCombat() {
 		fight.initEnemies();
@@ -529,11 +537,13 @@ public class GameController {
 	}
 
 	private void goToNextFloor() {
+		
 		if (floorIndex + 1 >= 3) {
 			System.out.println("Fin du donjon ! Il n'y a plus d'étages.");
 			System.exit(0);
 			return;
 		}
+		floatingItems.clear();
 		floorIndex++;
 		MapDungeon next = dungeon.getFloor(floorIndex);
 		floor.rooms().clear();

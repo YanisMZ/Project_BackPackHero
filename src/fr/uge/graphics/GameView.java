@@ -16,6 +16,7 @@ import com.github.forax.zen.ApplicationContext;
 
 import fr.uge.implement.BackPack;
 import fr.uge.implement.Enemy;
+import fr.uge.implement.FloatingItem;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.MapDungeon;
@@ -65,11 +66,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	public void render(List<Integer> selectedSlots, boolean isDragging, Item draggedItem, int dragOffsetX,
-			int dragOffsetY) {
+			int dragOffsetY,List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			drawFloatingItems(g, floatingItems );
 		});
 	}
 
@@ -113,7 +115,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY) {
+			int dragOffsetX, int dragOffsetY,List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawCorridor(g);
@@ -123,11 +125,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawHero(g);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			drawFloatingItems(g, floatingItems );
 		});
 	}
 
 	public void treasureDisplay(List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero, boolean isDragging,
-			Item draggedItem, int dragOffsetX, int dragOffsetY) {
+			Item draggedItem, int dragOffsetX, int dragOffsetY,List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawHeroStaminaBar(g, hero);
@@ -137,11 +140,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			drawFloatingItems(g, floatingItems );
 		});
 	}
 
 	public void emptyRoomDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY) {
+			int dragOffsetX, int dragOffsetY,List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
@@ -151,6 +155,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawHero(g);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			drawFloatingItems(g, floatingItems );
 		});
 	}
 
@@ -666,6 +671,42 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 	}
+	
+	
+	private void drawFloatingItems(Graphics2D g, List<FloatingItem> floatingItems) {
+    int cellSize = 60;
+    int padding = 8;
+
+    for (FloatingItem fItem : floatingItems) {
+        Item item = fItem.item();
+        int x = fItem.position.x;
+        int y = fItem.position.y;
+
+        int itemPixelWidth = item.width() * (cellSize + padding) - padding;
+        int itemPixelHeight = item.height() * (cellSize + padding) - padding;
+
+        // Dessin du fond
+        g.setColor(Color.CYAN);
+        g.fillRect(x, y, itemPixelWidth, itemPixelHeight);
+
+        // Dessin de l'image ou du texte
+        if (item.name().contains("Sword")) {
+            g.drawImage(sword, x, y, itemPixelWidth, itemPixelHeight, null);
+        } else if (item.name().contains("Shield")) {
+            g.drawImage(shield, x, y, itemPixelWidth, itemPixelHeight, null);
+        } else {
+            g.setColor(Color.BLACK);
+            String name = item.name();
+            if (name.length() > 8) name = name.substring(0, 7) + "...";
+            g.drawString(name, x + 5, y + cellSize / 2);
+        }
+
+        // Bordure
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, itemPixelWidth, itemPixelHeight);
+    }
+}
+
 
 	private void clearScreen(Graphics2D graphics) {
 		graphics.setColor(Color.BLACK);

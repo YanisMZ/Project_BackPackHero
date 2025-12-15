@@ -58,12 +58,12 @@ public class GameRun {
 					view.combatDisplay(fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
 							dragOffsetX, dragOffsetY, controller.getLastAttackTime());
 				} else if (controller.isInCorridor()) {
-					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,controller.getFloatingItems());
 				} else if (controller.isInTreasure()) {
 
-					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,controller.getFloatingItems());
 				} else {
-					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,controller.getFloatingItems());
 				}
 
 				if (hero.hp() <= 0) {
