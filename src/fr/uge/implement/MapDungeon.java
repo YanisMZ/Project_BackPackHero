@@ -82,6 +82,11 @@ public class MapDungeon {
   public boolean playerOnCorridor() {
     return rooms.get(playerIndex).type() == Type.CORRIDOR;
   }
+  
+  public boolean playeOnExitRom() {
+  	return rooms.get(playerIndex).type() == Type.EXIT;
+  	
+  }
 
   public boolean isVisited(int index) {
     return visited.contains(index);

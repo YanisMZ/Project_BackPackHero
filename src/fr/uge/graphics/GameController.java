@@ -10,6 +10,7 @@ import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
 import fr.uge.implement.BackPack;
+import fr.uge.implement.BackpackExpansionSystem;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.FloatingItem;
@@ -57,6 +58,8 @@ public class GameController {
 	private int pointerDownY = -1;
 	private static final int DRAG_THRESHOLD = 5;
 	private final List<FloatingItem> floatingItems = new ArrayList<>();
+	private final BackpackExpansionSystem expansionSystem;
+	private boolean inExpansionMode = false;
 
 	/**
 	 * Creates a new game controller responsible for handling input events, updating
@@ -73,6 +76,7 @@ public class GameController {
 		this.hero = new Hero(40, 0, 3);
 		setTreasureDisplayCoords();
 		this.treasureChest = new TreasureChest(3, 5, treasureStartX, treasureStartY);
+		this.expansionSystem = new BackpackExpansionSystem(backpack);
 	}
 
 	public boolean isInCorridor() {
@@ -89,6 +93,14 @@ public class GameController {
 
 	public List<Integer> getSelectedSlots() {
 		return selectedItems;
+	}
+
+	public BackpackExpansionSystem getExpansionSystem() {
+		return expansionSystem;
+	}
+
+	public boolean isInExpansionMode() {
+		return inExpansionMode;
 	}
 
 	public boolean isDragging() {
@@ -123,8 +135,10 @@ public class GameController {
 	public Item[][] getTreasureGrid() {
 		return treasureChest.getGrid();
 	}
-	
-	 public List<FloatingItem> getFloatingItems() { return floatingItems; }
+
+	public List<FloatingItem> getFloatingItems() {
+		return floatingItems;
+	}
 
 	/**
 	 * main loop where every pressed key/point will get redirected to another
@@ -149,7 +163,13 @@ public class GameController {
 	private void handleKeyboard(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.Q)
 			System.exit(0);
-
+		 if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
+       inExpansionMode = false;
+       if (!treasureChest.isEmpty()) {
+           setTreasureState();
+       }
+       return;
+   }
 		// Supprimer des items uniquement hors combat
 		if (ke.key() == KeyboardEvent.Key.X && !inCombat)
 			handleDeleteSelectedItems();
@@ -158,7 +178,7 @@ public class GameController {
 			return;
 
 		switch (ke.key()) {
-		
+
 		// CTRL : Terminer le tour du joueur (les ennemis attaquent automatiquement)
 		case KeyboardEvent.Key.CTRL -> {
 			if (fight.isPlayerTurnActive()) {
@@ -168,27 +188,25 @@ public class GameController {
 				System.out.println("Votre tour est déjà terminé !");
 			}
 		}
-		
+
 		default -> {
 		}
 		}
 	}
-	
-	
-	
-	private FloatingItem findFloatingItemAt(int mouseX, int mouseY) {
-    for (FloatingItem f : floatingItems) {
-        int x = f.position.x;
-        int y = f.position.y;
-        int width = f.item.width() * (backpackCellSize + backpackPadding) - backpackPadding;
-        int height = f.item.height() * (backpackCellSize + backpackPadding) - backpackPadding;
 
-        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-            return f;
-        }
-    }
-    return null;
-}
+	private FloatingItem findFloatingItemAt(int mouseX, int mouseY) {
+		for (FloatingItem f : floatingItems) {
+			int x = f.position.x;
+			int y = f.position.y;
+			int width = f.item.width() * (backpackCellSize + backpackPadding) - backpackPadding;
+			int height = f.item.height() * (backpackCellSize + backpackPadding) - backpackPadding;
+
+			if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+				return f;
+			}
+		}
+		return null;
+	}
 
 	/**
 	 * this function will manage every pointer input in the game
@@ -209,18 +227,41 @@ public class GameController {
 	private void handlePointerDown(int mouseX, int mouseY) {
 		pointerDownX = mouseX;
 		pointerDownY = mouseY;
+		
+		
+		if (inExpansionMode) {
+      int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
+      if (slotCoords != null) {
+          int x = slotCoords[0];
+          int y = slotCoords[1];
+          
+          if (expansionSystem.unlockCell(x, y)) {
+              // Case débloquée avec succès
+              if (!expansionSystem.hasPendingUnlocks()) {
+                  // Tous les déblocages sont faits
+                  inExpansionMode = false;
+                  
+                  // Passer au trésor si disponible
+                  if (!treasureChest.isEmpty()) {
+                      setTreasureState();
+                  }
+              }
+          }
+          return;
+      }
+  }
 
-    // Vérifie si on clique sur un item flottant
-    FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
-    if (fItem != null) {
-        draggedItem = fItem.item;
-        dragOffsetX = mouseX - fItem.position.x;
-        dragOffsetY = mouseY - fItem.position.y;
-        isDragging = true;
-        floatingItems.remove(fItem);
-        dragFromTreasure = false;
-        return;
-    }
+		// Vérifie si on clique sur un item flottant
+		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
+		if (fItem != null) {
+			draggedItem = fItem.item;
+			dragOffsetX = mouseX - fItem.position.x;
+			dragOffsetY = mouseY - fItem.position.y;
+			isDragging = true;
+			floatingItems.remove(fItem);
+			dragFromTreasure = false;
+			return;
+		}
 
 		// Check treasure chest click for potential drag (priority)
 		if (inTreasure) {
@@ -259,11 +300,19 @@ public class GameController {
 		}
 
 		// Check backpack click for potential drag
+	// Check backpack click for potential drag
 		int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
 		if (slotCoords != null) {
-			int x = slotCoords[0];
-			int y = slotCoords[1];
-			Item item = backpack.grid()[y][x];
+		    int x = slotCoords[0];
+		    int y = slotCoords[1];
+		    
+		    // AJOUTEZ CETTE VÉRIFICATION :
+		    if (!backpack.isUnlocked(x, y)) {
+		        return; // Ne pas permettre de drag sur case verrouillée
+		    }
+		    
+		    Item item = backpack.grid()[y][x];
+		    
 
 			if (item != null) {
 				draggedItem = item;
@@ -301,93 +350,90 @@ public class GameController {
 	}
 
 	private void handlePointerMove(int mouseX, int mouseY) {
-    if (draggedItem != null && !isDragging) {
-        int deltaX = Math.abs(mouseX - pointerDownX);
-        int deltaY = Math.abs(mouseY - pointerDownY);
+		if (draggedItem != null && !isDragging) {
+			int deltaX = Math.abs(mouseX - pointerDownX);
+			int deltaY = Math.abs(mouseY - pointerDownY);
 
-        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-            isDragging = true;
+			if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+				isDragging = true;
 
-            // Retirer l'item du sac ou du coffre uniquement au début du drag
-            if (dragFromTreasure) {
-                treasureChest.removeItem(draggedItem);
-            } else {
-                backpack.remove(draggedItem);
-            }
-        }
-    }
+				// Retirer l'item du sac ou du coffre uniquement au début du drag
+				if (dragFromTreasure) {
+					treasureChest.removeItem(draggedItem);
+				} else {
+					backpack.remove(draggedItem);
+				}
+			}
+		}
 
-    if (isDragging && draggedItem != null) {
-        dragMouseX = mouseX - dragOffsetX;
-        dragMouseY = mouseY - dragOffsetY;
-    }
-}
-
+		if (isDragging && draggedItem != null) {
+			dragMouseX = mouseX - dragOffsetX;
+			dragMouseY = mouseY - dragOffsetY;
+		}
+	}
 
 	private void handlePointerUp(int mouseX, int mouseY) {
-    // Clic simple sans drag
-    if (draggedItem != null && !isDragging) {
-        if (inCombat && !dragFromTreasure) {
-            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-            if (slotCoords != null) {
-                int x = slotCoords[0];
-                int y = slotCoords[1];
-                Item clickedItem = backpack.grid()[y][x];
-                if (clickedItem != null && fight.isPlayerTurnActive()) {
-                    fight.useItem(clickedItem);
-                    lastAttackTime = System.currentTimeMillis();
-                }
-            }
-        } else if (!inCombat && !dragFromTreasure) {
-            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-            if (slotCoords != null) {
-                toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
-            }
-        }
+		// Clic simple sans drag
+		if (draggedItem != null && !isDragging) {
+			if (inCombat && !dragFromTreasure) {
+				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+				if (slotCoords != null) {
+					int x = slotCoords[0];
+					int y = slotCoords[1];
+					Item clickedItem = backpack.grid()[y][x];
+					if (clickedItem != null && fight.isPlayerTurnActive()) {
+						fight.useItem(clickedItem);
+						lastAttackTime = System.currentTimeMillis();
+					}
+				}
+			} else if (!inCombat && !dragFromTreasure) {
+				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+				if (slotCoords != null) {
+					toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
+				}
+			}
 
-        draggedItem = null;
-        dragStartX = -1;
-        dragStartY = -1;
-        dragFromTreasure = false;
-        pointerDownX = -1;
-        pointerDownY = -1;
-        return;
-    }
+			draggedItem = null;
+			dragStartX = -1;
+			dragStartY = -1;
+			dragFromTreasure = false;
+			pointerDownX = -1;
+			pointerDownY = -1;
+			return;
+		}
 
-    // Drag en cours
-    if (isDragging && draggedItem != null) {
-        boolean placed = false;
+		// Drag en cours
+		if (isDragging && draggedItem != null) {
+			boolean placed = false;
 
-        // Essayer de placer dans le sac
-        int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
-        if (targetCoords != null && backpack.place(draggedItem, targetCoords[0], targetCoords[1])) {
-            placed = true;
-        }
+			// Essayer de placer dans le sac
+			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
+			if (targetCoords != null && backpack.place(draggedItem, targetCoords[0], targetCoords[1])) {
+				placed = true;
+			}
 
-        // Essayer de placer dans le coffre
-        if (!placed && inTreasure && !dragFromTreasure) {
-            int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
-            if (treasureCoords != null && treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1])) {
-                placed = true;
-            }
-        }
+			// Essayer de placer dans le coffre
+			if (!placed && inTreasure && !dragFromTreasure) {
+				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
+				if (treasureCoords != null && treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1])) {
+					placed = true;
+				}
+			}
 
-        // Si pas placé, item devient flottant
-        if (!placed) {
-            floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
-        }
+			// Si pas placé, item devient flottant
+			if (!placed) {
+				floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
+			}
 
-        draggedItem = null;
-        dragStartX = -1;
-        dragStartY = -1;
-        dragFromTreasure = false;
-        pointerDownX = -1;
-        pointerDownY = -1;
-        isDragging = false;
-    }
-}
-
-
+			draggedItem = null;
+			dragStartX = -1;
+			dragStartY = -1;
+			dragFromTreasure = false;
+			pointerDownX = -1;
+			pointerDownY = -1;
+			isDragging = false;
+		}
+	}
 
 	private void toggleSelection(int x, int y, Item clicked) {
 		if (clicked == null)
@@ -416,36 +462,39 @@ public class GameController {
 	}
 
 	private void handleRoomClick(int clickedRoom) {
-    if (!floor.adjacentRooms().contains(clickedRoom))
-        return;
+		if (!floor.adjacentRooms().contains(clickedRoom))
+			return;
 
-    floor.setPlayerIndex(clickedRoom);
+		floor.setPlayerIndex(clickedRoom);
 
-    // On supprime les items flottants à chaque changement de salle
-    floatingItems.clear();
+		// On supprime les items flottants à chaque changement de salle
+		floatingItems.clear();
 
-    if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
-        startCombat();
-    } else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
-        treasureChest.generateTreasure();
-        setTreasureState();
-        floor.markVisited(clickedRoom);
-    } else if (floor.playerOnCorridor()) {
-        setCorridorState();
-    } else {
-        setEmptyRoomState();
-    }
+		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
+			startCombat();
+		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
+			treasureChest.generateTreasure();
+			setTreasureState();
+			floor.markVisited(clickedRoom);
+		} else if (floor.playerOnCorridor()) {
+			setCorridorState();
+		} else if (floor.playeOnExitRom()) {
+			goToNextFloor();
+		} else {
+			setEmptyRoomState();
+		}
 
-    floor.markVisited(clickedRoom);
-}
-
+		floor.markVisited(clickedRoom);
+	}
 
 	private void leaveTreasureRoom() {
-    treasureChest.clear();
-    floatingItems.clear(); // supprime tous les items flottants
-    if (floor.playerOnCorridor()) setCorridorState();
-    else setEmptyRoomState();
-}
+		treasureChest.clear();
+		floatingItems.clear(); // supprime tous les items flottants
+		if (floor.playerOnCorridor())
+			setCorridorState();
+		else
+			setEmptyRoomState();
+	}
 
 	private void startCombat() {
 		fight.initEnemies();
@@ -453,14 +502,26 @@ public class GameController {
 	}
 
 	private void checkCombatEnd() {
-		if (fight != null && !fight.isRunning()) {
-			inCombat = false;
-			treasureChest.generateTreasure();
-			if (!treasureChest.isEmpty())
-				setTreasureState();
-		}
-	}
-
+		 System.out.println(">>> checkCombatEnd appelé");
+	    if (fight != null && !fight.isRunning()) {
+	        System.out.println(">>> Combat terminé !");
+	        inCombat = false;
+	        
+	        int defeatedEnemies = fight.getDefeatedEnemiesCount();
+	        System.out.println(">>> Ennemis vaincus : " + defeatedEnemies);
+	        
+	        expansionSystem.addPendingUnlocks(defeatedEnemies);
+	        
+	        if (expansionSystem.hasPendingUnlocks()) {
+	            inExpansionMode = true;
+	            System.out.println(">>> MODE EXPANSION ACTIVÉ !");
+	        }
+        
+        treasureChest.generateTreasure();
+        if (!treasureChest.isEmpty() && !inExpansionMode)
+            setTreasureState();
+    }
+}
 	private void setCorridorState() {
 		inCorridor = true;
 		inTreasure = false;
@@ -539,7 +600,7 @@ public class GameController {
 	}
 
 	private void goToNextFloor() {
-		
+
 		if (floorIndex + 1 >= 3) {
 			System.out.println("Fin du donjon ! Il n'y a plus d'étages.");
 			System.exit(0);

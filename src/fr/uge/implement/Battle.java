@@ -9,9 +9,14 @@ public class Battle {
 	private final Hero hero;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final Random random = new Random();
-	private enum EnemyAction { ATTACK, DEFEND }
+
+	private enum EnemyAction {
+		ATTACK, DEFEND
+	}
+
 	private final List<EnemyAction> enemyActions = new ArrayList<>();
 	private boolean playerTurnActive = true;
+	private int defeatedEnemiesThisCombat = 0;
 
 	public Battle(Hero hero) {
 		this.hero = hero;
@@ -26,11 +31,11 @@ public class Battle {
 		for (int i = 0; i < nb; i++) {
 			enemies.add(random.nextBoolean() ? new SmallWolfRat() : new WolfRat());
 		}
-		
+
 		// Au début du combat, le tour joueur est actif
 		playerTurnActive = true;
 		hero.resetStaminaForNewTurn();
-		
+
 		// Les ennemis annoncent immédiatement leurs actions pour le premier tour
 		announceEnemyTurn();
 	}
@@ -38,8 +43,9 @@ public class Battle {
 	/* ===================== PLAYER ===================== */
 
 	/**
-	 * Le joueur utilise un item. Cela consomme de la stamina.
-	 * Le joueur peut utiliser plusieurs items tant qu'il a de la stamina.
+	 * Le joueur utilise un item. Cela consomme de la stamina. Le joueur peut
+	 * utiliser plusieurs items tant qu'il a de la stamina.
+	 * 
 	 * @return true si l'item a été utilisé avec succès
 	 */
 	public boolean useItem(Item item) {
@@ -49,15 +55,15 @@ public class Battle {
 		}
 
 		if (!hero.hasStamina(item.staminaCost())) {
-			System.out.println("Pas assez de stamina ! (Coût: " + item.staminaCost() + 
-			                   ", Restant: " + hero.currentStamina() + ")");
+			System.out
+					.println("Pas assez de stamina ! (Coût: " + item.staminaCost() + ", Restant: " + hero.currentStamina() + ")");
 			return false;
 		}
 
 		// Consommer la stamina
 		hero.useStamina(item.staminaCost());
-		System.out.println("Utilisation de " + item.name() + " (Coût: " + item.staminaCost() + 
-		                   ", Stamina restante: " + hero.currentStamina() + ")");
+		System.out.println("Utilisation de " + item.name() + " (Coût: " + item.staminaCost() + ", Stamina restante: "
+				+ hero.currentStamina() + ")");
 
 		// Appliquer les effets de défense
 		if (item.defendValue() > 0) {
@@ -69,11 +75,12 @@ public class Battle {
 		if (!enemies.isEmpty() && item.attackValue() > 0) {
 			Enemy target = enemies.get(0);
 			System.out.println("Attaque sur " + target.name() + " : " + item.attackValue() + " dégâts");
-			
+
 			target = target.takeDamage(item.attackValue());
 
 			if (!target.isAlive()) {
 				System.out.println(target.name() + " est vaincu !");
+				defeatedEnemiesThisCombat++;
 				enemies.remove(0);
 			} else {
 				enemies.set(0, target);
@@ -84,20 +91,20 @@ public class Battle {
 	}
 
 	/**
-	 * Le joueur met fin à son tour.
-	 * Cela déclenche l'exécution immédiate du tour ennemi.
+	 * Le joueur met fin à son tour. Cela déclenche l'exécution immédiate du tour
+	 * ennemi.
 	 */
 	public void endPlayerTurn() {
 		if (!playerTurnActive) {
 			System.out.println("Le tour joueur est déjà terminé !");
 			return;
 		}
-		
+
 		playerTurnActive = false;
 		System.out.println("\n========== FIN DU TOUR JOUEUR ==========");
-		System.out.println("Stamina utilisée ce tour: " + 
-		                   (hero.maxStamina() - hero.currentStamina()) + "/" + hero.maxStamina());
-		
+		System.out
+				.println("Stamina utilisée ce tour: " + (hero.maxStamina() - hero.currentStamina()) + "/" + hero.maxStamina());
+
 		// Exécuter immédiatement le tour des ennemis
 		executeEnemyTurn();
 	}
@@ -105,8 +112,8 @@ public class Battle {
 	/* ===================== ENEMIES ===================== */
 
 	/**
-	 * Les ennemis annoncent leurs actions pour le prochain tour.
-	 * Cela est appelé AVANT que le joueur ne commence son tour.
+	 * Les ennemis annoncent leurs actions pour le prochain tour. Cela est appelé
+	 * AVANT que le joueur ne commence son tour.
 	 */
 	public void announceEnemyTurn() {
 		enemyActions.clear();
@@ -122,20 +129,20 @@ public class Battle {
 				System.out.println("🛡️  " + e.name() + " va SE DÉFENDRE");
 			}
 		}
-		
+
 		System.out.println("=========================================\n");
 	}
 
 	/**
-	 * Exécute les actions annoncées des ennemis.
-	 * Après cela, un nouveau tour joueur commence.
+	 * Exécute les actions annoncées des ennemis. Après cela, un nouveau tour joueur
+	 * commence.
 	 */
 	public void executeEnemyTurn() {
 		if (enemyActions.isEmpty()) {
 			System.out.println("Les ennemis n'ont pas encore annoncé leurs actions !");
 			return;
 		}
-		
+
 		System.out.println("\n========== EXÉCUTION DU TOUR ENNEMI ==========");
 
 		for (int i = 0; i < enemies.size(); i++) {
@@ -152,21 +159,21 @@ public class Battle {
 				enemies.set(i, e.defend());
 			}
 		}
-		
+
 		// Réinitialiser la protection du héros après le tour ennemi
 		hero.resetProtection();
-		
+
 		// Commencer un nouveau tour joueur
 		if (isRunning()) {
 			startNewPlayerTurn();
 		}
-		
+
 		System.out.println("==============================================\n");
 	}
 
 	/**
-	 * Démarre un nouveau tour pour le joueur.
-	 * Les ennemis annoncent leurs actions AVANT que le joueur ne joue.
+	 * Démarre un nouveau tour pour le joueur. Les ennemis annoncent leurs actions
+	 * AVANT que le joueur ne joue.
 	 */
 	private void startNewPlayerTurn() {
 		playerTurnActive = true;
@@ -174,7 +181,7 @@ public class Battle {
 		System.out.println("\n========== NOUVEAU TOUR JOUEUR ==========");
 		System.out.println("Stamina disponible: " + hero.currentStamina() + "/" + hero.maxStamina());
 		System.out.println("=========================================\n");
-		
+
 		// Les ennemis annoncent leurs actions pour ce tour
 		announceEnemyTurn();
 	}
@@ -184,7 +191,7 @@ public class Battle {
 	public boolean isRunning() {
 		return hero.hp() > 0 && !enemies.isEmpty();
 	}
-	
+
 	public boolean isPlayerTurnActive() {
 		return playerTurnActive;
 	}
@@ -192,7 +199,7 @@ public class Battle {
 	public List<Enemy> getEnemy() {
 		return List.copyOf(enemies);
 	}
-	
+
 	public Hero getHero() {
 		return hero;
 	}
@@ -201,7 +208,13 @@ public class Battle {
 		// TODO Auto-generated method stub
 		return enemies.size();
 	}
-	
-	
+
+	/**
+	 * Retourne le nombre d'ennemis vaincus dans ce combat
+	 */
+	public int getDefeatedEnemiesCount() {
+		 System.out.println("[Battle] Retourne : " + defeatedEnemiesThisCombat);
+	    return defeatedEnemiesThisCombat;
+	}
 
 }
