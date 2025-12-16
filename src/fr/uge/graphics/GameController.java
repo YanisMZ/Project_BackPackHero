@@ -132,7 +132,6 @@ public class GameController {
 		return fight;
 	}
 
-	/** Retourne la grille du trésor gérée par l'objet TreasureChest. */
 	public Item[][] getTreasureGrid() {
 		return treasureChest.getGrid();
 	}
@@ -171,7 +170,7 @@ public class GameController {
         && isDragging && draggedItem != null) {
 
         draggedItem = draggedItem.rotate();
-        dragOriginalItem = draggedItem; // garder la référence
+        dragOriginalItem = draggedItem;
         return;
     }
 

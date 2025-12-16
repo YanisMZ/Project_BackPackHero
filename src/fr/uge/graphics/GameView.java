@@ -39,7 +39,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static BufferedImage attackOrDefenseBanner;
 	private static BufferedImage attackBanner;
 	private static BufferedImage defendBanner;
-	private static BufferedImage sword;
+	private static BufferedImage sword90;
+	private static BufferedImage sword180;
 	private static BufferedImage shield;
 	private static BufferedImage injuredEnemy;
 	private static BufferedImage swordv;
@@ -81,7 +82,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		attackOrDefenseBanner = loadImage("attackdefend.png");
 		attackBanner = loadImage("attack.png");
 		defendBanner = loadImage("defend.png");
-		sword = loadImage("./weapons/sword90.png");
+		sword90 = loadImage("./weapons/sword90.png");
+		sword180 = loadImage("./weapons/sword180.png");
 		shield = loadImage("./weapons/shield.png");
 		injuredEnemy = loadImage("./injuredRat.jpg");
 		swordv = loadImage("./weapons/sword90v.png");
@@ -322,7 +324,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.YELLOW);
 		graphics.drawString("(ESPACE pour passer)", originX, originY + (backpack.height() + 1) * (cellSize + padding));
 
-// Dessiner toutes les cases
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				int cellX = originX + x * (cellSize + padding);
@@ -332,20 +333,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				boolean isExpandable = expansionSystem.isExpansionAvailable(x, y);
 				Item item = grid[y][x];
 
-// Couleur de fond
 				if (isExpandable) {
-// Case disponible pour expansion
 					graphics.setColor(new Color(0, 255, 0, 150));
 				} else if (isUnlocked) {
-// Case déjà débloquée
 					graphics.setColor(item == null ? Color.YELLOW : Color.BLACK);
 				} else {
-// Case verrouillée
 					graphics.setColor(new Color(80, 80, 80));
 				}
 				graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-// Bordure
 				if (isExpandable) {
 					graphics.setColor(Color.GREEN);
 					graphics.setStroke(new java.awt.BasicStroke(3));
@@ -356,7 +352,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 				graphics.setStroke(new java.awt.BasicStroke(1));
 
-// Icône de cadenas pour cases verrouillées
 				if (!isUnlocked && !isExpandable) {
 					graphics.setColor(Color.DARK_GRAY);
 					graphics.fillRect(cellX + cellSize / 3, cellY + cellSize / 3, cellSize / 3, cellSize / 3);
@@ -364,7 +359,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
-// Dessiner les items existants
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
@@ -384,7 +378,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 					int finalHeight = item.height() * (cellSize + padding) - padding;
 
 					if (item.name().contains("Sword") || item.name().contains("Epee")) {
-						graphics.drawImage(sword, cellX, cellY, finalWidth, finalHeight, null);
+						BufferedImage img = item.isRotated() ? sword180 : sword90;
+						graphics.drawImage(img, cellX, cellY, finalWidth, finalHeight, null);
 					} else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
 						graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
 					} else {
@@ -483,7 +478,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		graphics.setColor(Color.BLACK);
 		graphics.drawString("Backpack :", originX, originY - 10);
 
-		// NOUVELLE PARTIE : Dessiner toutes les cases avec gestion du verrouillage
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				int cellX = originX + x * (cellSize + padding);
@@ -491,9 +485,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				Item item = grid[y][x];
 				boolean isUnlocked = backpack.isUnlocked(x, y);
 
-				// Couleur de fond selon l'état de débloquage
 				if (!isUnlocked) {
-					// Case verrouillée - gris foncé
 					graphics.setColor(new Color(60, 60, 60));
 				} else if (isDragging && item == draggedItem) {
 					graphics.setColor(Color.YELLOW);
@@ -504,7 +496,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				}
 				graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-				// Bordure
 				if (item != null && item != draggedItem) {
 					graphics.setColor(Color.GRAY);
 				} else {
@@ -512,7 +503,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				}
 				graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-				// NOUVEAU : Cadenas pour cases verrouillées
 				if (!isUnlocked) {
 					graphics.setColor(Color.DARK_GRAY);
 					int lockSize = cellSize / 3;
@@ -527,12 +517,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 		}
 
-		// Dessiner les items (modification : ajouter vérification isUnlocked)
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
 
-				// MODIFIÉ : Ajouter !backpack.isUnlocked(x, y)
 				if (item == null || (isDragging && item == draggedItem) || !backpack.isUnlocked(x, y))
 					continue;
 
@@ -568,7 +556,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 					}
 
 					if (item.name().contains("Sword") || item.name().contains("Epee")) {
-						graphics.drawImage(sword, cellX, cellY, finalWidth, finalHeight, null);
+						BufferedImage img = item.isRotated() ? sword180 : sword90;
+						graphics.drawImage(img, cellX, cellY, finalWidth, finalHeight, null);
 					} else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
 						graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
 					} else {
@@ -596,7 +585,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			graphics.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
 
 			if (draggedItem.name().contains("Sword") || draggedItem.name().contains("Epee")) {
-				graphics.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+				BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
+				graphics.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else if (draggedItem.name().contains("Shield") || draggedItem.name().contains("Bouclier")) {
 				graphics.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else {
@@ -685,7 +675,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 					int itemHeight = item.height() * (cellSize + padding) - padding;
 
 					if (item.name().contains("Sword")) {
-						g.drawImage(sword, cellX, cellY, itemWidth, itemHeight, null);
+						BufferedImage img = item.isRotated() ? sword180 : sword90;
+						g.drawImage(img, cellX, cellY, itemWidth, itemHeight, null);
 					} else if (item.name().contains("Shield")) {
 						g.drawImage(shield, cellX, cellY, itemWidth, itemHeight, null);
 					} else {
@@ -714,7 +705,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
 
 			if (draggedItem.name().contains("Sword")) {
-				g.drawImage(sword, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+				BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
+				g.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else if (draggedItem.name().contains("Shield")) {
 				g.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
 			} else {
@@ -874,7 +866,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 			// Dessin de l'image ou du texte
 			if (item.name().contains("Sword")) {
-				g.drawImage(sword, x, y, itemPixelWidth, itemPixelHeight, null);
+				BufferedImage img = item.isRotated() ? sword180 : sword90;
+				g.drawImage(img, x, y, itemPixelWidth, itemPixelHeight, null);
 			} else if (item.name().contains("Shield")) {
 				g.drawImage(shield, x, y, itemPixelWidth, itemPixelHeight, null);
 			} else {
