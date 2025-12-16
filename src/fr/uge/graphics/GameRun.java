@@ -1,9 +1,10 @@
 package fr.uge.graphics;
 
 import java.awt.Color;
+
 import java.awt.geom.Rectangle2D;
 import java.util.List;
-
+import java.util.concurrent.atomic.AtomicBoolean;
 import com.github.forax.zen.Application;
 
 import fr.uge.implement.BackPack;
@@ -25,19 +26,31 @@ public class GameRun {
 			int status = 0;
 			Dungeon dungeon = new Dungeon();
 
-			// Créer le sac avec une taille max de 5x5
 			BackPack backpack = new BackPack(5, 5);
 
-			// Débloquer une zone de départ (3x3 en haut à gauche)
-			int[][] startCells = { { 2, 3 }, { 2, 1 }, { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 3, 1 }, { 3,  2} };
+			int[][] startCells = { { 2, 3 }, { 2, 1 }, { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 3, 1 }, { 3, 2 } };
 			backpack.unlockCells(startCells);
 
-			// Ajouter les items de départ
+			var floor0 = dungeon.getFloor(0);
+			GameView view = new GameView(context, floor0, backpack);
+
+			AtomicBoolean areAssetsLoaded = new AtomicBoolean(false);
+			long startTime = System.currentTimeMillis();
+
+			new Thread(() -> {
+				GameView.loadGameAssets();
+				areAssetsLoaded.set(true);
+			}).start();
+
+			while (!areAssetsLoaded.get()) {
+				view.loadingDisplay(startTime);
+				context.pollOrWaitEvent(10);
+			}
+
 			backpack.place(new Sword("Sword 1", 10, 1, 1, 2), 2, 1);
 			backpack.place(new Shield("Shield", 5, 1, 1), 2, 0);
 			backpack.place(new Sword("Sword 2", 15, 1, 1, 2), 1, 1);
 
-			var floor0 = dungeon.getFloor(0);
 			var hero = new Hero(40, 0, 3);
 			var fight = new Battle(hero);
 
@@ -45,12 +58,6 @@ public class GameRun {
 			var width = screenInfo.width();
 			var height = screenInfo.height();
 
-			context.renderFrame(graphics -> {
-				graphics.setColor(Color.ORANGE);
-				graphics.fill(new Rectangle2D.Float(0, 0, width, height));
-			});
-
-			GameView view = new GameView(context, floor0, backpack);
 			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon);
 
 			while (true) {

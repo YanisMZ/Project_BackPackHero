@@ -163,13 +163,13 @@ public class GameController {
 	private void handleKeyboard(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.Q)
 			System.exit(0);
-		 if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
-       inExpansionMode = false;
-       if (!treasureChest.isEmpty()) {
-           setTreasureState();
-       }
-       return;
-   }
+		if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
+			inExpansionMode = false;
+			if (!treasureChest.isEmpty()) {
+				setTreasureState();
+			}
+			return;
+		}
 		// Supprimer des items uniquement hors combat
 		if (ke.key() == KeyboardEvent.Key.X && !inCombat)
 			handleDeleteSelectedItems();
@@ -227,29 +227,28 @@ public class GameController {
 	private void handlePointerDown(int mouseX, int mouseY) {
 		pointerDownX = mouseX;
 		pointerDownY = mouseY;
-		
-		
+
 		if (inExpansionMode) {
-      int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
-      if (slotCoords != null) {
-          int x = slotCoords[0];
-          int y = slotCoords[1];
-          
-          if (expansionSystem.unlockCell(x, y)) {
-              // Case débloquée avec succès
-              if (!expansionSystem.hasPendingUnlocks()) {
-                  // Tous les déblocages sont faits
-                  inExpansionMode = false;
-                  
-                  // Passer au trésor si disponible
-                  if (!treasureChest.isEmpty()) {
-                      setTreasureState();
-                  }
-              }
-          }
-          return;
-      }
-  }
+			int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
+			if (slotCoords != null) {
+				int x = slotCoords[0];
+				int y = slotCoords[1];
+
+				if (expansionSystem.unlockCell(x, y)) {
+					// Case débloquée avec succès
+					if (!expansionSystem.hasPendingUnlocks()) {
+						// Tous les déblocages sont faits
+						inExpansionMode = false;
+
+						// Passer au trésor si disponible
+						if (!treasureChest.isEmpty()) {
+							setTreasureState();
+						}
+					}
+				}
+				return;
+			}
+		}
 
 		// Vérifie si on clique sur un item flottant
 		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
@@ -300,19 +299,18 @@ public class GameController {
 		}
 
 		// Check backpack click for potential drag
-	// Check backpack click for potential drag
+		// Check backpack click for potential drag
 		int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
 		if (slotCoords != null) {
-		    int x = slotCoords[0];
-		    int y = slotCoords[1];
-		    
-		    // AJOUTEZ CETTE VÉRIFICATION :
-		    if (!backpack.isUnlocked(x, y)) {
-		        return; // Ne pas permettre de drag sur case verrouillée
-		    }
-		    
-		    Item item = backpack.grid()[y][x];
-		    
+			int x = slotCoords[0];
+			int y = slotCoords[1];
+
+			// AJOUTEZ CETTE VÉRIFICATION :
+			if (!backpack.isUnlocked(x, y)) {
+				return; // Ne pas permettre de drag sur case verrouillée
+			}
+
+			Item item = backpack.grid()[y][x];
 
 			if (item != null) {
 				draggedItem = item;
@@ -502,26 +500,27 @@ public class GameController {
 	}
 
 	private void checkCombatEnd() {
-		 System.out.println(">>> checkCombatEnd appelé");
-	    if (fight != null && !fight.isRunning()) {
-	        System.out.println(">>> Combat terminé !");
-	        inCombat = false;
-	        
-	        int defeatedEnemies = fight.getDefeatedEnemiesCount();
-	        System.out.println(">>> Ennemis vaincus : " + defeatedEnemies);
-	        
-	        expansionSystem.addPendingUnlocks(defeatedEnemies);
-	        
-	        if (expansionSystem.hasPendingUnlocks()) {
-	            inExpansionMode = true;
-	            System.out.println(">>> MODE EXPANSION ACTIVÉ !");
-	        }
-        
-        treasureChest.generateTreasure();
-        if (!treasureChest.isEmpty() && !inExpansionMode)
-            setTreasureState();
-    }
-}
+		System.out.println(">>> checkCombatEnd appelé");
+		if (fight != null && !fight.isRunning()) {
+			System.out.println(">>> Combat terminé !");
+			inCombat = false;
+
+			int defeatedEnemies = fight.getDefeatedEnemiesCount();
+			System.out.println(">>> Ennemis vaincus : " + defeatedEnemies);
+
+			expansionSystem.addPendingUnlocks(defeatedEnemies);
+
+			if (expansionSystem.hasPendingUnlocks()) {
+				inExpansionMode = true;
+				System.out.println(">>> MODE EXPANSION ACTIVÉ !");
+			}
+
+			treasureChest.generateTreasure();
+			if (!treasureChest.isEmpty() && !inExpansionMode)
+				setTreasureState();
+		}
+	}
+
 	private void setCorridorState() {
 		inCorridor = true;
 		inTreasure = false;
