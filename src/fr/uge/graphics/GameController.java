@@ -417,20 +417,18 @@ public class GameController {
 			return;
 		}
 
-		// =====================
-		// DRAG TERMINÉ
-		// =====================
+	
 		if (isDragging && draggedItem != null) {
 
 			boolean placed = false;
 
-			// 1️⃣ Tentative de placement dans le backpack
+			//  Tentative de placement dans le backpack
 			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
 			if (targetCoords != null) {
 				placed = backpack.place(draggedItem, targetCoords[0], targetCoords[1]);
 			}
 
-			// 2️⃣ Tentative de placement dans le coffre
+			
 			if (!placed && inTreasure && !dragFromTreasure) {
 				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
 				if (treasureCoords != null) {
@@ -438,7 +436,7 @@ public class GameController {
 				}
 			}
 
-			// 3️⃣ ❌ AUCUN EMPLACEMENT → OBJET FLOTTANT
+			
 			if (!placed) {
 				floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
 			}
