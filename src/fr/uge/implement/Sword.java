@@ -17,4 +17,15 @@ public record Sword(String name, int dmg,int stamina, int width, int height) imp
 	public int staminaCost() {
 		return stamina;
 	}
+	
+	
+	@Override
+  public Item rotate() {
+      return new RotatableItem(this, true);
+  }
+
+  @Override
+  public boolean isRotated() {
+      return false;
+  }
 }

@@ -20,4 +20,14 @@ public record Shield(String name, int hp,int width, int height) implements Item 
 		return 1;
 	}
 
+	@Override
+  public Item rotate() {
+      return new RotatableItem(this, true);
+  }
+
+  @Override
+  public boolean isRotated() {
+      return false;
+  }
+
 }

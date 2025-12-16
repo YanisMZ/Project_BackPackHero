@@ -37,4 +37,16 @@ public record Gold(String name) implements Item {
 		return 0;
 	}
 
+	@Override
+	public Item rotate() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isRotated() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

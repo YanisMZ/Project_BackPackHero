@@ -60,6 +60,7 @@ public class GameController {
 	private final List<FloatingItem> floatingItems = new ArrayList<>();
 	private final BackpackExpansionSystem expansionSystem;
 	private boolean inExpansionMode = false;
+	private Item dragOriginalItem = null;
 
 	/**
 	 * Creates a new game controller responsible for handling input events, updating
@@ -161,38 +162,47 @@ public class GameController {
 	 * this function will manage every keyboard inputs in the game
 	 */
 	private void handleKeyboard(KeyboardEvent ke) {
-		if (ke.key() == KeyboardEvent.Key.Q)
-			System.exit(0);
-		if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
-			inExpansionMode = false;
-			if (!treasureChest.isEmpty()) {
-				setTreasureState();
-			}
-			return;
-		}
-		// Supprimer des items uniquement hors combat
-		if (ke.key() == KeyboardEvent.Key.X && !inCombat)
-			handleDeleteSelectedItems();
+    if (ke.key() == KeyboardEvent.Key.Q)
+        System.exit(0);
 
-		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
-			return;
+    // Rotation d'item avec un seul appui
+    if (ke.key() == KeyboardEvent.Key.R 
+        && ke.action() == KeyboardEvent.Action.KEY_PRESSED
+        && isDragging && draggedItem != null) {
 
-		switch (ke.key()) {
+        draggedItem = draggedItem.rotate();
+        dragOriginalItem = draggedItem; // garder la référence
+        return;
+    }
 
-		// CTRL : Terminer le tour du joueur (les ennemis attaquent automatiquement)
-		case KeyboardEvent.Key.CTRL -> {
-			if (fight.isPlayerTurnActive()) {
-				fight.endPlayerTurn();
-				checkCombatEnd();
-			} else {
-				System.out.println("Votre tour est déjà terminé !");
-			}
-		}
+    if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
+        inExpansionMode = false;
+        if (!treasureChest.isEmpty()) {
+            setTreasureState();
+        }
+        return;
+    }
 
-		default -> {
-		}
-		}
-	}
+    // Supprimer des items uniquement hors combat
+    if (ke.key() == KeyboardEvent.Key.X && !inCombat)
+        handleDeleteSelectedItems();
+
+    if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
+        return;
+
+    switch (ke.key()) {
+        case KeyboardEvent.Key.CTRL -> {
+            if (fight.isPlayerTurnActive()) {
+                fight.endPlayerTurn();
+                checkCombatEnd();
+            } else {
+                System.out.println("Votre tour est déjà terminé !");
+            }
+        }
+        default -> {}
+    }
+}
+
 
 	private FloatingItem findFloatingItemAt(int mouseX, int mouseY) {
 		for (FloatingItem f : floatingItems) {
@@ -282,6 +292,7 @@ public class GameController {
 					}
 
 					draggedItem = item;
+					dragOriginalItem = item;
 					dragFromTreasure = true;
 					dragStartX = itemStartX;
 					dragStartY = itemStartY;
@@ -314,6 +325,7 @@ public class GameController {
 
 			if (item != null) {
 				draggedItem = item;
+				dragOriginalItem = item;
 				dragStartX = x;
 				dragStartY = y;
 				dragFromTreasure = false;
@@ -371,8 +383,12 @@ public class GameController {
 	}
 
 	private void handlePointerUp(int mouseX, int mouseY) {
-		// Clic simple sans drag
+
+		// =====================
+		// CLIC SIMPLE (pas un drag)
+		// =====================
 		if (draggedItem != null && !isDragging) {
+
 			if (inCombat && !dragFromTreasure) {
 				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
 				if (slotCoords != null) {
@@ -391,6 +407,7 @@ public class GameController {
 				}
 			}
 
+			// cleanup
 			draggedItem = null;
 			dragStartX = -1;
 			dragStartY = -1;
@@ -400,29 +417,33 @@ public class GameController {
 			return;
 		}
 
-		// Drag en cours
+		// =====================
+		// DRAG TERMINÉ
+		// =====================
 		if (isDragging && draggedItem != null) {
+
 			boolean placed = false;
 
-			// Essayer de placer dans le sac
+			// 1️⃣ Tentative de placement dans le backpack
 			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
-			if (targetCoords != null && backpack.place(draggedItem, targetCoords[0], targetCoords[1])) {
-				placed = true;
+			if (targetCoords != null) {
+				placed = backpack.place(draggedItem, targetCoords[0], targetCoords[1]);
 			}
 
-			// Essayer de placer dans le coffre
+			// 2️⃣ Tentative de placement dans le coffre
 			if (!placed && inTreasure && !dragFromTreasure) {
 				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
-				if (treasureCoords != null && treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1])) {
-					placed = true;
+				if (treasureCoords != null) {
+					placed = treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1]);
 				}
 			}
 
-			// Si pas placé, item devient flottant
+			// 3️⃣ ❌ AUCUN EMPLACEMENT → OBJET FLOTTANT
 			if (!placed) {
 				floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
 			}
 
+			// cleanup final
 			draggedItem = null;
 			dragStartX = -1;
 			dragStartY = -1;

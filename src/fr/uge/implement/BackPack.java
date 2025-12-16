@@ -18,7 +18,8 @@ public class BackPack {
      * width/height = taille MAX du sac
      */
     public BackPack(int width, int height) {
-        if (width <= 0 || height <= 0) throw new IllegalArgumentException();
+        if (width <= 0 || height <= 0)
+            throw new IllegalArgumentException();
 
         this.width = width;
         this.height = height;
@@ -26,10 +27,15 @@ public class BackPack {
         this.unlocked = new boolean[height][width];
     }
 
+    /* ===================== ACCESSORS ===================== */
+
     public int width() { return width; }
     public int height() { return height; }
     public Item[][] grid() { return grid; }
-    public boolean isUnlocked(int x, int y) { return unlocked[y][x]; }
+
+    public boolean isUnlocked(int x, int y) {
+        return unlocked[y][x];
+    }
 
     /* ===================== UNLOCK ===================== */
 
@@ -71,7 +77,8 @@ public class BackPack {
     }
 
     public boolean place(Item item, int x, int y) {
-        if (!canPlace(item, x, y)) return false;
+        if (!canPlace(item, x, y))
+            return false;
 
         for (int dy = 0; dy < item.height(); dy++) {
             for (int dx = 0; dx < item.width(); dx++) {
@@ -81,23 +88,49 @@ public class BackPack {
         return true;
     }
 
+    /**
+     * Try to add an item anywhere in the backpack.
+     * Tries normal orientation first, then rotated.
+     */
     public boolean autoAdd(Item item) {
+        Objects.requireNonNull(item);
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
+
                 if (canPlace(item, x, y))
                     return place(item, x, y);
+
+                Item rotated = item.rotate();
+                if (canPlace(rotated, x, y))
+                    return place(rotated, x, y);
             }
         }
         return false;
     }
 
+    /**
+     * Try to add an item at a specific position.
+     * Accepts rotation implicitly.
+     */
     public boolean addAt(Item item, int x, int y) {
-        return place(item, x, y);
+        Objects.requireNonNull(item);
+
+        if (canPlace(item, x, y))
+            return place(item, x, y);
+
+        Item rotated = item.rotate();
+        if (canPlace(rotated, x, y))
+            return place(rotated, x, y);
+
+        return false;
     }
 
     /* ===================== REMOVE / MOVE ===================== */
 
     public boolean remove(Item item) {
+        Objects.requireNonNull(item);
+
         boolean removed = false;
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -110,21 +143,35 @@ public class BackPack {
         return removed;
     }
 
+    /**
+     * Move an item to a new position.
+     * Keeps orientation if possible, otherwise tries rotated.
+     */
     public boolean move(Item item, int newX, int newY) {
-        if (item == null) return false;
+        Objects.requireNonNull(item);
 
         remove(item);
-        if (!place(item, newX, newY)) {
-            autoAdd(item);
-            return false;
-        }
-        return true;
+
+        if (place(item, newX, newY))
+            return true;
+
+        Item rotated = item.rotate();
+        if (place(rotated, newX, newY))
+            return true;
+
+        autoAdd(item);
+        return false;
     }
 
+    /* ===================== QUERY ===================== */
+
     public boolean contains(Item item) {
+        Objects.requireNonNull(item);
+
         for (Item[] row : grid) {
             for (Item cell : row) {
-                if (cell == item) return true;
+                if (cell == item)
+                    return true;
             }
         }
         return false;
