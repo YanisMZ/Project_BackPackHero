@@ -84,7 +84,7 @@ public class GameRun {
 							dragOffsetX, dragOffsetY, controller.getLastAttackTime());
 				} else if (controller.isInCorridor()) {
 					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
-							controller.getFloatingItems());
+							controller.getFloatingItems(), controller.getLastChangeRoom());
 				} else if (controller.isInTreasure()) {
 					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems());

@@ -42,7 +42,7 @@ public class GameController {
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
 	private long lastChangeRoom = 0;
-	
+
 	private final TreasureChest treasureChest;
 
 	private final int backpackOriginX = 20, backpackOriginY = 550;
@@ -138,7 +138,7 @@ public class GameController {
 	public long getLastAttackTime() {
 		return lastAttackTime;
 	}
-	
+
 	public long getLastChangeRoom() {
 		return lastChangeRoom;
 	}
@@ -155,10 +155,10 @@ public class GameController {
 
 		return treasureChest.getGrid().getGrid();
 	}
-	
+
 	public Item[][] getMerchantGrid() {
-    return merchant.getStock().getGrid();
-}
+		return merchant.getStock().getGrid();
+	}
 
 	public List<FloatingItem> getFloatingItems() {
 		return floatingItems;
@@ -331,8 +331,6 @@ public class GameController {
 			}
 		}
 
-		// Check backpack click for potential drag
-		// Check backpack click for potential drag
 		int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
 		if (slotCoords != null) {
 			int x = slotCoords[0];
@@ -368,29 +366,32 @@ public class GameController {
 			int room = roomAt(mouseX, mouseY);
 			if (room != -1) {
 				leaveTreasureRoom();
+				lastChangeRoom = System.currentTimeMillis();
 				handleRoomClick(room);
 				return;
 			}
 		}
-		
+
 		if (inMerchant) {
-	    int room = roomAt(mouseX, mouseY);
-	    if (room != -1) {
-	        leaveMerchantRoom();
-	        handleRoomClick(room);
-	        return;
-	    }
+			int room = roomAt(mouseX, mouseY);
+			if (room != -1) {
+				leaveMerchantRoom();
+				lastChangeRoom = System.currentTimeMillis();
+				handleRoomClick(room);
+				return;
+			}
 		}
 
 		// Handle room clicks
 		if (!inCombat && !inTreasure) {
 			int room = roomAt(mouseX, mouseY);
-			if (room != -1)
+			if (room != -1) {
 				handleRoomClick(room);
+				lastChangeRoom = System.currentTimeMillis();
+			}
 		}
-		
-		}
-	
+
+	}
 
 	private void handlePointerMove(int mouseX, int mouseY) {
 		if (draggedItem != null && !isDragging) {
@@ -421,17 +422,17 @@ public class GameController {
 		// CLIC SIMPLE (pas un drag)
 		// =====================
 		if (draggedItem != null && !isDragging) {
-			
+
 			if (inMerchant) {
-        handleMerchantClick(pointerDownX, pointerDownY);
-        draggedItem = null;
-        dragStartX = -1;
-        dragStartY = -1;
-        dragFromTreasure = false;
-        pointerDownX = -1;
-        pointerDownY = -1;
-        return;
-    }
+				handleMerchantClick(pointerDownX, pointerDownY);
+				draggedItem = null;
+				dragStartX = -1;
+				dragStartY = -1;
+				dragFromTreasure = false;
+				pointerDownX = -1;
+				pointerDownY = -1;
+				return;
+			}
 
 			if (inCombat && !dragFromTreasure) {
 				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
@@ -544,37 +545,37 @@ public class GameController {
 	}
 
 	private void handleRoomClick(int clickedRoom) {
-    if (!floor.adjacentRooms().contains(clickedRoom))
-        return;
+		if (!floor.adjacentRooms().contains(clickedRoom))
+			return;
 
-    floor.setPlayerIndex(clickedRoom);
-    floatingItems.clear();
+		floor.setPlayerIndex(clickedRoom);
+		floatingItems.clear();
 
-    if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
-        startCombat();
-    } else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
-        treasureChest.generateTreasure();
-        setTreasureState();
-        floor.markVisited(clickedRoom);
-    } 
-   
-    else if (floor.playerOnMerchantRoom()) {
-      System.out.println("je suis dans le marchand");
-      merchant.generateStock();
-      setMerchantState();
-      floor.markVisited(clickedRoom);
-  }
+		if (floor.playerOnEnemyRoom() && !floor.isVisited(clickedRoom)) {
+			startCombat();
+		} else if (floor.playerOnTreasureRoom() && !floor.isVisited(clickedRoom)) {
+			treasureChest.generateTreasure();
+			setTreasureState();
+			floor.markVisited(clickedRoom);
+		}
 
-    else if (floor.playerOnCorridor()) {
-        setCorridorState();
-    } else if (floor.playeOnExitRom()) {
-        goToNextFloor();
-    } else {
-        setEmptyRoomState();
-    }
+		else if (floor.playerOnMerchantRoom()) {
+			System.out.println("je suis dans le marchand");
+			merchant.generateStock();
+			setMerchantState();
+			floor.markVisited(clickedRoom);
+		}
 
-    floor.markVisited(clickedRoom);
-}
+		else if (floor.playerOnCorridor()) {
+			setCorridorState();
+		} else if (floor.playeOnExitRom()) {
+			goToNextFloor();
+		} else {
+			setEmptyRoomState();
+		}
+
+		floor.markVisited(clickedRoom);
+	}
 
 	private void leaveTreasureRoom() {
 		treasureChest.getGrid().clear();
@@ -584,15 +585,15 @@ public class GameController {
 		else
 			setEmptyRoomState();
 	}
-	
+
 	private void leaveMerchantRoom() {
-   merchant.getStock().clear();
-    floatingItems.clear();
-    if (floor.playerOnCorridor())
-        setCorridorState();
-    else
-        setEmptyRoomState();
-}
+		merchant.getStock().clear();
+		floatingItems.clear();
+		if (floor.playerOnCorridor())
+			setCorridorState();
+		else
+			setEmptyRoomState();
+	}
 
 	private void startCombat() {
 		fight.initEnemies();
@@ -636,13 +637,13 @@ public class GameController {
 
 		setTreasureDisplayCoords();
 	}
-	
+
 	private void setMerchantState() {
 		inMerchant = true;
-    inCorridor = false;
-    inTreasure = false;
-    inCombat = false;
-    setMerchantDisplayCoords();
+		inCorridor = false;
+		inTreasure = false;
+		inCombat = false;
+		setMerchantDisplayCoords();
 	}
 
 	private void setTreasureDisplayCoords() {
@@ -661,7 +662,7 @@ public class GameController {
 		inCorridor = false;
 		inCombat = false;
 		inMerchant = false;
-		
+
 	}
 
 	public int roomAt(int mouseX, int mouseY) {
@@ -707,7 +708,7 @@ public class GameController {
 		}
 		return null;
 	}
-	
+
 	private void setMerchantDisplayCoords() {
 		var info = context.getScreenInfo();
 		int chestWidth = 200;
@@ -719,45 +720,42 @@ public class GameController {
 		merchantStartY = chestY + chestHeight + 20;
 	}
 
-	
 	private int[] merchantSlotCoordsAt(int mouseX, int mouseY) {
-   
-    
-    for (int y = 0; y < merchant.getStock().getRows(); y++) {
-        for (int x = 0; x < merchant.getStock().getCols(); x++) {
-            int cellX = merchantStartX + x * (backpackCellSize + backpackPadding);
-            int cellY = merchantStartY + y * (backpackCellSize + backpackPadding);
-            if (mouseX >= cellX && mouseX <= cellX + backpackCellSize 
-                && mouseY >= cellY && mouseY <= cellY + backpackCellSize) {
-                return new int[] { x, y };
-            }
-        }
-    }
-    return null;
-}
-	
+
+		for (int y = 0; y < merchant.getStock().getRows(); y++) {
+			for (int x = 0; x < merchant.getStock().getCols(); x++) {
+				int cellX = merchantStartX + x * (backpackCellSize + backpackPadding);
+				int cellY = merchantStartY + y * (backpackCellSize + backpackPadding);
+				if (mouseX >= cellX && mouseX <= cellX + backpackCellSize && mouseY >= cellY
+						&& mouseY <= cellY + backpackCellSize) {
+					return new int[] { x, y };
+				}
+			}
+		}
+		return null;
+	}
+
 	private void handleMerchantClick(int mouseX, int mouseY) {
-    if (!inMerchant) return;
-    
-    
-    int[] stockCoords = merchantSlotCoordsAt(mouseX, mouseY);
-    if (stockCoords != null) {
-        Item item = merchant.getStock().getGrid()[stockCoords[1]][stockCoords[0]];
-        if (item != null) {
-            merchant.buyItem(item, hero);
-            return;
-        }
-    }
-    
-    
-    int[] backpackCoords = backpackSlotCoordsAt(mouseX, mouseY);
-    if (backpackCoords != null) {
-        Item item = backpack.grid()[backpackCoords[1]][backpackCoords[0]];
-        if (item != null && item.isSellable()) { // ✅ Polymorphisme au lieu de instanceof
-            merchant.sellItem(item, hero);
-        }
-    }
-}
+		if (!inMerchant)
+			return;
+
+		int[] stockCoords = merchantSlotCoordsAt(mouseX, mouseY);
+		if (stockCoords != null) {
+			Item item = merchant.getStock().getGrid()[stockCoords[1]][stockCoords[0]];
+			if (item != null) {
+				merchant.buyItem(item, hero);
+				return;
+			}
+		}
+
+		int[] backpackCoords = backpackSlotCoordsAt(mouseX, mouseY);
+		if (backpackCoords != null) {
+			Item item = backpack.grid()[backpackCoords[1]][backpackCoords[0]];
+			if (item != null && item.isSellable()) { // ✅ Polymorphisme au lieu de instanceof
+				merchant.sellItem(item, hero);
+			}
+		}
+	}
 
 	private void goToNextFloor() {
 

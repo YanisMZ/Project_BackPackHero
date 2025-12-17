@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -25,7 +26,7 @@ import fr.uge.implement.Room;
 
 public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack) {
 
-	private static final List<BufferedImage> loadingAnimation = loadFrames(161);
+	private static final List<BufferedImage> loadingAnimation = loadFrames(161, "loadingscreen", "loading");
 	private static BufferedImage corridorImage;
 	private static BufferedImage treasureRoomImage;
 	private static BufferedImage treasureImage;
@@ -50,6 +51,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static List<BufferedImage> fightingAnnimation1;
 	private static List<BufferedImage> fightingAnnimation2;
 	private static List<BufferedImage> fightingAnnimation3;
+	private static List<BufferedImage> corridorToCorridorAnimation;
 
 	private static BufferedImage loadImage(String fileName) {
 		try {
@@ -94,26 +96,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		fightingAnnimation2 = loadAttackFrames(2, 78);
 		fightingAnnimation3 = loadAttackFrames(3, 78);
 
+		corridorToCorridorAnimation = loadFrames(160, "animationroom", "room");
+
 		System.out.println("Assets chargés !");
 	}
 
-	public void loadingDisplay(long startTime) {
-		int duration = 8000;
-		context.renderFrame(g -> {
-			clearScreen(g);
-			long currentTime = System.currentTimeMillis();
-			long totalElapsed = currentTime - startTime;
-			long loopElapsed = totalElapsed % duration;
-			long loopStartTime = currentTime - loopElapsed;
-
-			drawAnimation(g, loopStartTime, duration, loadingAnimation);
-		});
-	}
-
-	private static List<BufferedImage> loadFrames(int nbFrames) {
+	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name) {
 		List<BufferedImage> frames = new ArrayList<>();
 		for (int i = 1; i < nbFrames; i++) {
-			frames.add(loadImage("./loadingscreen" + "/loading(" + i + ").jpg"));
+			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ").jpg"));
 		}
 		return frames;
 	}
@@ -126,11 +117,16 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		return frames;
 	}
 
-	public void loadingDisplay() {
-		int totalTime = 8000;
+	public void loadingDisplay(long startTime) {
+		int duration = 8000;
 		context.renderFrame(g -> {
 			clearScreen(g);
-			drawAnimation(g, 0, totalTime, loadingAnimation);
+			long currentTime = System.currentTimeMillis();
+			long totalElapsed = currentTime - startTime;
+			long loopElapsed = totalElapsed % duration;
+			long loopStartTime = currentTime - loopElapsed;
+
+			drawAnimation(g, loopStartTime, duration, loadingAnimation);
 		});
 	}
 
@@ -183,6 +179,33 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		});
 	}
 
+	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
+			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems, long lastChangeRoom) {
+		context.renderFrame(g -> {
+			clearScreen(g);
+			int totalTime = 8000;
+			long timeElapsed = System.currentTimeMillis() - lastChangeRoom;
+			if (timeElapsed < totalTime) {
+				drawAnimation(g, lastChangeRoom, totalTime, corridorToCorridorAnimation);
+				drawHeroStaminaBar(g, hero);
+				drawHeroManaBar(g, hero);
+				drawHeroHealthBar(g, hero);
+				drawGrid(g);
+				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+				drawFloatingItems(g, floatingItems);
+			} else {
+				drawCorridor(g);
+				drawHeroStaminaBar(g, hero);
+				drawHeroManaBar(g, hero);
+				drawHeroHealthBar(g, hero);
+				drawHero(g);
+				drawGrid(g);
+				drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+				drawFloatingItems(g, floatingItems);
+			}
+		});
+	}
+	
 	public void expansionDisplay(List<Integer> selectedSlots, Hero hero, BackpackExpansionSystem expansionSystem) {
 		context.renderFrame(g -> {
 			clearScreen(g);
@@ -195,35 +218,21 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawBackPackWithExpansion(g, selectedSlots, expansionSystem);
 		});
 	}
-	
-	public void merchantDisplay(List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero, boolean isDragging,
-      Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
-  context.renderFrame(g -> {
-      clearScreen(g);
-      drawHeroStaminaBar(g, hero);
-      drawHeroManaBar(g, hero);
-      drawHeroHealthBar(g, hero);
-      drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-      drawGrid(g);
-      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-      drawFloatingItems(g, floatingItems);
-  });
-}
 
-	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
+	public void merchantDisplay(List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero, boolean isDragging,
+			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
-			drawCorridor(g);
 			drawHeroStaminaBar(g, hero);
 			drawHeroManaBar(g, hero);
 			drawHeroHealthBar(g, hero);
-			drawHero(g);
+			drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
+
 
 	public void treasureDisplay(List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
@@ -481,142 +490,137 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	private void drawBackPack(Graphics2D graphics, List<Integer> selectedSlots, boolean isDragging, Item draggedItem,
-      int dragOffsetX, int dragOffsetY) {
+			int dragOffsetX, int dragOffsetY) {
 
-  int originX = 20;
-  int originY = 550;
-  int cols = backpack.width();
-  int cellSize = 60;
-  int padding = 8;
-  Item[][] grid = backpack.grid();
+		int originX = 20;
+		int originY = 550;
+		int cols = backpack.width();
+		int cellSize = 60;
+		int padding = 8;
+		Item[][] grid = backpack.grid();
 
-  graphics.setColor(Color.BLACK);
-  graphics.drawString("Backpack :", originX, originY - 10);
+		graphics.setColor(Color.BLACK);
+		graphics.drawString("Backpack :", originX, originY - 10);
 
-  // =======================
-  // DESSIN DES CASES
-  // =======================
-  for (int y = 0; y < backpack.height(); y++) {
-      for (int x = 0; x < backpack.width(); x++) {
+		// =======================
+		// DESSIN DES CASES
+		// =======================
+		for (int y = 0; y < backpack.height(); y++) {
+			for (int x = 0; x < backpack.width(); x++) {
 
-          int cellX = originX + x * (cellSize + padding);
-          int cellY = originY + y * (cellSize + padding);
-          Item item = grid[y][x];
-          boolean isUnlocked = backpack.isUnlocked(x, y);
+				int cellX = originX + x * (cellSize + padding);
+				int cellY = originY + y * (cellSize + padding);
+				Item item = grid[y][x];
+				boolean isUnlocked = backpack.isUnlocked(x, y);
 
-          if (!isUnlocked) {
-              graphics.setColor(new Color(60, 60, 60));
-          } else if (isDragging && item == draggedItem) {
-              graphics.setColor(Color.YELLOW);
-          } else if (item == null) {
-              graphics.setColor(Color.YELLOW);
-          } else {
-              graphics.setColor(Color.BLACK);
-          }
+				if (!isUnlocked) {
+					graphics.setColor(new Color(60, 60, 60));
+				} else if (isDragging && item == draggedItem) {
+					graphics.setColor(Color.YELLOW);
+				} else if (item == null) {
+					graphics.setColor(Color.YELLOW);
+				} else {
+					graphics.setColor(Color.BLACK);
+				}
 
-          graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+				graphics.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-          graphics.setColor(item != null && item != draggedItem ? Color.GRAY : Color.BLACK);
-          graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+				graphics.setColor(item != null && item != draggedItem ? Color.GRAY : Color.BLACK);
+				graphics.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-          if (!isUnlocked) {
-              graphics.setColor(Color.DARK_GRAY);
-              int lockSize = cellSize / 3;
-              graphics.fillRect(cellX + lockSize, cellY + lockSize, lockSize, lockSize);
-          }
+				if (!isUnlocked) {
+					graphics.setColor(Color.DARK_GRAY);
+					int lockSize = cellSize / 3;
+					graphics.fillRect(cellX + lockSize, cellY + lockSize, lockSize, lockSize);
+				}
 
-          int slot = y * cols + x;
-          if (item == null && selectedSlots != null && selectedSlots.contains(slot) && isUnlocked) {
-              graphics.setColor(Color.RED);
-              graphics.drawRect(cellX - 2, cellY - 2, cellSize + 4, cellSize + 4);
-          }
-      }
-  }
+				int slot = y * cols + x;
+				if (item == null && selectedSlots != null && selectedSlots.contains(slot) && isUnlocked) {
+					graphics.setColor(Color.RED);
+					graphics.drawRect(cellX - 2, cellY - 2, cellSize + 4, cellSize + 4);
+				}
+			}
+		}
 
-  // =======================
-  // DESSIN DES ITEMS
-  // =======================
-  for (int y = 0; y < backpack.height(); y++) {
-      for (int x = 0; x < backpack.width(); x++) {
+		// =======================
+		// DESSIN DES ITEMS
+		// =======================
+		for (int y = 0; y < backpack.height(); y++) {
+			for (int x = 0; x < backpack.width(); x++) {
 
-          Item item = grid[y][x];
-          if (item == null || (isDragging && item == draggedItem) || !backpack.isUnlocked(x, y))
-              continue;
+				Item item = grid[y][x];
+				if (item == null || (isDragging && item == draggedItem) || !backpack.isUnlocked(x, y))
+					continue;
 
-          boolean isTopLeft = true;
-          if (x > 0 && grid[y][x - 1] == item) isTopLeft = false;
-          if (y > 0 && grid[y - 1][x] == item) isTopLeft = false;
+				boolean isTopLeft = true;
+				if (x > 0 && grid[y][x - 1] == item)
+					isTopLeft = false;
+				if (y > 0 && grid[y - 1][x] == item)
+					isTopLeft = false;
 
-          if (!isTopLeft) continue;
+				if (!isTopLeft)
+					continue;
 
-          int cellX = originX + x * (cellSize + padding);
-          int cellY = originY + y * (cellSize + padding);
-          int finalWidth = item.width() * (cellSize + padding) - padding;
-          int finalHeight = item.height() * (cellSize + padding) - padding;
+				int cellX = originX + x * (cellSize + padding);
+				int cellY = originY + y * (cellSize + padding);
+				int finalWidth = item.width() * (cellSize + padding) - padding;
+				int finalHeight = item.height() * (cellSize + padding) - padding;
 
-          if (item.name().contains("Sword") || item.name().contains("Epee")) {
-              BufferedImage img = item.isRotated() ? sword180 : sword90;
-              graphics.drawImage(img, cellX, cellY, finalWidth, finalHeight, null);
-          } else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
-              graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
-          } else {
-              graphics.setColor(Color.BLACK);
-              graphics.drawRect(cellX, cellY, finalWidth, finalHeight);
-              graphics.drawString(item.name(), cellX + 5, cellY + cellSize / 2);
-          }
+				if (item.name().contains("Sword") || item.name().contains("Epee")) {
+					BufferedImage img = item.isRotated() ? sword180 : sword90;
+					graphics.drawImage(img, cellX, cellY, finalWidth, finalHeight, null);
+				} else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
+					graphics.drawImage(shield, cellX, cellY, finalWidth, finalHeight, null);
+				} else {
+					graphics.setColor(Color.BLACK);
+					graphics.drawRect(cellX, cellY, finalWidth, finalHeight);
+					graphics.drawString(item.name(), cellX + 5, cellY + cellSize / 2);
+				}
 
-          // 🔥 STACK GOLD
-          if (item.isStackable() && item.quantity() > 1) {
-              graphics.setColor(Color.BLACK);
-              graphics.fillRect(cellX + finalWidth - 26, cellY + finalHeight - 18, 24, 16);
+				// 🔥 STACK GOLD
+				if (item.isStackable() && item.quantity() > 1) {
+					graphics.setColor(Color.BLACK);
+					graphics.fillRect(cellX + finalWidth - 26, cellY + finalHeight - 18, 24, 16);
 
-              graphics.setColor(Color.YELLOW);
-              graphics.drawString(
-                  String.valueOf(item.quantity()),
-                  cellX + finalWidth - 22,
-                  cellY + finalHeight - 6
-              );
-          }
-      }
-  }
+					graphics.setColor(Color.YELLOW);
+					graphics.drawString(String.valueOf(item.quantity()), cellX + finalWidth - 22, cellY + finalHeight - 6);
+				}
+			}
+		}
 
-  // =======================
-  // DRAG
-  // =======================
-  if (isDragging && draggedItem != null) {
+		// =======================
+		// DRAG
+		// =======================
+		if (isDragging && draggedItem != null) {
 
-      int mouseX = dragOffsetX;
-      int mouseY = dragOffsetY;
-      int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
-      int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
+			int mouseX = dragOffsetX;
+			int mouseY = dragOffsetY;
+			int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
+			int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
 
-      if (draggedItem.name().contains("Sword")) {
-          BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
-          graphics.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
-      } else {
-          graphics.setColor(new Color(100, 200, 255));
-          graphics.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
-          graphics.setColor(Color.BLACK);
-          graphics.drawString(draggedItem.name(), mouseX + 5, mouseY + cellSize / 2);
-      }
+			if (draggedItem.name().contains("Sword")) {
+				BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
+				graphics.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else {
+				graphics.setColor(new Color(100, 200, 255));
+				graphics.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+				graphics.setColor(Color.BLACK);
+				graphics.drawString(draggedItem.name(), mouseX + 5, mouseY + cellSize / 2);
+			}
 
-      // 🔥 STACK EN DRAG
-      if (draggedItem.isStackable() && draggedItem.quantity() > 1) {
-          graphics.setColor(Color.BLACK);
-          graphics.fillRect(mouseX + itemPixelWidth - 26, mouseY + itemPixelHeight - 18, 24, 16);
-          graphics.setColor(Color.YELLOW);
-          graphics.drawString(
-              String.valueOf(draggedItem.quantity()),
-              mouseX + itemPixelWidth - 22,
-              mouseY + itemPixelHeight - 6
-          );
-      }
+			// 🔥 STACK EN DRAG
+			if (draggedItem.isStackable() && draggedItem.quantity() > 1) {
+				graphics.setColor(Color.BLACK);
+				graphics.fillRect(mouseX + itemPixelWidth - 26, mouseY + itemPixelHeight - 18, 24, 16);
+				graphics.setColor(Color.YELLOW);
+				graphics.drawString(String.valueOf(draggedItem.quantity()), mouseX + itemPixelWidth - 22,
+						mouseY + itemPixelHeight - 6);
+			}
 
-      graphics.setColor(Color.BLACK);
-      graphics.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
-  }
-}
-
+			graphics.setColor(Color.BLACK);
+			graphics.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+		}
+	}
 
 	public void drawTreasureChest(Graphics2D g, Item[][] treasureGrid, List<Integer> selectedSlots, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY) {
@@ -730,7 +734,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.setColor(Color.BLACK);
 			g.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
 		}
-		
+
 	}
 
 	private void drawHeroManaBar(Graphics2D g, Hero hero) {
@@ -890,137 +894,136 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.drawRect(x, y, itemPixelWidth, itemPixelHeight);
 		}
 	}
-	
-	
+
 	public void drawMerchantStock(Graphics2D g, Item[][] merchantGrid, List<Integer> selectedSlots, boolean isDragging,
-      Item draggedItem, int dragOffsetX, int dragOffsetY) {
-  var info = context.getScreenInfo();
-  int width = info.width();
-  int height = info.height();
+			Item draggedItem, int dragOffsetX, int dragOffsetY) {
+		var info = context.getScreenInfo();
+		int width = info.width();
+		int height = info.height();
 
-  int chestWidth = 200;
-  int chestHeight = 150;
-  int chestX = width / 2 - chestWidth / 2;
-  int chestY = height / 3 - chestHeight / 2;
+		int chestWidth = 200;
+		int chestHeight = 150;
+		int chestX = width / 2 - chestWidth / 2;
+		int chestY = height / 3 - chestHeight / 2;
 
-  int merchantRows = merchantGrid.length;
-  int merchantCols = merchantGrid[0].length;
-  int cellSize = 60;
-  int padding = 8;
-  int startX = chestX;
-  int startY = chestY + chestHeight + 20;
+		int merchantRows = merchantGrid.length;
+		int merchantCols = merchantGrid[0].length;
+		int cellSize = 60;
+		int padding = 8;
+		int startX = chestX;
+		int startY = chestY + chestHeight + 20;
 
-  g.setColor(Color.WHITE);
-  g.drawString("Stock du Marchand :", startX, startY - 30);
-  g.setColor(Color.CYAN);
-  g.drawString("Cliquez pour acheter | Cliquez sur votre sac pour vendre", startX, startY - 10);
+		g.setColor(Color.WHITE);
+		g.drawString("Stock du Marchand :", startX, startY - 30);
+		g.setColor(Color.CYAN);
+		g.drawString("Cliquez pour acheter | Cliquez sur votre sac pour vendre", startX, startY - 10);
 
-  // 1. Dessin des cellules vides et des bordures
-  for (int y = 0; y < merchantRows; y++) {
-      for (int x = 0; x < merchantCols; x++) {
-          int cellX = startX + x * (cellSize + padding);
-          int cellY = startY + y * (cellSize + padding);
+		// 1. Dessin des cellules vides et des bordures
+		for (int y = 0; y < merchantRows; y++) {
+			for (int x = 0; x < merchantCols; x++) {
+				int cellX = startX + x * (cellSize + padding);
+				int cellY = startY + y * (cellSize + padding);
 
-          Item item = merchantGrid[y][x];
+				Item item = merchantGrid[y][x];
 
-          if (isDragging && item == draggedItem) {
-              g.setColor(new Color(100, 200, 255));
-          } else {
-              g.setColor(item == null ? new Color(100, 200, 255) : new Color(150, 220, 255));
-          }
-          g.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+				if (isDragging && item == draggedItem) {
+					g.setColor(new Color(100, 200, 255));
+				} else {
+					g.setColor(item == null ? new Color(100, 200, 255) : new Color(150, 220, 255));
+				}
+				g.fill(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
 
-          g.setColor(Color.BLACK);
-          g.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
-      }
-  }
+				g.setColor(Color.BLACK);
+				g.draw(new Rectangle2D.Float(cellX, cellY, cellSize, cellSize));
+			}
+		}
 
-  // 2. Dessin des objets (images ou texte) + PRIX
-  for (int y = 0; y < merchantRows; y++) {
-      for (int x = 0; x < merchantCols; x++) {
-          Item item = merchantGrid[y][x];
+		// 2. Dessin des objets (images ou texte) + PRIX
+		for (int y = 0; y < merchantRows; y++) {
+			for (int x = 0; x < merchantCols; x++) {
+				Item item = merchantGrid[y][x];
 
-          if (item == null || (isDragging && item == draggedItem))
-              continue;
+				if (item == null || (isDragging && item == draggedItem))
+					continue;
 
-          // Vérifie si c'est le coin supérieur gauche de l'objet
-          boolean isTopLeft = true;
-          if (x > 0 && merchantGrid[y][x - 1] == item)
-              isTopLeft = false;
-          if (y > 0 && merchantGrid[y - 1][x] == item)
-              isTopLeft = false;
+				// Vérifie si c'est le coin supérieur gauche de l'objet
+				boolean isTopLeft = true;
+				if (x > 0 && merchantGrid[y][x - 1] == item)
+					isTopLeft = false;
+				if (y > 0 && merchantGrid[y - 1][x] == item)
+					isTopLeft = false;
 
-          if (isTopLeft) {
-              int cellX = startX + x * (cellSize + padding);
-              int cellY = startY + y * (cellSize + padding);
-              int itemWidth = item.width() * (cellSize + padding) - padding;
-              int itemHeight = item.height() * (cellSize + padding) - padding;
+				if (isTopLeft) {
+					int cellX = startX + x * (cellSize + padding);
+					int cellY = startY + y * (cellSize + padding);
+					int itemWidth = item.width() * (cellSize + padding) - padding;
+					int itemHeight = item.height() * (cellSize + padding) - padding;
 
-              // Dessin de l'item
-              if (item.name().contains("Sword")) {
-                  BufferedImage img = item.isRotated() ? sword180 : sword90;
-                  g.drawImage(img, cellX, cellY, itemWidth, itemHeight, null);
-              } else if (item.name().contains("Shield")) {
-                  g.drawImage(shield, cellX, cellY, itemWidth, itemHeight, null);
-              } else {
-                  String name = item.name();
-                  if (name.length() > 8)
-                      name = name.substring(0, 7) + "...";
-                  g.setColor(Color.BLACK);
-                  g.drawString(name, cellX + 5, cellY + cellSize / 2 - 10);
-              }
+					// Dessin de l'item
+					if (item.name().contains("Sword")) {
+						BufferedImage img = item.isRotated() ? sword180 : sword90;
+						g.drawImage(img, cellX, cellY, itemWidth, itemHeight, null);
+					} else if (item.name().contains("Shield")) {
+						g.drawImage(shield, cellX, cellY, itemWidth, itemHeight, null);
+					} else {
+						String name = item.name();
+						if (name.length() > 8)
+							name = name.substring(0, 7) + "...";
+						g.setColor(Color.BLACK);
+						g.drawString(name, cellX + 5, cellY + cellSize / 2 - 10);
+					}
 
-              // 🔥 AFFICHAGE DU PRIX
-              g.setColor(Color.BLACK);
-              g.fillRect(cellX, cellY + itemHeight - 18, itemWidth, 18);
-              g.setColor(Color.YELLOW);
-              g.drawString(item.price() + " 💰", cellX + 5, cellY + itemHeight - 5);
+					// 🔥 AFFICHAGE DU PRIX
+					g.setColor(Color.BLACK);
+					g.fillRect(cellX, cellY + itemHeight - 18, itemWidth, 18);
+					g.setColor(Color.YELLOW);
+					g.drawString(item.price() + " 💰", cellX + 5, cellY + itemHeight - 5);
 
-              // 🔥 STACK
-              if (item.isStackable() && item.quantity() > 1) {
-                  g.setColor(Color.BLACK);
-                  g.fillRect(cellX + itemWidth - 26, cellY + 2, 24, 16);
-                  g.setColor(Color.CYAN);
-                  g.drawString(String.valueOf(item.quantity()), cellX + itemWidth - 22, cellY + 14);
-              }
+					// 🔥 STACK
+					if (item.isStackable() && item.quantity() > 1) {
+						g.setColor(Color.BLACK);
+						g.fillRect(cellX + itemWidth - 26, cellY + 2, 24, 16);
+						g.setColor(Color.CYAN);
+						g.drawString(String.valueOf(item.quantity()), cellX + itemWidth - 22, cellY + 14);
+					}
 
-              g.setColor(new Color(0, 0, 0, 150));
-              g.drawRect(cellX, cellY, itemWidth, itemHeight);
-          }
-      }
-  }
+					g.setColor(new Color(0, 0, 0, 150));
+					g.drawRect(cellX, cellY, itemWidth, itemHeight);
+				}
+			}
+		}
 
-  // 3. Dessin de l'objet glissé (draggedItem)
-  if (isDragging && draggedItem != null) {
-      int mouseX = dragOffsetX;
-      int mouseY = dragOffsetY;
+		// 3. Dessin de l'objet glissé (draggedItem)
+		if (isDragging && draggedItem != null) {
+			int mouseX = dragOffsetX;
+			int mouseY = dragOffsetY;
 
-      int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
-      int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
+			int itemPixelWidth = draggedItem.width() * (cellSize + padding) - padding;
+			int itemPixelHeight = draggedItem.height() * (cellSize + padding) - padding;
 
-      g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
+			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
 
-      if (draggedItem.name().contains("Sword")) {
-          BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
-          g.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
-      } else if (draggedItem.name().contains("Shield")) {
-          g.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
-      } else {
-          g.setColor(new Color(100, 200, 255));
-          g.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+			if (draggedItem.name().contains("Sword")) {
+				BufferedImage img = draggedItem.isRotated() ? sword180 : sword90;
+				g.drawImage(img, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else if (draggedItem.name().contains("Shield")) {
+				g.drawImage(shield, mouseX, mouseY, itemPixelWidth, itemPixelHeight, null);
+			} else {
+				g.setColor(new Color(100, 200, 255));
+				g.fillRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
 
-          g.setColor(Color.BLACK);
-          String name = draggedItem.name();
-          if (name.length() > 8)
-              name = name.substring(0, 7) + "...";
-          g.drawString(name, mouseX + 5, mouseY + cellSize / 2);
-      }
+				g.setColor(Color.BLACK);
+				String name = draggedItem.name();
+				if (name.length() > 8)
+					name = name.substring(0, 7) + "...";
+				g.drawString(name, mouseX + 5, mouseY + cellSize / 2);
+			}
 
-      g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
-      g.setColor(Color.BLACK);
-      g.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
-  }
-}
+			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
+			g.setColor(Color.BLACK);
+			g.drawRect(mouseX, mouseY, itemPixelWidth, itemPixelHeight);
+		}
+	}
 
 	private void clearScreen(Graphics2D graphics) {
 		graphics.setColor(Color.BLACK);
