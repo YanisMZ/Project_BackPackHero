@@ -45,17 +45,17 @@ public class Hero {
 	}
 
 	public int gold() {
-		return backpack.getQuantity("Or");
+		return backpack.getQuantity("Gold");
 	}
 
 	/* ===================== OR ===================== */
 
 	public void addGold(int amount) {
-		backpack.addQuantity("Or", amount);
+		backpack.addQuantity("Gold", amount);
 	}
 
 	public void removeGold(int amount) {
-		backpack.removeQuantity("Or", amount);
+		backpack.removeQuantity("Gold", amount);
 	}
 
 	/* ===================== HP ===================== */
