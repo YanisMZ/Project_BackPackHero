@@ -6,8 +6,7 @@ public record Gold(String name, int quantity) implements Item {
 
 	public Gold {
 		Objects.requireNonNull(name);
-		if (quantity <= 0)
-			throw new IllegalArgumentException();
+		
 	}
 
 	@Override
@@ -64,4 +63,7 @@ public record Gold(String name, int quantity) implements Item {
   public boolean isSellable() {
       return false; // L'or n'est pas vendable au marchand
   }
+	public int price() {
+		return 0;
+	}
 }

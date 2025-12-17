@@ -6,18 +6,15 @@ public class Hero {
 	private int hp;
 	private int currentStamina;
 	private int protection;
-	 private final BackPack backpack;
+	private final BackPack backpack;
 
-	private int gold; // Or du héros
-
-	public Hero(int maxHp, int protection, int maxStamina,BackPack backpack) {
+	public Hero(int maxHp, int protection, int maxStamina, BackPack backpack) {
 		this.maxHp = maxHp;
 		this.maxStamina = maxStamina;
 		this.hp = maxHp;
 		this.currentStamina = maxStamina;
 		this.protection = protection;
 		this.backpack = backpack;
-		this.gold = 100; // Or initial
 	}
 
 	/* ===================== GETTERS ===================== */
@@ -40,24 +37,25 @@ public class Hero {
 	public int protection() {
 		return protection;
 	}
+	
+	
+	public boolean hasEnoughGold(int price) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	public int gold() {
-		return gold;
+		return backpack.getQuantity("Or");
 	}
 
 	/* ===================== OR ===================== */
-	public boolean hasEnoughGold(int amount) {
-		return gold >= amount;
-	}
 
 	public void addGold(int amount) {
-		gold += amount;
+		backpack.addQuantity("Or", amount);
 	}
 
 	public void removeGold(int amount) {
-		if (amount > gold)
-			throw new IllegalStateException("Pas assez d'or !");
-		gold -= amount;
+		backpack.removeQuantity("Or", amount);
 	}
 
 	/* ===================== HP ===================== */
@@ -103,9 +101,10 @@ public class Hero {
 	public int mana() {
 		return 5;
 	}
-	
-	
+
 	public BackPack getBackpack() {
-    return backpack;
-}
+		return backpack;
+	}
+
+	
 }
