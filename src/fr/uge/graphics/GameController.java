@@ -41,7 +41,8 @@ public class GameController {
 	private final List<Integer> selectedItems = new ArrayList<>();
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
-
+	private long lastChangeRoom = 0;
+	
 	private final TreasureChest treasureChest;
 
 	private final int backpackOriginX = 20, backpackOriginY = 550;
@@ -136,6 +137,10 @@ public class GameController {
 
 	public long getLastAttackTime() {
 		return lastAttackTime;
+	}
+	
+	public long getLastChangeRoom() {
+		return lastChangeRoom;
 	}
 
 	public Hero getHero() {
