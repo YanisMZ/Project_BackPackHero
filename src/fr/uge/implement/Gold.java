@@ -59,4 +59,9 @@ public record Gold(String name, int quantity) implements Item {
 	public boolean isRotated() {
 		return false;
 	}
+	
+	@Override
+  public boolean isSellable() {
+      return false; // L'or n'est pas vendable au marchand
+  }
 }

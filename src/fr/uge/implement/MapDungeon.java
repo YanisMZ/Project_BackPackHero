@@ -87,6 +87,10 @@ public class MapDungeon {
   	return rooms.get(playerIndex).type() == Type.EXIT;
   	
   }
+  public boolean playerOnMerchantRoom() {
+    return rooms().get(playerIndex()).type() == Room.Type.MERCHANT;
+ 
+}
 
   public boolean isVisited(int index) {
     return visited.contains(index);

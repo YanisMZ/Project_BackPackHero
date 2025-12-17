@@ -55,15 +55,14 @@ public class GameRun {
 			backpack.autoAdd(new Gold("Gold", 5));
 			// → une seule case avec Gold(quantity=15)
 
-
-			var hero = new Hero(40, 0, 3);
+			var hero = new Hero(40, 0, 3, backpack);
 			var fight = new Battle(hero);
 
 			var screenInfo = context.getScreenInfo();
 			var width = screenInfo.width();
 			var height = screenInfo.height();
 
-			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon);
+			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero);
 
 			while (true) {
 				int pollTimeout = controller.isDragging() ? 0 : 10;
@@ -71,6 +70,7 @@ public class GameRun {
 
 				List<Integer> selectedSlots = controller.getSelectedSlots();
 				Item[][] treasureGrid = controller.getTreasureGrid();
+				Item[][] getMerchantGrid = controller.getMerchantGrid();
 				boolean isDragging = controller.isDragging();
 				Item draggedItem = controller.getDraggedItem();
 				int dragOffsetX = controller.getDragOffsetX();
@@ -87,6 +87,9 @@ public class GameRun {
 							controller.getFloatingItems());
 				} else if (controller.isInTreasure()) {
 					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+							controller.getFloatingItems());
+				} else if (controller.isInMerchant()) {
+					view.merchantDisplay(selectedSlots, getMerchantGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems());
 				} else {
 					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,

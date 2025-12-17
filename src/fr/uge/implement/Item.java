@@ -25,4 +25,13 @@ public interface Item {
     default Item addQuantity(int amount) {
         throw new UnsupportedOperationException();
     }
+    
+    default int price() {
+    	return 10;
+    }
+    
+    default boolean isSellable() {
+      return true; 
+  }
+    
 }
