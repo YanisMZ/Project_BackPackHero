@@ -1,16 +1,28 @@
 package fr.uge.implement;
 
 public interface Item {
-  String name();
-  int attackValue();
-  int staminaCost();
-  int defendValue();
+    String name();
 
-  int width();
-  int height();
+    int attackValue();
+    int staminaCost();
+    int defendValue();
 
-  
-  Item rotate();
-  boolean isRotated();
+    int width();
+    int height();
+
+    Item rotate();
+    boolean isRotated();
+
+    // Stack
+    default boolean isStackable() {
+        return false;
+    }
+
+    default int quantity() {
+        return 1;
+    }
+
+    default Item addQuantity(int amount) {
+        throw new UnsupportedOperationException();
+    }
 }
-

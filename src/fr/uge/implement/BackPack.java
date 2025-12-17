@@ -93,21 +93,39 @@ public class BackPack {
      * Tries normal orientation first, then rotated.
      */
     public boolean autoAdd(Item item) {
-        Objects.requireNonNull(item);
+      Objects.requireNonNull(item);
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+      // stack
+      if (item.isStackable()) {
+          for (int y = 0; y < height; y++) {
+              for (int x = 0; x < width; x++) {
+                  Item cell = grid[y][x];
+                  if (cell != null
+                          && cell.isStackable()
+                          && cell.name().equals(item.name())) {
 
-                if (canPlace(item, x, y))
-                    return place(item, x, y);
+                      grid[y][x] = cell.addQuantity(item.quantity());
+                      return true;
+                  }
+              }
+          }
+      }
 
-                Item rotated = item.rotate();
-                if (canPlace(rotated, x, y))
-                    return place(rotated, x, y);
-            }
-        }
-        return false;
-    }
+     
+      for (int y = 0; y < height; y++) {
+          for (int x = 0; x < width; x++) {
+
+              if (canPlace(item, x, y))
+                  return place(item, x, y);
+
+              Item rotated = item.rotate();
+              if (canPlace(rotated, x, y))
+                  return place(rotated, x, y);
+          }
+      }
+      return false;
+  }
+
 
     /**
      * Try to add an item at a specific position.

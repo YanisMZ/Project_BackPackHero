@@ -11,6 +11,7 @@ import fr.uge.implement.BackPack;
 import fr.uge.implement.BackpackExpansionSystem;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
+import fr.uge.implement.Gold;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.Shield;
@@ -26,7 +27,7 @@ public class GameRun {
 			int status = 0;
 			Dungeon dungeon = new Dungeon();
 
-			BackPack backpack = new BackPack(5, 5);
+			BackPack backpack = new BackPack(5, 7);
 
 			int[][] startCells = { { 2, 3 }, { 2, 1 }, { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 3, 1 }, { 3, 2 } };
 			backpack.unlockCells(startCells);
@@ -50,6 +51,10 @@ public class GameRun {
 			backpack.place(new Sword("Sword 1", 10, 1, 1, 2), 2, 1);
 			backpack.place(new Shield("Shield", 5, 1, 1), 2, 0);
 			backpack.place(new Sword("Sword 2", 15, 1, 1, 2), 1, 1);
+			backpack.autoAdd(new Gold("Gold", 10));
+			backpack.autoAdd(new Gold("Gold", 5));
+			// → une seule case avec Gold(quantity=15)
+
 
 			var hero = new Hero(40, 0, 3);
 			var fight = new Battle(hero);

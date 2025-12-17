@@ -383,73 +383,93 @@ public class GameController {
 
 	private void handlePointerUp(int mouseX, int mouseY) {
 
-		// =====================
-		// CLIC SIMPLE (pas un drag)
-		// =====================
-		if (draggedItem != null && !isDragging) {
+    // =====================
+    // CLIC SIMPLE (pas un drag)
+    // =====================
+    if (draggedItem != null && !isDragging) {
 
-			if (inCombat && !dragFromTreasure) {
-				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-				if (slotCoords != null) {
-					int x = slotCoords[0];
-					int y = slotCoords[1];
-					Item clickedItem = backpack.grid()[y][x];
-					if (clickedItem != null && fight.isPlayerTurnActive()) {
-						fight.useItem(clickedItem);
-						lastAttackTime = System.currentTimeMillis();
-					}
-				}
-			} else if (!inCombat && !dragFromTreasure) {
-				int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-				if (slotCoords != null) {
-					toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
-				}
-			}
+        if (inCombat && !dragFromTreasure) {
+            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+            if (slotCoords != null) {
+                int x = slotCoords[0];
+                int y = slotCoords[1];
+                Item clickedItem = backpack.grid()[y][x];
+                if (clickedItem != null && fight.isPlayerTurnActive()) {
+                    fight.useItem(clickedItem);
+                    lastAttackTime = System.currentTimeMillis();
+                }
+            }
+        } else if (!inCombat && !dragFromTreasure) {
+            int[] slotCoords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+            if (slotCoords != null) {
+                toggleSelection(slotCoords[0], slotCoords[1], draggedItem);
+            }
+        }
 
-			// cleanup
-			draggedItem = null;
-			dragStartX = -1;
-			dragStartY = -1;
-			dragFromTreasure = false;
-			pointerDownX = -1;
-			pointerDownY = -1;
-			return;
-		}
+        // cleanup
+        draggedItem = null;
+        dragStartX = -1;
+        dragStartY = -1;
+        dragFromTreasure = false;
+        pointerDownX = -1;
+        pointerDownY = -1;
+        return;
+    }
 
-	
-		if (isDragging && draggedItem != null) {
+    // =====================
+    // DRAG & DROP
+    // =====================
+    if (isDragging && draggedItem != null) {
 
-			boolean placed = false;
+        boolean placed = false;
 
-			//  Tentative de placement dans le backpack
-			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
-			if (targetCoords != null) {
-				placed = backpack.place(draggedItem, targetCoords[0], targetCoords[1]);
-			}
+        // Tentative de placement dans le backpack
+        int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
+        if (targetCoords != null) {
 
-			
-			if (!placed && inTreasure && !dragFromTreasure) {
-				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
-				if (treasureCoords != null) {
-					placed = treasureChest.placeItemAt(draggedItem, treasureCoords[0], treasureCoords[1]);
-				}
-			}
+            // 🔵 Déplacement interne → placement normal
+            if (!dragFromTreasure) {
+                placed = backpack.place(draggedItem, targetCoords[0], targetCoords[1]);
+            }
+            // 🟢 Depuis un trésor → stack possible
+            else {
+                placed = backpack.autoAdd(draggedItem);
+            }
+        }
 
-			
-			if (!placed) {
-				floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
-			}
+        // Retour vers le trésor (depuis le sac)
+        if (!placed && inTreasure && !dragFromTreasure) {
+            int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
+            if (treasureCoords != null) {
+                placed = treasureChest.placeItemAt(
+                        draggedItem,
+                        treasureCoords[0],
+                        treasureCoords[1]
+                );
+            }
+        }
 
-			// cleanup final
-			draggedItem = null;
-			dragStartX = -1;
-			dragStartY = -1;
-			dragFromTreasure = false;
-			pointerDownX = -1;
-			pointerDownY = -1;
-			isDragging = false;
-		}
-	}
+        // Item lâché dans le vide → devient flottant
+        if (!placed) {
+            floatingItems.add(
+                new FloatingItem(
+                    draggedItem,
+                    new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)
+                )
+            );
+        }
+
+        // cleanup final
+        draggedItem = null;
+        dragStartX = -1;
+        dragStartY = -1;
+        dragFromTreasure = false;
+        pointerDownX = -1;
+        pointerDownY = -1;
+        isDragging = false;
+    }
+}
+
 
 	private void toggleSelection(int x, int y, Item clicked) {
 		if (clicked == null)

@@ -84,20 +84,39 @@ public class TreasureChest {
 	}
 	
 	public boolean placeItem(Item item) {
+
+    // 🔥 CAS STACKABLE (ex: Gold)
+    if (item.isStackable()) {
         for (int y = 0; y < rows; y++) {
-			for (int x = 0; x < cols; x++) {
-				if (canPlace(item, x, y)) {
-					for (int dy = 0; dy < item.height(); dy++) {
-						for (int dx = 0; dx < item.width(); dx++) {
-							grid[y + dy][x + dx] = item;
-						}
-					}
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+            for (int x = 0; x < cols; x++) {
+                Item cell = grid[y][x];
+                if (cell != null
+                        && cell.isStackable()
+                        && cell.name().equals(item.name())) {
+
+                    grid[y][x] = cell.addQuantity(item.quantity());
+                    return true;
+                }
+            }
+        }
+    }
+
+    // 🔁 Placement normal
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
+            if (canPlace(item, x, y)) {
+                for (int dy = 0; dy < item.height(); dy++) {
+                    for (int dx = 0; dx < item.width(); dx++) {
+                        grid[y + dy][x + dx] = item;
+                    }
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 	
 	public boolean placeItemAt(Item item, int x, int y) {
         if (canPlace(item, x, y)) {

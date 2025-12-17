@@ -2,51 +2,61 @@ package fr.uge.implement;
 
 import java.util.Objects;
 
-public record Gold(String name) implements Item {
+public record Gold(String name, int quantity) implements Item {
+
 	public Gold {
 		Objects.requireNonNull(name);
+		if (quantity <= 0)
+			throw new IllegalArgumentException();
+	}
+
+	@Override
+	public boolean isStackable() {
+		return true;
+	}
+
+	@Override
+	public int quantity() {
+		return quantity;
+	}
+
+	@Override
+	public Item addQuantity(int amount) {
+		return new Gold(name, quantity + amount);
 	}
 
 	@Override
 	public int attackValue() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int defendValue() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int width() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public int height() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public int staminaCost() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
+	public int width() {
+		return 1;
+	}
+
+	@Override
+	public int height() {
+		return 1;
+	}
+
+	@Override
 	public Item rotate() {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 	@Override
 	public boolean isRotated() {
-		// TODO Auto-generated method stub
 		return false;
 	}
-
 }
