@@ -40,9 +40,8 @@ public class Hero {
 	
 	
 	public boolean hasEnoughGold(int price) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    return gold() >= price;
+}
 
 	public int gold() {
 		return backpack.getQuantity("Gold");

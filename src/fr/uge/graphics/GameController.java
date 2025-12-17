@@ -67,6 +67,7 @@ public class GameController {
 	private Item dragOriginalItem = null;
 	private final Merchant merchant;
 	private boolean inMerchant = false;
+	private boolean dragFromMerchant = false;
 
 	/**
 	 * Creates a new game controller responsible for handling input events, updating
@@ -332,6 +333,30 @@ public class GameController {
 		}
 
 		int[] slotCoords = backpackSlotCoordsAt(mouseX, mouseY);
+		// =====================
+		// DRAG DEPUIS LE MARCHAND
+		// =====================
+		if (inMerchant) {
+			int[] merchantCoords = merchantSlotCoordsAt(mouseX, mouseY);
+			if (merchantCoords != null) {
+				Item item = merchant.getStock().getGrid()[merchantCoords[1]][merchantCoords[0]];
+				if (item != null) {
+					draggedItem = item;
+					dragOriginalItem = item;
+					dragFromMerchant = true;
+
+					int cellX = merchantStartX + merchantCoords[0] * (backpackCellSize + backpackPadding);
+					int cellY = merchantStartY + merchantCoords[1] * (backpackCellSize + backpackPadding);
+					dragOffsetX = mouseX - cellX;
+					dragOffsetY = mouseY - cellY;
+
+					dragMouseX = mouseX - dragOffsetX;
+					dragMouseY = mouseY - dragOffsetY;
+					return;
+				}
+			}
+		}
+
 		if (slotCoords != null) {
 			int x = slotCoords[0];
 			int y = slotCoords[1];
@@ -404,7 +429,7 @@ public class GameController {
 				// Retirer l'item du sac ou du coffre uniquement au début du drag
 				if (dragFromTreasure) {
 					treasureChest.getGrid().removeItem(draggedItem);
-				} else {
+				} else if (!dragFromMerchant) {
 					backpack.remove(draggedItem);
 				}
 			}
@@ -462,17 +487,52 @@ public class GameController {
 			return;
 		}
 
+		// Dans GameController.java, remplacez la section DRAG & DROP de handlePointerUp
+		// par ceci :
+
 		// =====================
 		// DRAG & DROP
 		// =====================
 		if (isDragging && draggedItem != null) {
-
 			boolean placed = false;
 
-			// Tentative de placement dans le backpack
+			// =====================
+			// CAS SPÉCIAL : ACHAT DEPUIS LE MARCHAND
+			// =====================
+			if (dragFromMerchant) {
+				int price = draggedItem.price();
+
+				if (hero.hasEnoughGold(price)) {
+					// Tenter de placer dans le backpack
+					if (hero.getBackpack().autoAdd(draggedItem)) {
+						hero.removeGold(price); // 💰 Retirer l'or
+						merchant.getStock().removeItem(draggedItem); // 🗑️ Retirer du stock
+						placed = true;
+						System.out.println("✅ Achat réussi : " + draggedItem.name() + " pour " + price + " or");
+					} else {
+						System.out.println("❌ Pas de place dans le sac !");
+					}
+				} else {
+					System.out.println("❌ Pas assez d'or ! Prix: " + price + ", Or: " + hero.gold());
+				}
+
+				// Nettoyage pour drag depuis marchand
+				dragFromMerchant = false;
+				draggedItem = null;
+				dragStartX = -1;
+				dragStartY = -1;
+				dragFromTreasure = false;
+				pointerDownX = -1;
+				pointerDownY = -1;
+				isDragging = false;
+				return; // ⚠️ Important : sortir ici pour éviter le code "flottant" plus bas
+			}
+
+			// =====================
+			// CAS NORMAL : Placement dans le backpack
+			// =====================
 			int[] targetCoords = backpackSlotCoordsAt(mouseX, mouseY);
 			if (targetCoords != null) {
-
 				// 🔵 Déplacement interne → placement normal
 				if (!dragFromTreasure) {
 					placed = backpack.place(draggedItem, targetCoords[0], targetCoords[1]);
@@ -483,10 +543,12 @@ public class GameController {
 				}
 			}
 
+			// =====================
+			// Placement dans le coffre (si en mode trésor)
+			// =====================
 			if (!placed && inTreasure && !dragFromTreasure) {
 				int[] treasureCoords = treasureSlotCoordsAt(mouseX, mouseY);
 				if (treasureCoords != null) {
-					// ✅ Utiliser grid.canPlace() et placer manuellement
 					Grid grid = treasureChest.getGrid();
 					int x = treasureCoords[0];
 					int y = treasureCoords[1];
@@ -502,12 +564,14 @@ public class GameController {
 				}
 			}
 
+			// =====================
 			// Item lâché dans le vide → devient flottant
+			// =====================
 			if (!placed) {
 				floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
 			}
 
-			// cleanup final
+			// Nettoyage final
 			draggedItem = null;
 			dragStartX = -1;
 			dragStartY = -1;
