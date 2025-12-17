@@ -93,4 +93,15 @@ public class Grid {
         for (int i = 0; i < numItems; i++)
             placeItem(ItemFactory.randomItem());
     }
+    
+    
+    public void generateRandomItemsMarchant(int minItems, int maxItems) {
+      clear();
+      Random random = new Random();
+      int numItems = minItems + random.nextInt(maxItems - minItems + 1);
+      for (int i = 0; i < numItems; i++)
+          placeItem(ItemFactory.randomItemMarchant());
+  }
+    
+    
 }

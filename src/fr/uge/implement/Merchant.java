@@ -12,7 +12,7 @@ public class Merchant {
 
     public void generateStock() {
         stock.clear();
-        stock.generateRandomItems(3, 7);
+        stock.generateRandomItemsMarchant(3, 7);
     }
 
     // ACHAT (joueur achète au marchand)

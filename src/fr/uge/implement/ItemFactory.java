@@ -21,4 +21,18 @@ public class ItemFactory {
             default -> new Shield("Shield+" + power, power,2,2);
         };
     }
+    
+    
+    public static Item randomItemMarchant() {
+      int type = RANDOM.nextInt(2); // 0=Weapon,1=Armor
+      int power = 5 + RANDOM.nextInt(16); // 5..20
+
+      return switch (type) {
+      case 0 -> new Sword("Sword+" + power, power,1, 1, 2);
+      default -> new Shield("Shield+" + power, power,2,2);
+      };
+  }
+    
+    
+    
 }
