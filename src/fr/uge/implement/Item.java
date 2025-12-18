@@ -55,5 +55,15 @@ public interface Item {
   default int healthRegen() {
     return 0; 
 }
+  
+  default boolean occupies(int dx, int dy) {
+    return true;
+}
+  
+  default boolean isMalediction() {
+    return false;
+}
+
+
    
 }

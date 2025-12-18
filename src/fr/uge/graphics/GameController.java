@@ -24,7 +24,7 @@ public class GameController {
 	private final BackpackExpansionSystem expansionSystem;
 	private final List<FloatingItem> floatingItems = new ArrayList<>();
 	private final List<Integer> selectedItems = new ArrayList<>();
-	
+
 	private boolean inCorridor = true;
 	private boolean inTreasure = false;
 	private boolean inCombat = false;
@@ -33,16 +33,16 @@ public class GameController {
 	private boolean isDragging = false;
 	private boolean dragFromTreasure = false;
 	private boolean dragFromMerchant = false;
-	
+
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
 	private long lastChangeRoom = 0;
-	
+
 	private final int backpackOriginX = 20, backpackOriginY = 550;
 	private final int backpackCellSize = 60, backpackPadding = 8;
 	private int treasureStartX, treasureStartY;
 	private int merchantStartX, merchantStartY;
-	
+
 	private Item draggedItem = null;
 	private Item dragOriginalItem = null;
 	private int dragStartX = -1, dragStartY = -1;
@@ -50,9 +50,15 @@ public class GameController {
 	private int dragOffsetX = 0, dragOffsetY = 0;
 	private int pointerDownX = -1, pointerDownY = -1;
 	private static final int DRAG_THRESHOLD = 5;
+	private boolean placingMalediction = false;
+	private Item currentMalediction = null;
+	private Item placedMalediction = null; // nouvelle variable
 
-	public GameController(ApplicationContext context, GameView view, MapDungeon floor, 
-			BackPack backpack, Battle fight, Dungeon dungeon, Hero hero) {
+	// Combat suspendu
+	private boolean combatPausedByMalediction = false;
+
+	public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight,
+			Dungeon dungeon, Hero hero) {
 		this.context = Objects.requireNonNull(context);
 		this.view = Objects.requireNonNull(view);
 		this.floor = Objects.requireNonNull(floor);
@@ -67,52 +73,124 @@ public class GameController {
 	}
 
 	// ===================== GETTERS =====================
-	public boolean isInCorridor() { return inCorridor; }
-	public boolean isInTreasure() { return inTreasure; }
-	public boolean isInMerchant() { return inMerchant; }
-	public boolean isInCombat() { return inCombat; }
-	public boolean isInExpansionMode() { return inExpansionMode; }
-	public boolean isDragging() { return isDragging; }
-	public Merchant getMerchant() { return merchant; }
-	public Hero getHero() { return hero; }
-	public Battle getBattle() { return fight; }
-	public Item getDraggedItem() { return draggedItem; }
-	public int getDragOffsetX() { return dragMouseX; }
-	public int getDragOffsetY() { return dragMouseY; }
-	public long getLastAttackTime() { return lastAttackTime; }
-	public long getLastChangeRoom() { return lastChangeRoom; }
-	public List<Integer> getSelectedSlots() { return selectedItems; }
-	public BackpackExpansionSystem getExpansionSystem() { return expansionSystem; }
-	public Item[][] getTreasureGrid() { return treasureChest.getGrid().getGrid(); }
-	public Item[][] getMerchantGrid() { return merchant.getStock().getGrid(); }
-	public List<FloatingItem> getFloatingItems() { return floatingItems; }
+	public boolean isPlacingMalediction() {
+		return placingMalediction;
+	}
+
+	public Item getCurrentMalediction() {
+		return currentMalediction;
+	}
+
+	public boolean isInCorridor() {
+		return inCorridor;
+	}
+
+	public boolean isInTreasure() {
+		return inTreasure;
+	}
+
+	public boolean isInMerchant() {
+		return inMerchant;
+	}
+
+	public boolean isInCombat() {
+		return inCombat;
+	}
+
+	public boolean isInExpansionMode() {
+		return inExpansionMode;
+	}
+
+	public boolean isDragging() {
+		return isDragging;
+	}
+
+	public Merchant getMerchant() {
+		return merchant;
+	}
+
+	public Hero getHero() {
+		return hero;
+	}
+
+	public Battle getBattle() {
+		return fight;
+	}
+
+	public Item getDraggedItem() {
+		return draggedItem;
+	}
+
+	public int getDragOffsetX() {
+		return dragMouseX;
+	}
+
+	public int getDragOffsetY() {
+		return dragMouseY;
+	}
+
+	public long getLastAttackTime() {
+		return lastAttackTime;
+	}
+
+	public long getLastChangeRoom() {
+		return lastChangeRoom;
+	}
+
+	public List<Integer> getSelectedSlots() {
+		return selectedItems;
+	}
+
+	public BackpackExpansionSystem getExpansionSystem() {
+		return expansionSystem;
+	}
+
+	public Item[][] getTreasureGrid() {
+		return treasureChest.getGrid().getGrid();
+	}
+
+	public Item[][] getMerchantGrid() {
+		return merchant.getStock().getGrid();
+	}
+
+	public List<FloatingItem> getFloatingItems() {
+		return floatingItems;
+	}
 
 	// ===================== MAIN LOOP =====================
 	public void update(int pollTimeout) {
 		var event = context.pollOrWaitEvent(pollTimeout);
-		if (event == null) return;
-		
+		if (event == null)
+			return;
+
 		switch (event) {
-			case KeyboardEvent ke -> handleKeyboard(ke);
-			case PointerEvent pe -> handlePointer(pe);
-			default -> {}
+		case KeyboardEvent ke -> handleKeyboard(ke);
+		case PointerEvent pe -> handlePointer(pe);
+		default -> {
+		}
 		}
 	}
 
 	// ===================== KEYBOARD HANDLING =====================
 	private void handleKeyboard(KeyboardEvent ke) {
-		if (ke.key() == KeyboardEvent.Key.Q) System.exit(0);
-		
-		if (handleRotation(ke)) return;
-		if (handleExpansionExit(ke)) return;
-		if (handleDelete(ke)) return;
-		if (handleCombatEndTurn(ke)) return;
-	}
+    if (ke.key() == KeyboardEvent.Key.Q)
+        System.exit(0);
+
+    if (handleRotation(ke))
+        return;
+    if (handleExpansionExit(ke))
+        return;
+    if (handleDelete(ke))
+        return;
+    if (handleCombatEndTurn(ke))
+        return;
+    
+    // ✅ Suppression du blocage global - on laisse le reste fonctionner normalement
+}
 
 	private boolean handleRotation(KeyboardEvent ke) {
-		if (ke.key() == KeyboardEvent.Key.R && 
-			ke.action() == KeyboardEvent.Action.KEY_PRESSED && 
-			isDragging && draggedItem != null) {
+		if (ke.key() == KeyboardEvent.Key.R && ke.action() == KeyboardEvent.Action.KEY_PRESSED && isDragging
+				&& draggedItem != null) {
 			draggedItem = draggedItem.rotate();
 			dragOriginalItem = draggedItem;
 			return true;
@@ -140,8 +218,12 @@ public class GameController {
 	}
 
 	private boolean handleCombatEndTurn(KeyboardEvent ke) {
-		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED) return false;
-		
+		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
+			return false;
+		if (placingMalediction) {
+			System.out.println("Impossible de finir le tour : malédiction active !");
+			return true;
+		}
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
 			if (fight.isPlayerTurnActive()) {
 				fight.endPlayerTurn();
@@ -160,28 +242,41 @@ public class GameController {
 		int mouseY = pe.location().y();
 
 		switch (pe.action()) {
-			case POINTER_DOWN -> handlePointerDown(mouseX, mouseY);
-			case POINTER_UP -> handlePointerUp(mouseX, mouseY);
-			case POINTER_MOVE -> handlePointerMove(mouseX, mouseY);
-			default -> {}
+		case POINTER_DOWN -> handlePointerDown(mouseX, mouseY);
+		case POINTER_UP -> handlePointerUp(mouseX, mouseY);
+		case POINTER_MOVE -> handlePointerMove(mouseX, mouseY);
+		default -> {
+		}
 		}
 	}
 
 	private void handlePointerDown(int mouseX, int mouseY) {
-		pointerDownX = mouseX;
-		pointerDownY = mouseY;
+    pointerDownX = mouseX;
+    pointerDownY = mouseY;
 
-		if (handleExpansionClick(mouseX, mouseY)) return;
-		if (handleFloatingItemClick(mouseX, mouseY)) return;
-		if (handleTreasureClick(mouseX, mouseY)) return;
-		if (handleMerchantDragStart(mouseX, mouseY)) return;
-		if (handleBackpackDragStart(mouseX, mouseY)) return;
-		if (handleRoomNavigation(mouseX, mouseY)) return;
-	}
+    // ☠️ Mode placement : clic uniquement pour placer
+    if (placingMalediction) {
+        handleMaledictionPlacement(mouseX, mouseY);
+        return;
+    }
 
+    if (handleExpansionClick(mouseX, mouseY))
+        return;
+    if (handleFloatingItemClick(mouseX, mouseY))
+        return;
+    if (handleTreasureClick(mouseX, mouseY))
+        return;
+    if (handleMerchantDragStart(mouseX, mouseY))
+        return;
+    if (handleBackpackDragStart(mouseX, mouseY))
+        return;
+    if (handleRoomNavigation(mouseX, mouseY))
+        return;
+}
 	private boolean handleExpansionClick(int mouseX, int mouseY) {
-		if (!inExpansionMode) return false;
-		
+		if (!inExpansionMode)
+			return false;
+
 		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
 		if (coords != null && expansionSystem.unlockCell(coords[0], coords[1])) {
 			if (!expansionSystem.hasPendingUnlocks()) {
@@ -196,22 +291,29 @@ public class GameController {
 	}
 
 	private boolean handleFloatingItemClick(int mouseX, int mouseY) {
-		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
-		if (fItem != null) {
-			draggedItem = fItem.item;
-			dragOffsetX = mouseX - fItem.position.x;
-			dragOffsetY = mouseY - fItem.position.y;
-			isDragging = true;
-			floatingItems.remove(fItem);
-			dragFromTreasure = false;
-			return true;
-		}
-		return false;
-	}
+    FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
+    if (fItem != null) {
+        // ⚠️ Bloquer uniquement la malédiction
+        if (fItem.item == currentMalediction) {
+            System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
+            return true; // Consomme l'événement sans démarrer le drag
+        }
+        
+        draggedItem = fItem.item;
+        dragOffsetX = mouseX - fItem.position.x;
+        dragOffsetY = mouseY - fItem.position.y;
+        isDragging = true;
+        floatingItems.remove(fItem);
+        dragFromTreasure = false;
+        return true;
+    }
+    return false;
+}
 
 	private boolean handleTreasureClick(int mouseX, int mouseY) {
-		if (!inTreasure) return false;
-		
+		if (!inTreasure)
+			return false;
+
 		int[] coords = treasureSlotCoordsAt(mouseX, mouseY);
 		if (coords != null) {
 			Item item = treasureChest.getGrid().getGrid()[coords[1]][coords[0]];
@@ -240,8 +342,9 @@ public class GameController {
 	}
 
 	private boolean handleMerchantDragStart(int mouseX, int mouseY) {
-		if (!inMerchant) return false;
-		
+		if (!inMerchant)
+			return false;
+
 		int[] coords = merchantSlotCoordsAt(mouseX, mouseY);
 		if (coords != null) {
 			Item item = merchant.getStock().getGrid()[coords[1]][coords[0]];
@@ -268,11 +371,13 @@ public class GameController {
 
 	private boolean handleBackpackDragStart(int mouseX, int mouseY) {
 		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
-		if (coords == null) return false;
-		
+		if (coords == null)
+			return false;
+
 		int x = coords[0], y = coords[1];
-		if (!backpack.isUnlocked(x, y)) return false;
-		
+		if (!backpack.isUnlocked(x, y))
+			return false;
+
 		Item item = backpack.grid()[y][x];
 		if (item != null) {
 			startBackpackDrag(x, y, item, mouseX, mouseY);
@@ -282,20 +387,25 @@ public class GameController {
 	}
 
 	private void startBackpackDrag(int x, int y, Item item, int mouseX, int mouseY) {
-		draggedItem = item;
-		dragOriginalItem = item;
-		dragStartX = x;
-		dragStartY = y;
-		dragFromTreasure = false;
+    // ⚠️ Bloquer le drag de la malédiction UNIQUEMENT en combat
+    if (item == placedMalediction && inCombat) {
+        System.out.println("⛔ Impossible de déplacer la malédiction en combat !");
+        return;
+    }
+    
+    draggedItem = item;
+    dragOriginalItem = item;
+    dragStartX = x;
+    dragStartY = y;
+    dragFromTreasure = false;
 
-		int cellX = backpackOriginX + x * (backpackCellSize + backpackPadding);
-		int cellY = backpackOriginY + y * (backpackCellSize + backpackPadding);
-		dragOffsetX = mouseX - cellX;
-		dragOffsetY = mouseY - cellY;
-		dragMouseX = mouseX - dragOffsetX;
-		dragMouseY = mouseY - dragOffsetY;
-	}
-
+    int cellX = backpackOriginX + x * (backpackCellSize + backpackPadding);
+    int cellY = backpackOriginY + y * (backpackCellSize + backpackPadding);
+    dragOffsetX = mouseX - cellX;
+    dragOffsetY = mouseY - cellY;
+    dragMouseX = mouseX - dragOffsetX;
+    dragMouseY = mouseY - dragOffsetY;
+}
 	private boolean handleRoomNavigation(int mouseX, int mouseY) {
 		if (inCombat || (!inTreasure && !inMerchant)) {
 			int room = roomAt(mouseX, mouseY);
@@ -305,11 +415,13 @@ public class GameController {
 				return true;
 			}
 		}
-		
+
 		if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
 			int room = roomAt(mouseX, mouseY);
-			if (inTreasure) leaveTreasureRoom();
-			if (inMerchant) leaveMerchantRoom();
+			if (inTreasure)
+				leaveTreasureRoom();
+			if (inMerchant)
+				leaveMerchantRoom();
 			lastChangeRoom = System.currentTimeMillis();
 			handleRoomClick(room);
 			return true;
@@ -327,20 +439,78 @@ public class GameController {
 			dragMouseY = mouseY - dragOffsetY;
 		}
 	}
+	
+	
+	private void triggerMalediction() {
+    if (currentMalediction != null || placedMalediction != null) {
+        System.out.println("⛔ Une malédiction est déjà active !");
+        return;
+    }
+
+    placingMalediction = true;
+    combatPausedByMalediction = true;
+    currentMalediction = Malediction.formeS();
+    floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
+    System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
+}
+
+	private void handleMaledictionPlacement(int mouseX, int mouseY) {
+    int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
+    if (coords == null) {
+        System.out.println("❌ Cliquez sur une case du sac !");
+        return;
+    }
+
+    int x = coords[0];
+    int y = coords[1];
+
+    if (!backpack.canForcePlace(currentMalediction, x, y)) {
+        System.out.println("❌ Placement impossible (cases verrouillées ou hors limites)");
+        return;
+    }
+
+    var blocking = backpack.blockingItems(currentMalediction, x, y);
+    if (!blocking.isEmpty()) {
+        System.out.println("⛔ Objets bloquants ! Déplacez-les d'abord : " + blocking.size() + " objet(s)");
+        return;
+    }
+
+    // ✅ Placement réussi
+    backpack.forcePlace(currentMalediction, x, y);
+    placingMalediction = false;
+    floatingItems.removeIf(f -> f.item == currentMalediction);
+    placedMalediction = currentMalediction;
+    currentMalediction = null;
+    combatPausedByMalediction = false;
+
+    System.out.println("☠️ Malédiction placée ! Le combat reprend.");
+}
 
 	private void checkDragThreshold(int mouseX, int mouseY) {
-		int deltaX = Math.abs(mouseX - pointerDownX);
-		int deltaY = Math.abs(mouseY - pointerDownY);
+    int deltaX = Math.abs(mouseX - pointerDownX);
+    int deltaY = Math.abs(mouseY - pointerDownY);
 
-		if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-			isDragging = true;
-			if (dragFromTreasure) {
-				treasureChest.getGrid().removeItem(draggedItem);
-			} else if (!dragFromMerchant) {
-				backpack.remove(draggedItem);
-			}
-		}
-	}
+    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+        // 💀 PÉNALITÉ si on drag la malédiction hors combat
+        if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
+            int penalty = 10;
+            hero.takeDamage(penalty);
+            System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+            System.out.println("❤️  HP restants : " + hero.hp() + "/" + hero.maxHp());
+        }
+
+        isDragging = true;
+
+        if (dragFromTreasure) {
+            treasureChest.getGrid().removeItem(draggedItem);
+        } else if (!dragFromMerchant) {
+            backpack.remove(draggedItem);
+        }
+    }
+}
+
+
+
 
 	private void handlePointerUp(int mouseX, int mouseY) {
 		if (draggedItem != null && !isDragging) {
@@ -364,15 +534,28 @@ public class GameController {
 		resetDragState();
 	}
 
+	
+
+
+
+
 	private void handleCombatClick() {
 		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-		if (coords != null) {
-			Item item = backpack.grid()[coords[1]][coords[0]];
-			if (item != null && fight.isPlayerTurnActive()) {
-				fight.useItem(item);
-				lastAttackTime = System.currentTimeMillis();
-			}
-		}
+		if (coords == null)
+			return;
+
+		Item item = backpack.grid()[coords[1]][coords[0]];
+		if (item == null)
+			return;
+
+		if (!fight.isPlayerTurnActive())
+			return;
+
+		fight.useItem(item);
+		lastAttackTime = System.currentTimeMillis();
+
+		// ☠️ TEST : malédiction après CHAQUE attaque
+		triggerMalediction();
 	}
 
 	private void handleSelectionClick() {
@@ -389,9 +572,11 @@ public class GameController {
 		}
 
 		boolean placed = tryPlaceInBackpack(mouseX, mouseY);
-		if (!placed) placed = tryPlaceInTreasure(mouseX, mouseY);
-		if (!placed) createFloatingItem(mouseX, mouseY);
-		
+		if (!placed)
+			placed = tryPlaceInTreasure(mouseX, mouseY);
+		if (!placed)
+			createFloatingItem(mouseX, mouseY);
+
 		resetDragState();
 	}
 
@@ -412,9 +597,12 @@ public class GameController {
 		resetDragState();
 	}
 
+
+
 	private boolean tryPlaceInBackpack(int mouseX, int mouseY) {
 		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
-		if (coords == null) return false;
+		if (coords == null)
+			return false;
 
 		if (dragFromTreasure) {
 			return backpack.autoAdd(draggedItem);
@@ -424,10 +612,12 @@ public class GameController {
 	}
 
 	private boolean tryPlaceInTreasure(int mouseX, int mouseY) {
-		if (!inTreasure || dragFromTreasure) return false;
-		
+		if (!inTreasure || dragFromTreasure)
+			return false;
+
 		int[] coords = treasureSlotCoordsAt(mouseX, mouseY);
-		if (coords == null) return false;
+		if (coords == null)
+			return false;
 
 		Grid grid = treasureChest.getGrid();
 		if (grid.canPlace(draggedItem, coords[0], coords[1])) {
@@ -438,24 +628,14 @@ public class GameController {
 	}
 
 	private void createFloatingItem(int mouseX, int mouseY) {
-		floatingItems.add(new FloatingItem(draggedItem, 
-			new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
+		floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
 	}
 
-	private void resetDragState() {
-		draggedItem = null;
-		dragStartX = -1;
-		dragStartY = -1;
-		dragFromTreasure = false;
-		dragFromMerchant = false;
-		pointerDownX = -1;
-		pointerDownY = -1;
-		isDragging = false;
-	}
-
+	
 	// ===================== ROOM HANDLING =====================
 	private void handleRoomClick(int clickedRoom) {
-		if (!floor.adjacentRooms().contains(clickedRoom)) return;
+		if (!floor.adjacentRooms().contains(clickedRoom))
+			return;
 
 		floor.setPlayerIndex(clickedRoom);
 		floatingItems.clear();
@@ -509,8 +689,9 @@ public class GameController {
 	}
 
 	private void checkCombatEnd() {
-		if (fight == null || fight.isRunning()) return;
-		
+		if (fight == null || fight.isRunning())
+			return;
+
 		inCombat = false;
 		int defeated = fight.getDefeatedEnemiesCount();
 		expansionSystem.addPendingUnlocks(defeated);
@@ -558,7 +739,8 @@ public class GameController {
 
 	// ===================== MERCHANT =====================
 	private void handleMerchantClick(int mouseX, int mouseY) {
-		if (!inMerchant) return;
+		if (!inMerchant)
+			return;
 
 		int[] stockCoords = merchantSlotCoordsAt(mouseX, mouseY);
 		if (stockCoords != null) {
@@ -580,7 +762,8 @@ public class GameController {
 
 	// ===================== ITEMS =====================
 	private void toggleSelection(int x, int y, Item clicked) {
-		if (clicked == null) return;
+		if (clicked == null)
+			return;
 		int slot = y * backpack.width() + x;
 		if (selectedItems.contains(slot)) {
 			selectedItems.remove(Integer.valueOf(slot));
@@ -590,16 +773,62 @@ public class GameController {
 	}
 
 	private void handleDeleteSelectedItems() {
-		if (selectedItems.isEmpty()) return;
+    if (selectedItems.isEmpty())
+        return;
 
-		selectedItems.stream().sorted((a, b) -> b - a).forEach(slot -> {
-			int x = slot % backpack.width();
-			int y = slot / backpack.width();
-			Item item = backpack.grid()[y][x];
-			if (item != null) backpack.remove(item);
-		});
-		selectedItems.clear();
-	}
+    selectedItems.stream().sorted((a, b) -> b - a).forEach(slot -> {
+        int x = slot % backpack.width();
+        int y = slot / backpack.width();
+        Item item = backpack.grid()[y][x];
+
+        if (item != null) {
+            // ⚠️ Traitement spécial pour les malédictions
+            if (item.isMalediction()) {
+                if (inCombat) {
+                    System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
+                } else {
+                    // 💀 HORS COMBAT : autoriser avec pénalité
+                    int penalty = 10;
+                    hero.takeDamage(penalty);
+                    System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
+                    System.out.println("❤️  HP restants : " + hero.hp() + "/" + hero.maxHp());
+                    
+                    backpack.remove(item);
+                    
+                    // Nettoyer les références si c'est la malédiction active
+                    if (item == placedMalediction) {
+                        placedMalediction = null;
+                    }
+                    if (item == currentMalediction) {
+                        floatingItems.removeIf(f -> f.item == currentMalediction);
+                        placingMalediction = false;
+                        currentMalediction = null;
+                        combatPausedByMalediction = false;
+                    }
+                }
+            } else {
+                // Suppression normale des autres items
+                backpack.remove(item);
+            }
+        }
+    });
+
+    selectedItems.clear();
+}
+
+
+	private void resetDragState() {
+    // ⚠️ Plus de pénalité ici - la malédiction ne peut plus être dragged de toute façon
+    
+    draggedItem = null;
+    dragStartX = -1;
+    dragStartY = -1;
+    dragFromTreasure = false;
+    dragFromMerchant = false;
+    pointerDownX = -1;
+    pointerDownY = -1;
+    isDragging = false;
+}
 
 	// ===================== FLOOR NAVIGATION =====================
 	private void goToNextFloor() {
@@ -608,7 +837,7 @@ public class GameController {
 			System.exit(0);
 			return;
 		}
-		
+
 		floatingItems.clear();
 		floorIndex++;
 		MapDungeon next = dungeon.getFloor(floorIndex);
@@ -626,35 +855,33 @@ public class GameController {
 			int row = i / cols, col = i % cols;
 			int x = padding + col * (cellSize + padding);
 			int y = padding + row * (cellSize + padding);
-			if (mouseX >= x && mouseX <= x + cellSize && 
-				mouseY >= y && mouseY <= y + cellSize) return i;
+			if (mouseX >= x && mouseX <= x + cellSize && mouseY >= y && mouseY <= y + cellSize)
+				return i;
 		}
 		return -1;
 	}
 
 	private int[] backpackSlotCoordsAt(int mouseX, int mouseY) {
-		return findSlotAt(mouseX, mouseY, backpackOriginX, backpackOriginY, 
-			backpack.width(), backpack.height());
+		return findSlotAt(mouseX, mouseY, backpackOriginX, backpackOriginY, backpack.width(), backpack.height());
 	}
 
 	private int[] treasureSlotCoordsAt(int mouseX, int mouseY) {
-		return findSlotAt(mouseX, mouseY, treasureStartX, treasureStartY,
-			treasureChest.getGrid().getCols(), treasureChest.getGrid().getRows());
+		return findSlotAt(mouseX, mouseY, treasureStartX, treasureStartY, treasureChest.getGrid().getCols(),
+				treasureChest.getGrid().getRows());
 	}
 
 	private int[] merchantSlotCoordsAt(int mouseX, int mouseY) {
-		return findSlotAt(mouseX, mouseY, merchantStartX, merchantStartY,
-			merchant.getStock().getCols(), merchant.getStock().getRows());
+		return findSlotAt(mouseX, mouseY, merchantStartX, merchantStartY, merchant.getStock().getCols(),
+				merchant.getStock().getRows());
 	}
 
-	private int[] findSlotAt(int mouseX, int mouseY, int originX, int originY, 
-			int cols, int rows) {
+	private int[] findSlotAt(int mouseX, int mouseY, int originX, int originY, int cols, int rows) {
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < cols; x++) {
 				int cellX = originX + x * (backpackCellSize + backpackPadding);
 				int cellY = originY + y * (backpackCellSize + backpackPadding);
-				if (mouseX >= cellX && mouseX <= cellX + backpackCellSize &&
-					mouseY >= cellY && mouseY <= cellY + backpackCellSize) {
+				if (mouseX >= cellX && mouseX <= cellX + backpackCellSize && mouseY >= cellY
+						&& mouseY <= cellY + backpackCellSize) {
 					return new int[] { x, y };
 				}
 			}
@@ -683,8 +910,8 @@ public class GameController {
 		for (FloatingItem f : floatingItems) {
 			int width = f.item.width() * (backpackCellSize + backpackPadding) - backpackPadding;
 			int height = f.item.height() * (backpackCellSize + backpackPadding) - backpackPadding;
-			if (mouseX >= f.position.x && mouseX <= f.position.x + width &&
-				mouseY >= f.position.y && mouseY <= f.position.y + height) {
+			if (mouseX >= f.position.x && mouseX <= f.position.x + width && mouseY >= f.position.y
+					&& mouseY <= f.position.y + height) {
 				return f;
 			}
 		}
@@ -693,8 +920,10 @@ public class GameController {
 
 	private int[] findItemOrigin(Item[][] grid, int x, int y, Item item) {
 		int startX = x, startY = y;
-		while (startX > 0 && grid[y][startX - 1] == item) startX--;
-		while (startY > 0 && grid[startY - 1][x] == item) startY--;
+		while (startX > 0 && grid[y][startX - 1] == item)
+			startX--;
+		while (startY > 0 && grid[startY - 1][x] == item)
+			startY--;
 		return new int[] { startX, startY };
 	}
 

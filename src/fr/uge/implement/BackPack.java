@@ -1,6 +1,8 @@
 package fr.uge.implement;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class BackPack {
 
@@ -36,24 +38,90 @@ public class BackPack {
     }
 
     public boolean canPlace(Item item, int x, int y) {
-        Objects.requireNonNull(item);
-        for (int dy = 0; dy < item.height(); dy++) {
-            for (int dx = 0; dx < item.width(); dx++) {
-                int gx = x + dx, gy = y + dy;
-                if (gx < 0 || gy < 0 || gx >= width || gy >= height) return false;
-                if (!unlocked[gy][gx] || grid[gy][gx] != null) return false;
-            }
-        }
-        return true;
-    }
+      Objects.requireNonNull(item);
+
+      for (int dy = 0; dy < item.height(); dy++) {
+          for (int dx = 0; dx < item.width(); dx++) {
+
+              if (!item.occupies(dx, dy)) continue;
+
+              int gx = x + dx;
+              int gy = y + dy;
+
+              if (gx < 0 || gy < 0 || gx >= width || gy >= height)
+                  return false;
+
+              if (!unlocked[gy][gx])
+                  return false;
+
+              if (grid[gy][gx] != null)
+                  return false;
+          }
+      }
+      return true;
+  }
+    
+    
+    public Set<Item> blockingItems(Item item, int x, int y) {
+      Objects.requireNonNull(item);
+      Set<Item> result = new HashSet<>();
+
+      for (int dy = 0; dy < item.height(); dy++) {
+          for (int dx = 0; dx < item.width(); dx++) {
+
+              if (!item.occupies(dx, dy)) continue;
+
+              int gx = x + dx;
+              int gy = y + dy;
+
+              if (gx < 0 || gy < 0 || gx >= width || gy >= height)
+                  continue;
+
+              Item existing = grid[gy][gx];
+              if (existing != null) {
+                  result.add(existing);
+              }
+          }
+      }
+      return result;
+  }
+    
+    public boolean canForcePlace(Item item, int x, int y) {
+      Objects.requireNonNull(item);
+
+      for (int dy = 0; dy < item.height(); dy++) {
+          for (int dx = 0; dx < item.width(); dx++) {
+
+              if (!item.occupies(dx, dy)) continue;
+
+              int gx = x + dx;
+              int gy = y + dy;
+
+              if (gx < 0 || gy < 0 || gx >= width || gy >= height)
+                  return false;
+
+              if (!unlocked[gy][gx])
+                  return false;
+          }
+      }
+      return true;
+  }
+
+
 
     public boolean place(Item item, int x, int y) {
-        if (!canPlace(item, x, y)) return false;
-        for (int dy = 0; dy < item.height(); dy++)
-            for (int dx = 0; dx < item.width(); dx++)
-                grid[y + dy][x + dx] = item;
-        return true;
-    }
+      if (!canPlace(item, x, y)) return false;
+
+      for (int dy = 0; dy < item.height(); dy++) {
+          for (int dx = 0; dx < item.width(); dx++) {
+
+              if (!item.occupies(dx, dy)) continue;
+              grid[y + dy][x + dx] = item;
+          }
+      }
+      return true;
+  }
+
 
     public boolean autoAdd(Item item) {
         Objects.requireNonNull(item);
@@ -141,4 +209,27 @@ public class BackPack {
           }
       }
   }
+    
+    
+    public void forcePlace(Item item, int x, int y) {
+      Objects.requireNonNull(item);
+
+      if (!canForcePlace(item, x, y))
+          throw new IllegalStateException("Placement impossible");
+
+      if (!blockingItems(item, x, y).isEmpty())
+          throw new IllegalStateException("Objets bloquants non résolus");
+
+      for (int dy = 0; dy < item.height(); dy++) {
+          for (int dx = 0; dx < item.width(); dx++) {
+
+              if (!item.occupies(dx, dy)) continue;
+              grid[y + dy][x + dx] = item;
+          }
+      }
+  }
+
+    
+    
+    
 }

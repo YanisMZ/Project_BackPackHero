@@ -16,6 +16,7 @@ import fr.uge.implement.HealingItem;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.ItemType;
+import fr.uge.implement.Malediction;
 import fr.uge.implement.Ration;
 import fr.uge.implement.Shield;
 import fr.uge.implement.Sword;
@@ -32,8 +33,19 @@ public class GameRun {
 
 			BackPack backpack = new BackPack(5, 7);
 
-			int[][] startCells = { { 2, 3 }, { 2, 1 }, { 2, 0 }, { 0, 1 }, { 1, 1 }, { 2, 2 }, { 3, 3 }, { 3, 1 }, { 3, 2 } };
-			backpack.unlockCells(startCells);
+		// Déblocage des cellules nécessaires pour la forme S (3x2)
+			//int[][] sCells = { {1,1}, {2,1}, {0,2}, {1,2}, {2,2} };
+			//backpack.unlockCells(sCells);
+
+			// Placement
+			
+			for (int y = 0; y < 7; y++) {
+		    for (int x = 0; x < 5; x++) {
+		        backpack.unlockCell(x, y);
+		    }
+		}
+		
+
 
 			var floor0 = dungeon.getFloor(0);
 			GameView view = new GameView(context, floor0, backpack);
@@ -50,12 +62,15 @@ public class GameRun {
 				view.loadingDisplay(startTime);
 				context.pollOrWaitEvent(10);
 			}
+			
+	
 
-			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2,3), 2, 1);
-			backpack.place(new Shield("Shield", 5, 1, 1,3), 2, 0);
+		
+			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2,3), 2, 2);
+			backpack.place(new Shield("Shield", 5, 1, 1,3), 2, 6);
 			backpack.place(new Ration("Ration", 1, 1, 1), 3, 1);
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
-			backpack.autoAdd(new Gold("Gold", 10));
+			backpack.autoAdd(new Gold("Gold", 65));
 			backpack.autoAdd(new Gold("Gold", 5));
 
 
@@ -85,7 +100,7 @@ public class GameRun {
 					view.expansionDisplay(selectedSlots, hero, controller.getExpansionSystem());
 				} else if (controller.isInCombat()) {
 					view.combatDisplay(fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
-							dragOffsetX, dragOffsetY, controller.getLastAttackTime());
+							dragOffsetX, dragOffsetY, controller.getLastAttackTime(),controller.getFloatingItems());
 				} else if (controller.isInCorridor()) {
 					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems(), controller.getLastChangeRoom());

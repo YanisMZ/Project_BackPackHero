@@ -1,5 +1,6 @@
 package fr.uge.graphics;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
@@ -135,7 +136,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	public void combatDisplay(int nbEnemies, int status, List<Integer> selectedSlots, Hero hero,
 			List<Enemy> enemies, boolean isDragging, Item draggedItem, int dragOffsetX, 
-			int dragOffsetY, long lastAttackTime) {
+			int dragOffsetY, long lastAttackTime,List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			if (isAnimationPlaying(lastAttackTime, 4500)) {
@@ -146,6 +147,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawAllBars(g, hero, enemies);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+			drawFloatingItems(g, floatingItems);
+			
 		});
 	}
 
@@ -866,6 +869,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		if (y > 0 && grid[y - 1][x] == item) return false;
 		return true;
 	}
+	
+
 
 	private void clearScreen(Graphics2D g) {
 		g.setColor(Color.BLACK);
