@@ -111,8 +111,17 @@ public class Battle {
         System.out.println("\n========== ANNONCE DES ENNEMIS ==========");
 
         for (Enemy e : enemies) {
-            int choice = random.nextInt(3); // 0=ATTACK, 1=DEFEND, 2=MALEDICTION
-            EnemyAction action = (choice == 0) ? EnemyAction.ATTACK : (choice == 1) ? EnemyAction.DEFEND : EnemyAction.MALEDICTION;
+            int roll = random.nextInt(100); // 0 à 99
+            EnemyAction action;
+
+            if (roll < 45) {            // 45% ATTACK
+                action = EnemyAction.ATTACK;
+            } else if (roll < 90) {     // 45% DEFEND
+                action = EnemyAction.DEFEND;
+            } else {                     // 10% MALEDICTION
+                action = EnemyAction.MALEDICTION;
+            }
+
             enemyActions.add(action);
 
             switch (action) {
@@ -124,6 +133,7 @@ public class Battle {
 
         System.out.println("=========================================\n");
     }
+
 
     /** Exécute le tour ennemi pour ATTACK et DEFEND. MALEDICTION est gérée par GameController */
     public void executeEnemyTurn() {
