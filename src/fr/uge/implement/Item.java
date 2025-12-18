@@ -34,4 +34,26 @@ public interface Item {
       return true; 
   }
     
+    default int staminaRegen() {
+      return 0; // La plupart des objets ne redonnent pas d'énergie
+  }
+    
+    
+    /** @return la durabilité actuelle. -1 si l'objet est indestructible. */
+    default int durability() {
+      return -1; // Objet indestructible par défaut (ex: Gold)
+  }
+
+  default Item decreaseDurability() {
+      return this; // Ne fait rien par défaut
+  }
+
+  default boolean isBroken() {
+      return durability() == 0;
+  }
+  
+  default int healthRegen() {
+    return 0; 
+}
+   
 }

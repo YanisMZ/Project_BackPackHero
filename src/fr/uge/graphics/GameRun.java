@@ -12,9 +12,11 @@ import fr.uge.implement.BackpackExpansionSystem;
 import fr.uge.implement.Battle;
 import fr.uge.implement.Dungeon;
 import fr.uge.implement.Gold;
+import fr.uge.implement.HealingItem;
 import fr.uge.implement.Hero;
 import fr.uge.implement.Item;
 import fr.uge.implement.ItemType;
+import fr.uge.implement.Ration;
 import fr.uge.implement.Shield;
 import fr.uge.implement.Sword;
 
@@ -49,15 +51,16 @@ public class GameRun {
 				context.pollOrWaitEvent(10);
 			}
 
-			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2), 2, 1);
-			backpack.place(new Shield("Shield", 5, 1, 1), 2, 0);
-			backpack.place(new Sword(ItemType.SWORD, 15, 1, 1, 2), 1, 1);
+			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2,3), 2, 1);
+			backpack.place(new Shield("Shield", 5, 1, 1,3), 2, 0);
+			backpack.place(new Ration("Ration", 1, 1, 1), 3, 1);
+			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
 			backpack.autoAdd(new Gold("Gold", 10));
 			backpack.autoAdd(new Gold("Gold", 5));
-			// → une seule case avec Gold(quantity=15)
+
 
 			var hero = new Hero(40, 0, 3, backpack);
-			var fight = new Battle(hero);
+			var fight = new Battle(hero,backpack);
 
 			var screenInfo = context.getScreenInfo();
 			var width = screenInfo.width();

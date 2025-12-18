@@ -37,11 +37,10 @@ public class Hero {
 	public int protection() {
 		return protection;
 	}
-	
-	
+
 	public boolean hasEnoughGold(int price) {
-    return gold() >= price;
-}
+		return gold() >= price;
+	}
 
 	public int gold() {
 		return backpack.getQuantity("Gold");
@@ -74,6 +73,11 @@ public class Hero {
 	}
 
 	/* ===================== STAMINA ===================== */
+
+	public void addStamina(int amount) {
+		this.currentStamina = Math.min(this.maxStamina, this.currentStamina + amount);
+	}
+
 	public boolean hasStamina(int cost) {
 		return currentStamina >= cost;
 	}
@@ -105,5 +109,15 @@ public class Hero {
 		return backpack;
 	}
 
-	
+	public void heal(int amount) {
+    if (amount < 0) {
+        return; // On ne soigne pas des montants négatifs
+    }
+    
+    // On ajoute le soin tout en s'assurant de ne pas dépasser maxHp
+    this.hp = Math.min(this.hp + amount, this.maxHp);
+    
+    System.out.println("Héros soigné ! HP actuels : " + this.hp + "/" + this.maxHp);
+}
+
 }

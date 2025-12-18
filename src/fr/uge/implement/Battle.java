@@ -7,6 +7,7 @@ import java.util.Random;
 public class Battle {
 
 	private final Hero hero;
+	private final BackPack backpack;
 	private final List<Enemy> enemies = new ArrayList<>();
 	private final Random random = new Random();
 
@@ -18,8 +19,9 @@ public class Battle {
 	private boolean playerTurnActive = true;
 	private int defeatedEnemiesThisCombat = 0;
 
-	public Battle(Hero hero) {
+	public Battle(Hero hero,BackPack backpack) {
 		this.hero = hero;
+		this.backpack = backpack;
 	}
 
 	/* ===================== INIT ===================== */
@@ -49,46 +51,58 @@ public class Battle {
 	 * @return true si l'item a été utilisé avec succès
 	 */
 	public boolean useItem(Item item) {
-		if (!playerTurnActive) {
-			System.out.println("Ce n'est pas votre tour !");
-			return false;
-		}
+    if (!playerTurnActive) {
+        System.out.println("Ce n'est pas votre tour !");
+        return false;
+    }
 
-		if (!hero.hasStamina(item.staminaCost())) {
-			System.out
-					.println("Pas assez de stamina ! (Coût: " + item.staminaCost() + ", Restant: " + hero.currentStamina() + ")");
-			return false;
-		}
+    if (!hero.hasStamina(item.staminaCost())) {
+        System.out.println("Pas assez de stamina !");
+        return false;
+    }
 
-		// Consommer la stamina
-		hero.useStamina(item.staminaCost());
-		System.out.println("Utilisation de " + item.name() + " (Coût: " + item.staminaCost() + ", Stamina restante: "
-				+ hero.currentStamina() + ")");
+    // 1. Consommation et gain d'énergie
+    hero.useStamina(item.staminaCost());
+    
+    if (item.staminaRegen() > 0) {
+        hero.addStamina(item.staminaRegen());
+        System.out.println("Energie + " + item.staminaRegen());
+    }
 
-		// Appliquer les effets de défense
-		if (item.defendValue() > 0) {
-			hero.addProtection(item.defendValue());
-			System.out.println("Protection ajoutée: +" + item.defendValue());
-		}
+    // --- NOUVEAU : Gestion du Soin ---
+    if (item.healthRegen() > 0) {
+        hero.heal(item.healthRegen()); // Assure-toi d'avoir une méthode heal(int) dans Hero
+        System.out.println("Soins : +" + item.healthRegen() + " HP");
+    }
 
-		// Appliquer les dégâts d'attaque
-		if (!enemies.isEmpty() && item.attackValue() > 0) {
-			Enemy target = enemies.get(0);
-			System.out.println("Attaque sur " + target.name() + " : " + item.attackValue() + " dégâts");
+    // 2. Défense et Attaque
+    if (item.defendValue() > 0) {
+        hero.addProtection(item.defendValue());
+    }
 
-			target = target.takeDamage(item.attackValue());
+    if (!enemies.isEmpty() && item.attackValue() > 0) {
+        Enemy target = enemies.get(0);
+        target = target.takeDamage(item.attackValue());
+        if (!target.isAlive()) {
+            defeatedEnemiesThisCombat++;
+            enemies.remove(0);
+        } else {
+            enemies.set(0, target);
+        }
+    }
 
-			if (!target.isAlive()) {
-				System.out.println(target.name() + " est vaincu !");
-				defeatedEnemiesThisCombat++;
-				enemies.remove(0);
-			} else {
-				enemies.set(0, target);
-			}
-		}
+    // 3. Gestion de l'immuabilité et mise à jour du sac à dos
+    Item updatedItem = item.decreaseDurability();
+    
+    if (updatedItem.isBroken()) {
+        backpack.updateItem(item, null); 
+        System.out.println(item.name() + " a été consommé.");
+    } else {
+        backpack.updateItem(item, updatedItem);
+    }
 
-		return true;
-	}
+    return true;
+}
 
 	/**
 	 * Le joueur met fin à son tour. Cela déclenche l'exécution immédiate du tour

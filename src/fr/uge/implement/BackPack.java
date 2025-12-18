@@ -131,4 +131,14 @@ public class BackPack {
             }
         throw new IllegalStateException("Pas assez de " + itemName + " !");
     }
+    
+    public void updateItem(Item oldItem, Item newItem) {
+      for (int y = 0; y < height; y++) {
+          for (int x = 0; x < width; x++) {
+              if (grid[y][x] == oldItem) {
+                  grid[y][x] = newItem;
+              }
+          }
+      }
+  }
 }

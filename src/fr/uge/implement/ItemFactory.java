@@ -16,10 +16,10 @@ public class ItemFactory {
                 // On récupère le tableau des types localement
                 ItemType[] weaponTypes = ItemType.values();
                 ItemType randomWeapon = weaponTypes[random.nextInt(weaponTypes.length)];
-                yield new Sword(randomWeapon, power, 1, 1, 2);
+                yield new Sword(randomWeapon, power, 1, 1, 2,3);
             }
             case 1 -> new Gold("Gold", power);
-            default -> new Shield("Shield+" + power, power, 2, 2);
+            default -> new Shield("Shield+" + power, power, 2, 2,3);
         };
     }
 
@@ -30,8 +30,8 @@ public class ItemFactory {
         int power = 5 + random.nextInt(16);
 
         return switch (type) {
-            case 0 -> new Sword(ItemType.SWORD, power, 1, 1, 2);
-            default -> new Shield("Shield+" + power, power, 2, 2);
+            case 0 -> new Sword(ItemType.SWORD, power, 1, 1, 2,3);
+            default -> new Shield("Shield+" + power, power, 2, 2,3);
         };
     }
 }

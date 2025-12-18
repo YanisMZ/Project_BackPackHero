@@ -1,6 +1,6 @@
 package fr.uge.implement;
 
-public record Shield(String name, int hp,int width, int height) implements Item {
+public record Shield(String name, int hp,int width, int height,int durability) implements Item {
 
   @Override
   public int attackValue() {
@@ -29,5 +29,13 @@ public record Shield(String name, int hp,int width, int height) implements Item 
   public boolean isRotated() {
       return false;
   }
+  
+  @Override
+  public Item decreaseDurability() {
+      if (durability <= 0) return this; 
+      return new Shield(name, hp, width, height, durability - 1);
+  }
+
+  @Override public int durability() { return durability; }
 
 }
