@@ -218,23 +218,27 @@ public class GameController {
 	}
 
 	private boolean handleCombatEndTurn(KeyboardEvent ke) {
-		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
-			return false;
-		if (placingMalediction) {
-			System.out.println("Impossible de finir le tour : malédiction active !");
-			return true;
-		}
-		if (ke.key() == KeyboardEvent.Key.CTRL) {
-			if (fight.isPlayerTurnActive()) {
-				fight.endPlayerTurn();
-				checkCombatEnd();
-			} else {
-				System.out.println("Votre tour est déjà terminé !");
-			}
-			return true;
-		}
-		return false;
-	}
+    if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED) return false;
+    if (ke.key() == KeyboardEvent.Key.CTRL) {
+        if (fight.isPlayerTurnActive()) {
+            fight.endPlayerTurn();
+
+            // Vérifier si un ennemi déclenche une malédiction
+            for (Battle.EnemyAction action : fight.getEnemyActions()) {
+                if (action == Battle.EnemyAction.MALEDICTION) {
+                    triggerMalediction();
+                    break;
+                }
+            }
+
+            checkCombatEnd();
+        } else {
+            System.out.println("Votre tour est déjà terminé !");
+        }
+        return true;
+    }
+    return false;
+}
 
 	// ===================== POINTER HANDLING =====================
 	private void handlePointer(PointerEvent pe) {
@@ -537,7 +541,7 @@ private void checkDragThreshold(int mouseX, int mouseY) {
     System.out.println("☠️ Malédiction placée ! Le combat reprend.");
 }
 
-	
+	  
 
 
 
@@ -569,25 +573,27 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 
 
 
-	private void handleCombatClick() {
-		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-		if (coords == null)
-			return;
+	 private void handleCombatClick() {
+     int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+     if (coords == null) return;
 
-		Item item = backpack.grid()[coords[1]][coords[0]];
-		if (item == null)
-			return;
+     Item item = backpack.grid()[coords[1]][coords[0]];
+     if (item == null) return;
+     if (!fight.isPlayerTurnActive()) return;
 
-		if (!fight.isPlayerTurnActive())
-			return;
+     fight.useItem(item);
+     lastAttackTime = System.currentTimeMillis();
 
-		fight.useItem(item);
-		lastAttackTime = System.currentTimeMillis();
+     // Vérifier si un ennemi déclenche une malédiction
+     for (Battle.EnemyAction action : fight.getEnemyActions()) {
+         if (action == Battle.EnemyAction.MALEDICTION) {
+             triggerMalediction();
+             break;
+         }
+     }
 
-		// ☠️ TEST : malédiction après CHAQUE attaque
-		triggerMalediction();
-	}
-
+     checkCombatEnd();
+ }
 	private void handleSelectionClick() {
 		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
 		if (coords != null) {
