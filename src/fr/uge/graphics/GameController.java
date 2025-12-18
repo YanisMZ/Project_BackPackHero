@@ -249,30 +249,76 @@ public class GameController {
 		}
 		}
 	}
-
 	private void handlePointerDown(int mouseX, int mouseY) {
     pointerDownX = mouseX;
     pointerDownY = mouseY;
 
-    // ☠️ Mode placement : clic uniquement pour placer
+    int[] backpackCoords = backpackSlotCoordsAt(mouseX, mouseY);
+    Item clickedBackpackItem = (backpackCoords != null) ? backpack.grid()[backpackCoords[1]][backpackCoords[0]] : null;
+
+    // ⚠️ Mode placement de la malédiction
     if (placingMalediction) {
-        handleMaledictionPlacement(mouseX, mouseY);
+        if (backpackCoords != null) {
+            if (clickedBackpackItem != null && !clickedBackpackItem.isMalediction()) {
+                // On peut déplacer tous les items normaux
+                startBackpackDrag(backpackCoords[0], backpackCoords[1], clickedBackpackItem, mouseX, mouseY);
+                return;
+            } else if (clickedBackpackItem == null) {
+                // Tentative de placer la malédiction
+                handleMaledictionPlacement(mouseX, mouseY);
+                return;
+            }
+            // Si clic sur la malédiction elle-même, on bloque
+            System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
+            return;
+        }
+        // Ignorer les clics hors sac
         return;
     }
 
-    if (handleExpansionClick(mouseX, mouseY))
-        return;
-    if (handleFloatingItemClick(mouseX, mouseY))
-        return;
-    if (handleTreasureClick(mouseX, mouseY))
-        return;
-    if (handleMerchantDragStart(mouseX, mouseY))
-        return;
-    if (handleBackpackDragStart(mouseX, mouseY))
-        return;
-    if (handleRoomNavigation(mouseX, mouseY))
-        return;
+    // Mode normal : gestion classique
+    if (handleExpansionClick(mouseX, mouseY)) return;
+    if (handleFloatingItemClick(mouseX, mouseY)) return;
+    if (handleTreasureClick(mouseX, mouseY)) return;
+    if (handleMerchantDragStart(mouseX, mouseY)) return;
+    if (handleBackpackDragStart(mouseX, mouseY)) return;
+    if (handleRoomNavigation(mouseX, mouseY)) return;
 }
+
+private void checkDragThreshold(int mouseX, int mouseY) {
+    int deltaX = Math.abs(mouseX - pointerDownX);
+    int deltaY = Math.abs(mouseY - pointerDownY);
+
+    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+        isDragging = true;
+
+        // ⚠️ Pénalité uniquement si la malédiction est déplacée hors combat
+        if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
+            int penalty = 10;
+            hero.takeDamage(penalty);
+            System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+            System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+        }
+
+        // Supprimer l'item du sac ou du coffre si nécessaire
+        if (dragFromTreasure) {
+            treasureChest.getGrid().removeItem(draggedItem);
+        } else if (!dragFromMerchant) {
+            backpack.remove(draggedItem);
+        }
+
+        // Nettoyer les références si c'est la malédiction
+        if (draggedItem != null && draggedItem.isMalediction()) {
+            if (draggedItem == placedMalediction) placedMalediction = null;
+            if (draggedItem == currentMalediction) currentMalediction = null;
+            floatingItems.removeIf(f -> f.item == draggedItem);
+            placingMalediction = false;
+            combatPausedByMalediction = false;
+        }
+    }
+}
+
+	
 	private boolean handleExpansionClick(int mouseX, int mouseY) {
 		if (!inExpansionMode)
 			return false;
@@ -491,38 +537,7 @@ public class GameController {
     System.out.println("☠️ Malédiction placée ! Le combat reprend.");
 }
 
-	private void checkDragThreshold(int mouseX, int mouseY) {
-    int deltaX = Math.abs(mouseX - pointerDownX);
-    int deltaY = Math.abs(mouseY - pointerDownY);
-
-    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-        // Pénalité uniquement si la malédiction est déplacée hors combat
-        if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
-            int penalty = 10;
-            hero.takeDamage(penalty);
-            System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-            System.out.println("❤️  HP restants : " + hero.hp() + "/" + hero.maxHp());
-        }
-
-        isDragging = true;
-
-        // Suppression réelle de l'item du sac ou du coffre
-        if (dragFromTreasure) {
-            treasureChest.getGrid().removeItem(draggedItem);
-        } else if (!dragFromMerchant) {
-            backpack.remove(draggedItem);
-        }
-
-        // S'assurer que draggedItem ne garde pas de référence persistante
-        if (draggedItem.isMalediction()) {
-            if (draggedItem == placedMalediction) placedMalediction = null;
-            if (draggedItem == currentMalediction) currentMalediction = null;
-            floatingItems.removeIf(f -> f.item == draggedItem);
-            placingMalediction = false;
-            combatPausedByMalediction = false;
-        }
-    }
-}
+	
 
 
 
