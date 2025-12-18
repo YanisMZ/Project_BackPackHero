@@ -442,6 +442,7 @@ public class GameController {
 	
 	
 	private void triggerMalediction() {
+    // Vérifie qu'aucune malédiction n'est déjà active
     if (currentMalediction != null || placedMalediction != null) {
         System.out.println("⛔ Une malédiction est déjà active !");
         return;
@@ -449,10 +450,13 @@ public class GameController {
 
     placingMalediction = true;
     combatPausedByMalediction = true;
+
     currentMalediction = Malediction.formeS();
     floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
+
     System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
 }
+
 
 	private void handleMaledictionPlacement(int mouseX, int mouseY) {
     int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
@@ -475,12 +479,13 @@ public class GameController {
         return;
     }
 
-    // ✅ Placement réussi
+    // Placement réussi
     backpack.forcePlace(currentMalediction, x, y);
-    placingMalediction = false;
     floatingItems.removeIf(f -> f.item == currentMalediction);
+
     placedMalediction = currentMalediction;
     currentMalediction = null;
+    placingMalediction = false;
     combatPausedByMalediction = false;
 
     System.out.println("☠️ Malédiction placée ! Le combat reprend.");
@@ -491,7 +496,7 @@ public class GameController {
     int deltaY = Math.abs(mouseY - pointerDownY);
 
     if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-        // 💀 PÉNALITÉ si on drag la malédiction hors combat
+        // Pénalité uniquement si la malédiction est déplacée hors combat
         if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
             int penalty = 10;
             hero.takeDamage(penalty);
@@ -501,10 +506,20 @@ public class GameController {
 
         isDragging = true;
 
+        // Suppression réelle de l'item du sac ou du coffre
         if (dragFromTreasure) {
             treasureChest.getGrid().removeItem(draggedItem);
         } else if (!dragFromMerchant) {
             backpack.remove(draggedItem);
+        }
+
+        // S'assurer que draggedItem ne garde pas de référence persistante
+        if (draggedItem.isMalediction()) {
+            if (draggedItem == placedMalediction) placedMalediction = null;
+            if (draggedItem == currentMalediction) currentMalediction = null;
+            floatingItems.removeIf(f -> f.item == draggedItem);
+            placingMalediction = false;
+            combatPausedByMalediction = false;
         }
     }
 }
@@ -773,52 +788,46 @@ public class GameController {
 	}
 
 	private void handleDeleteSelectedItems() {
-    if (selectedItems.isEmpty())
-        return;
+    if (selectedItems.isEmpty()) return;
 
-    selectedItems.stream().sorted((a, b) -> b - a).forEach(slot -> {
-        int x = slot % backpack.width();
-        int y = slot / backpack.width();
-        Item item = backpack.grid()[y][x];
+    selectedItems.stream()
+        .sorted((a, b) -> b - a)
+        .forEach(slot -> {
+            int x = slot % backpack.width();
+            int y = slot / backpack.width();
+            Item item = backpack.grid()[y][x];
 
-        if (item != null) {
-            // ⚠️ Traitement spécial pour les malédictions
-            if (item.isMalediction()) {
-                if (inCombat) {
-                    System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
-                } else {
-                    // 💀 HORS COMBAT : autoriser avec pénalité
-                    int penalty = 10;
-                    hero.takeDamage(penalty);
-                    System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
-                    System.out.println("❤️  HP restants : " + hero.hp() + "/" + hero.maxHp());
-                    
-                    backpack.remove(item);
-                    
-                    // Nettoyer les références si c'est la malédiction active
-                    if (item == placedMalediction) {
-                        placedMalediction = null;
-                    }
-                    if (item == currentMalediction) {
-                        floatingItems.removeIf(f -> f.item == currentMalediction);
+            if (item != null) {
+                if (item.isMalediction()) {
+                    if (inCombat) {
+                        System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
+                    } else {
+                        int penalty = 10;
+                        hero.takeDamage(penalty);
+                        System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
+                        System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+
+                        backpack.remove(item);
+
+                        // Nettoyer toutes les références
+                        if (item == placedMalediction) placedMalediction = null;
+                        if (item == currentMalediction) currentMalediction = null;
+                        floatingItems.removeIf(f -> f.item == item);
                         placingMalediction = false;
-                        currentMalediction = null;
                         combatPausedByMalediction = false;
                     }
+                } else {
+                    backpack.remove(item);
                 }
-            } else {
-                // Suppression normale des autres items
-                backpack.remove(item);
             }
-        }
-    });
+        });
 
     selectedItems.clear();
 }
 
 
 	private void resetDragState() {
-    // ⚠️ Plus de pénalité ici - la malédiction ne peut plus être dragged de toute façon
+    
     
     draggedItem = null;
     dragStartX = -1;
