@@ -32,7 +32,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static final int GRID_COLS = 4;
 
 	// ===================== ASSETS =====================
-	private static final List<BufferedImage> loadingAnimation = loadFrames(161, "loadingscreen", "loading");
+	private static final List<BufferedImage> loadingAnimation = loadFrames(161, "loadingscreen", "loading", "jpg");
 	private static BufferedImage corridorImage;
 	private static BufferedImage treasureRoomImage;
 	private static BufferedImage treasureImage;
@@ -46,12 +46,14 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static BufferedImage attackBanner;
 	private static BufferedImage defendBanner;
 	private static BufferedImage injuredEnemy;
+	private static BufferedImage merchantImage;
 
 	private static Map<String, BufferedImage> weaponAssets = new HashMap<>();
 	private static List<BufferedImage> fightingAnimation1;
 	private static List<BufferedImage> fightingAnimation2;
 	private static List<BufferedImage> fightingAnimation3;
 	private static List<BufferedImage> corridorToCorridorAnimation;
+	private static List<BufferedImage> merchantToCorridorAnimation;
 
 	// ===================== ASSET LOADING =====================
 	private static BufferedImage loadImage(String fileName) {
@@ -90,19 +92,14 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		attackOrDefenseBanner = loadImage("attackdefend.png");
 		attackBanner = loadImage("attack.png");
 		defendBanner = loadImage("defend.png");
+		injuredEnemy = loadImage("injuredRat.jpg");
+		merchantImage = loadImage("merchantback.png");
 	}
 
-	private static void loadAnimations() {
-		fightingAnimation1 = loadAttackFrames(1, 157);
-		fightingAnimation2 = loadAttackFrames(2, 78);
-		fightingAnimation3 = loadAttackFrames(3, 78);
-		corridorToCorridorAnimation = loadFrames(160, "animationroom", "room");
-	}
-
-	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name) {
+	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name, String type) {
 		List<BufferedImage> frames = new ArrayList<>();
 		for (int i = 1; i < nbFrames; i++) {
-			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ").jpg"));
+			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ")." + type));
 			System.out.println("./" + folder + "/" + name + "(" + i + ").jpg");
 		}
 		return frames;
@@ -111,10 +108,20 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static List<BufferedImage> loadAttackFrames(int nbEnemies, int nbFrames) {
 		List<BufferedImage> frames = new ArrayList<>();
 		for (int i = 1; i < nbFrames; i++) {
-			frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
-			System.out.println("Frame chargé : hit_(" + i + ").png");
+			if (i % 2 == 0) {
+				frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
+				System.out.println("Frame chargé : hit_(" + i + ").png");
+			}
 		}
 		return frames;
+	}
+
+	private static void loadAnimations() {
+		fightingAnimation1 = loadAttackFrames(1, 157);
+		fightingAnimation2 = loadAttackFrames(2, 78);
+		fightingAnimation3 = loadAttackFrames(3, 78);
+		corridorToCorridorAnimation = loadFrames(160, "animationroom", "room", "jpg");
+		merchantToCorridorAnimation = loadFrames(160, "animationmerchant", "merchant", "png");
 	}
 
 	private static void loadAllWeapons() {
@@ -125,17 +132,17 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			for (File file : files) {
 				if (file.isFile() && file.getName().endsWith(".png")) {
 					String key = file.getName().substring(0, file.getName().lastIndexOf('.'));
-					
+
 					BufferedImage img = loadImage("weapons/" + file.getName());
 
 					if (img != null) {
 						weaponAssets.put(key, img);
-						System.out.println("Arme chargée : " + key);
+						System.out.println("Weapon loaded : " + key);
 					}
 				}
 			}
 		} else {
-			System.out.println("Erreur : Dossier weapons introuvable !");
+			System.out.println("Error : Weapon folder not found");
 		}
 	}
 
@@ -183,15 +190,17 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems, long lastChangeRoom) {
+			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems, long lastChangeRoom, boolean fromMerchant) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			if (isAnimationPlaying(lastChangeRoom, 8000)) {
-				drawAnimation(g, lastChangeRoom, 8000, corridorToCorridorAnimation);
+				List<BufferedImage> animToPlay = fromMerchant ? merchantToCorridorAnimation : corridorToCorridorAnimation;
+				drawAnimation(g, lastChangeRoom, 8000, animToPlay);
 			} else {
 				drawCorridor(g);
 				drawHero(g);
 			}
+
 			drawAllHeroBars(g, hero);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
@@ -214,6 +223,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
+			drawMerchantBackground(g);
 			drawAllHeroBars(g, hero);
 			drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
@@ -623,10 +633,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== MERCHANT =====================
+
 	public void drawMerchantStock(Graphics2D g, Item[][] merchantGrid, List<Integer> selectedSlots, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		var coords = getTreasureCoords(); // Même position que trésor
-
 		drawMerchantHeader(g, coords);
 		drawMerchantCells(g, merchantGrid, coords, isDragging, draggedItem);
 		drawMerchantItems(g, merchantGrid, coords, isDragging, draggedItem);
@@ -634,6 +644,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		if (isDragging && draggedItem != null) {
 			drawDraggedItem(g, draggedItem, dragOffsetX, dragOffsetY);
 		}
+	}
+
+	private void drawMerchantBackground(Graphics2D g) {
+		var info = context.getScreenInfo();
+		BufferedImage img = merchantImage;
+		g.drawImage(img, 0, 0, info.width(), info.height(), null);
+
 	}
 
 	private void drawMerchantHeader(Graphics2D g, int[] coords) {

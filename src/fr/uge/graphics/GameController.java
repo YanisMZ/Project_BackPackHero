@@ -33,6 +33,7 @@ public class GameController {
 	private boolean isDragging = false;
 	private boolean dragFromTreasure = false;
 	private boolean dragFromMerchant = false;
+	private boolean transitionFromMerchant = false;
 
 	private int floorIndex = 0;
 	private long lastAttackTime = 0;
@@ -73,6 +74,10 @@ public class GameController {
 	}
 
 	// ===================== GETTERS =====================
+	public boolean isTransitionFromMerchant() {
+		return transitionFromMerchant;
+	}
+
 	public boolean isPlacingMalediction() {
 		return placingMalediction;
 	}
@@ -173,20 +178,20 @@ public class GameController {
 
 	// ===================== KEYBOARD HANDLING =====================
 	private void handleKeyboard(KeyboardEvent ke) {
-    if (ke.key() == KeyboardEvent.Key.Q)
-        System.exit(0);
+		if (ke.key() == KeyboardEvent.Key.Q)
+			System.exit(0);
 
-    if (handleRotation(ke))
-        return;
-    if (handleExpansionExit(ke))
-        return;
-    if (handleDelete(ke))
-        return;
-    if (handleCombatEndTurn(ke))
-        return;
-    
-    // ✅ Suppression du blocage global - on laisse le reste fonctionner normalement
-}
+		if (handleRotation(ke))
+			return;
+		if (handleExpansionExit(ke))
+			return;
+		if (handleDelete(ke))
+			return;
+		if (handleCombatEndTurn(ke))
+			return;
+
+		// ✅ Suppression du blocage global - on laisse le reste fonctionner normalement
+	}
 
 	private boolean handleRotation(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.R && ke.action() == KeyboardEvent.Action.KEY_PRESSED && isDragging
@@ -218,27 +223,28 @@ public class GameController {
 	}
 
 	private boolean handleCombatEndTurn(KeyboardEvent ke) {
-    if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED) return false;
-    if (ke.key() == KeyboardEvent.Key.CTRL) {
-        if (fight.isPlayerTurnActive()) {
-            fight.endPlayerTurn();
+		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
+			return false;
+		if (ke.key() == KeyboardEvent.Key.CTRL) {
+			if (fight.isPlayerTurnActive()) {
+				fight.endPlayerTurn();
 
-            // Vérifier si un ennemi déclenche une malédiction
-            for (Battle.EnemyAction action : fight.getEnemyActions()) {
-                if (action == Battle.EnemyAction.MALEDICTION) {
-                    triggerMalediction();
-                    break;
-                }
-            }
+				// Vérifier si un ennemi déclenche une malédiction
+				for (Battle.EnemyAction action : fight.getEnemyActions()) {
+					if (action == Battle.EnemyAction.MALEDICTION) {
+						triggerMalediction();
+						break;
+					}
+				}
 
-            checkCombatEnd();
-        } else {
-            System.out.println("Votre tour est déjà terminé !");
-        }
-        return true;
-    }
-    return false;
-}
+				checkCombatEnd();
+			} else {
+				System.out.println("Votre tour est déjà terminé !");
+			}
+			return true;
+		}
+		return false;
+	}
 
 	// ===================== POINTER HANDLING =====================
 	private void handlePointer(PointerEvent pe) {
@@ -253,76 +259,84 @@ public class GameController {
 		}
 		}
 	}
+
 	private void handlePointerDown(int mouseX, int mouseY) {
-    pointerDownX = mouseX;
-    pointerDownY = mouseY;
+		pointerDownX = mouseX;
+		pointerDownY = mouseY;
 
-    int[] backpackCoords = backpackSlotCoordsAt(mouseX, mouseY);
-    Item clickedBackpackItem = (backpackCoords != null) ? backpack.grid()[backpackCoords[1]][backpackCoords[0]] : null;
+		int[] backpackCoords = backpackSlotCoordsAt(mouseX, mouseY);
+		Item clickedBackpackItem = (backpackCoords != null) ? backpack.grid()[backpackCoords[1]][backpackCoords[0]] : null;
 
-    // ⚠️ Mode placement de la malédiction
-    if (placingMalediction) {
-        if (backpackCoords != null) {
-            if (clickedBackpackItem != null && !clickedBackpackItem.isMalediction()) {
-                // On peut déplacer tous les items normaux
-                startBackpackDrag(backpackCoords[0], backpackCoords[1], clickedBackpackItem, mouseX, mouseY);
-                return;
-            } else if (clickedBackpackItem == null) {
-                // Tentative de placer la malédiction
-                handleMaledictionPlacement(mouseX, mouseY);
-                return;
-            }
-            // Si clic sur la malédiction elle-même, on bloque
-            System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
-            return;
-        }
-        // Ignorer les clics hors sac
-        return;
-    }
+		// ⚠️ Mode placement de la malédiction
+		if (placingMalediction) {
+			if (backpackCoords != null) {
+				if (clickedBackpackItem != null && !clickedBackpackItem.isMalediction()) {
+					// On peut déplacer tous les items normaux
+					startBackpackDrag(backpackCoords[0], backpackCoords[1], clickedBackpackItem, mouseX, mouseY);
+					return;
+				} else if (clickedBackpackItem == null) {
+					// Tentative de placer la malédiction
+					handleMaledictionPlacement(mouseX, mouseY);
+					return;
+				}
+				// Si clic sur la malédiction elle-même, on bloque
+				System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
+				return;
+			}
+			// Ignorer les clics hors sac
+			return;
+		}
 
-    // Mode normal : gestion classique
-    if (handleExpansionClick(mouseX, mouseY)) return;
-    if (handleFloatingItemClick(mouseX, mouseY)) return;
-    if (handleTreasureClick(mouseX, mouseY)) return;
-    if (handleMerchantDragStart(mouseX, mouseY)) return;
-    if (handleBackpackDragStart(mouseX, mouseY)) return;
-    if (handleRoomNavigation(mouseX, mouseY)) return;
-}
+		// Mode normal : gestion classique
+		if (handleExpansionClick(mouseX, mouseY))
+			return;
+		if (handleFloatingItemClick(mouseX, mouseY))
+			return;
+		if (handleTreasureClick(mouseX, mouseY))
+			return;
+		if (handleMerchantDragStart(mouseX, mouseY))
+			return;
+		if (handleBackpackDragStart(mouseX, mouseY))
+			return;
+		if (handleRoomNavigation(mouseX, mouseY))
+			return;
+	}
 
-private void checkDragThreshold(int mouseX, int mouseY) {
-    int deltaX = Math.abs(mouseX - pointerDownX);
-    int deltaY = Math.abs(mouseY - pointerDownY);
+	private void checkDragThreshold(int mouseX, int mouseY) {
+		int deltaX = Math.abs(mouseX - pointerDownX);
+		int deltaY = Math.abs(mouseY - pointerDownY);
 
-    if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-        isDragging = true;
+		if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
+			isDragging = true;
 
-        // ⚠️ Pénalité uniquement si la malédiction est déplacée hors combat
-        if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
-            int penalty = 10;
-            hero.takeDamage(penalty);
-            System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-            System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
-        }
+			// ⚠️ Pénalité uniquement si la malédiction est déplacée hors combat
+			if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
+				int penalty = 10;
+				hero.takeDamage(penalty);
+				System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+				System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+			}
 
-        // Supprimer l'item du sac ou du coffre si nécessaire
-        if (dragFromTreasure) {
-            treasureChest.getGrid().removeItem(draggedItem);
-        } else if (!dragFromMerchant) {
-            backpack.remove(draggedItem);
-        }
+			// Supprimer l'item du sac ou du coffre si nécessaire
+			if (dragFromTreasure) {
+				treasureChest.getGrid().removeItem(draggedItem);
+			} else if (!dragFromMerchant) {
+				backpack.remove(draggedItem);
+			}
 
-        // Nettoyer les références si c'est la malédiction
-        if (draggedItem != null && draggedItem.isMalediction()) {
-            if (draggedItem == placedMalediction) placedMalediction = null;
-            if (draggedItem == currentMalediction) currentMalediction = null;
-            floatingItems.removeIf(f -> f.item == draggedItem);
-            placingMalediction = false;
-            combatPausedByMalediction = false;
-        }
-    }
-}
+			// Nettoyer les références si c'est la malédiction
+			if (draggedItem != null && draggedItem.isMalediction()) {
+				if (draggedItem == placedMalediction)
+					placedMalediction = null;
+				if (draggedItem == currentMalediction)
+					currentMalediction = null;
+				floatingItems.removeIf(f -> f.item == draggedItem);
+				placingMalediction = false;
+				combatPausedByMalediction = false;
+			}
+		}
+	}
 
-	
 	private boolean handleExpansionClick(int mouseX, int mouseY) {
 		if (!inExpansionMode)
 			return false;
@@ -341,24 +355,24 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 	}
 
 	private boolean handleFloatingItemClick(int mouseX, int mouseY) {
-    FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
-    if (fItem != null) {
-        // ⚠️ Bloquer uniquement la malédiction
-        if (fItem.item == currentMalediction) {
-            System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
-            return true; // Consomme l'événement sans démarrer le drag
-        }
-        
-        draggedItem = fItem.item;
-        dragOffsetX = mouseX - fItem.position.x;
-        dragOffsetY = mouseY - fItem.position.y;
-        isDragging = true;
-        floatingItems.remove(fItem);
-        dragFromTreasure = false;
-        return true;
-    }
-    return false;
-}
+		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
+		if (fItem != null) {
+			// ⚠️ Bloquer uniquement la malédiction
+			if (fItem.item == currentMalediction) {
+				System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
+				return true; // Consomme l'événement sans démarrer le drag
+			}
+
+			draggedItem = fItem.item;
+			dragOffsetX = mouseX - fItem.position.x;
+			dragOffsetY = mouseY - fItem.position.y;
+			isDragging = true;
+			floatingItems.remove(fItem);
+			dragFromTreasure = false;
+			return true;
+		}
+		return false;
+	}
 
 	private boolean handleTreasureClick(int mouseX, int mouseY) {
 		if (!inTreasure)
@@ -437,48 +451,57 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 	}
 
 	private void startBackpackDrag(int x, int y, Item item, int mouseX, int mouseY) {
-    // ⚠️ Bloquer le drag de la malédiction UNIQUEMENT en combat
-    if (item == placedMalediction && inCombat) {
-        System.out.println("⛔ Impossible de déplacer la malédiction en combat !");
-        return;
-    }
-    
-    draggedItem = item;
-    dragOriginalItem = item;
-    dragStartX = x;
-    dragStartY = y;
-    dragFromTreasure = false;
-
-    int cellX = backpackOriginX + x * (backpackCellSize + backpackPadding);
-    int cellY = backpackOriginY + y * (backpackCellSize + backpackPadding);
-    dragOffsetX = mouseX - cellX;
-    dragOffsetY = mouseY - cellY;
-    dragMouseX = mouseX - dragOffsetX;
-    dragMouseY = mouseY - dragOffsetY;
-}
-	private boolean handleRoomNavigation(int mouseX, int mouseY) {
-		if (inCombat || (!inTreasure && !inMerchant)) {
-			int room = roomAt(mouseX, mouseY);
-			if (room != -1 && !inCombat) {
-				handleRoomClick(room);
-				lastChangeRoom = System.currentTimeMillis();
-				return true;
-			}
+		// ⚠️ Bloquer le drag de la malédiction UNIQUEMENT en combat
+		if (item == placedMalediction && inCombat) {
+			System.out.println("⛔ Impossible de déplacer la malédiction en combat !");
+			return;
 		}
 
-		if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
-			int room = roomAt(mouseX, mouseY);
-			if (inTreasure)
-				leaveTreasureRoom();
-			if (inMerchant)
-				leaveMerchantRoom();
-			lastChangeRoom = System.currentTimeMillis();
-			handleRoomClick(room);
-			return true;
-		}
-		return false;
+		draggedItem = item;
+		dragOriginalItem = item;
+		dragStartX = x;
+		dragStartY = y;
+		dragFromTreasure = false;
+
+		int cellX = backpackOriginX + x * (backpackCellSize + backpackPadding);
+		int cellY = backpackOriginY + y * (backpackCellSize + backpackPadding);
+		dragOffsetX = mouseX - cellX;
+		dragOffsetY = mouseY - cellY;
+		dragMouseX = mouseX - dragOffsetX;
+		dragMouseY = mouseY - dragOffsetY;
 	}
 
+	private boolean handleRoomNavigation(int mouseX, int mouseY) {
+    if (inCombat || (!inTreasure && !inMerchant)) {
+        int room = roomAt(mouseX, mouseY);
+        if (room != -1 && !inCombat) {
+            transitionFromMerchant = false;
+            handleRoomClick(room);
+            lastChangeRoom = System.currentTimeMillis();
+            return true;
+        }
+    }
+
+    if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
+        int room = roomAt(mouseX, mouseY);
+        if (inCorridor) {
+        }
+        if (inMerchant) {
+            leaveMerchantRoom();
+            transitionFromMerchant = true;
+        } else {
+            transitionFromMerchant = false;
+        }
+        
+        if (inTreasure)
+            leaveTreasureRoom();
+            
+        lastChangeRoom = System.currentTimeMillis();
+        handleRoomClick(room);
+        return true;
+    }
+    return false;
+}
 	private void handlePointerMove(int mouseX, int mouseY) {
 		if (draggedItem != null && !isDragging) {
 			checkDragThreshold(mouseX, mouseY);
@@ -489,62 +512,55 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 			dragMouseY = mouseY - dragOffsetY;
 		}
 	}
-	
-	
+
 	private void triggerMalediction() {
-    // Vérifie qu'aucune malédiction n'est déjà active
-    if (currentMalediction != null || placedMalediction != null) {
-        System.out.println("⛔ Une malédiction est déjà active !");
-        return;
-    }
+		// Vérifie qu'aucune malédiction n'est déjà active
+		if (currentMalediction != null || placedMalediction != null) {
+			System.out.println("⛔ Une malédiction est déjà active !");
+			return;
+		}
 
-    placingMalediction = true;
-    combatPausedByMalediction = true;
+		placingMalediction = true;
+		combatPausedByMalediction = true;
 
-    currentMalediction = Malediction.formeS();
-    floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
+		currentMalediction = Malediction.formeS();
+		floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
 
-    System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
-}
-
+		System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
+	}
 
 	private void handleMaledictionPlacement(int mouseX, int mouseY) {
-    int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
-    if (coords == null) {
-        System.out.println("❌ Cliquez sur une case du sac !");
-        return;
-    }
+		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
+		if (coords == null) {
+			System.out.println("❌ Cliquez sur une case du sac !");
+			return;
+		}
 
-    int x = coords[0];
-    int y = coords[1];
+		int x = coords[0];
+		int y = coords[1];
 
-    if (!backpack.canForcePlace(currentMalediction, x, y)) {
-        System.out.println("❌ Placement impossible (cases verrouillées ou hors limites)");
-        return;
-    }
+		if (!backpack.canForcePlace(currentMalediction, x, y)) {
+			System.out.println("❌ Placement impossible (cases verrouillées ou hors limites)");
+			return;
+		}
 
-    var blocking = backpack.blockingItems(currentMalediction, x, y);
-    if (!blocking.isEmpty()) {
-        System.out.println("⛔ Objets bloquants ! Déplacez-les d'abord : " + blocking.size() + " objet(s)");
-        return;
-    }
+		var blocking = backpack.blockingItems(currentMalediction, x, y);
+		if (!blocking.isEmpty()) {
+			System.out.println("⛔ Objets bloquants ! Déplacez-les d'abord : " + blocking.size() + " objet(s)");
+			return;
+		}
 
-    // Placement réussi
-    backpack.forcePlace(currentMalediction, x, y);
-    floatingItems.removeIf(f -> f.item == currentMalediction);
+		// Placement réussi
+		backpack.forcePlace(currentMalediction, x, y);
+		floatingItems.removeIf(f -> f.item == currentMalediction);
 
-    placedMalediction = currentMalediction;
-    currentMalediction = null;
-    placingMalediction = false;
-    combatPausedByMalediction = false;
+		placedMalediction = currentMalediction;
+		currentMalediction = null;
+		placingMalediction = false;
+		combatPausedByMalediction = false;
 
-    System.out.println("☠️ Malédiction placée ! Le combat reprend.");
-}
-
-	  
-
-
-
+		System.out.println("☠️ Malédiction placée ! Le combat reprend.");
+	}
 
 	private void handlePointerUp(int mouseX, int mouseY) {
 		if (draggedItem != null && !isDragging) {
@@ -568,32 +584,31 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 		resetDragState();
 	}
 
-	
+	private void handleCombatClick() {
+		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
+		if (coords == null)
+			return;
 
+		Item item = backpack.grid()[coords[1]][coords[0]];
+		if (item == null)
+			return;
+		if (!fight.isPlayerTurnActive())
+			return;
 
+		fight.useItem(item);
+		lastAttackTime = System.currentTimeMillis();
 
+		// Vérifier si un ennemi déclenche une malédiction
+		for (Battle.EnemyAction action : fight.getEnemyActions()) {
+			if (action == Battle.EnemyAction.MALEDICTION) {
+				triggerMalediction();
+				break;
+			}
+		}
 
-	 private void handleCombatClick() {
-     int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
-     if (coords == null) return;
+		checkCombatEnd();
+	}
 
-     Item item = backpack.grid()[coords[1]][coords[0]];
-     if (item == null) return;
-     if (!fight.isPlayerTurnActive()) return;
-
-     fight.useItem(item);
-     lastAttackTime = System.currentTimeMillis();
-
-     // Vérifier si un ennemi déclenche une malédiction
-     for (Battle.EnemyAction action : fight.getEnemyActions()) {
-         if (action == Battle.EnemyAction.MALEDICTION) {
-             triggerMalediction();
-             break;
-         }
-     }
-
-     checkCombatEnd();
- }
 	private void handleSelectionClick() {
 		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
 		if (coords != null) {
@@ -633,8 +648,6 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 		resetDragState();
 	}
 
-
-
 	private boolean tryPlaceInBackpack(int mouseX, int mouseY) {
 		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
 		if (coords == null)
@@ -667,7 +680,6 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 		floatingItems.add(new FloatingItem(draggedItem, new Point(mouseX - dragOffsetX, mouseY - dragOffsetY)));
 	}
 
-	
 	// ===================== ROOM HANDLING =====================
 	private void handleRoomClick(int clickedRoom) {
 		if (!floor.adjacentRooms().contains(clickedRoom))
@@ -809,56 +821,55 @@ private void checkDragThreshold(int mouseX, int mouseY) {
 	}
 
 	private void handleDeleteSelectedItems() {
-    if (selectedItems.isEmpty()) return;
+		if (selectedItems.isEmpty())
+			return;
 
-    selectedItems.stream()
-        .sorted((a, b) -> b - a)
-        .forEach(slot -> {
-            int x = slot % backpack.width();
-            int y = slot / backpack.width();
-            Item item = backpack.grid()[y][x];
+		selectedItems.stream().sorted((a, b) -> b - a).forEach(slot -> {
+			int x = slot % backpack.width();
+			int y = slot / backpack.width();
+			Item item = backpack.grid()[y][x];
 
-            if (item != null) {
-                if (item.isMalediction()) {
-                    if (inCombat) {
-                        System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
-                    } else {
-                        int penalty = 10;
-                        hero.takeDamage(penalty);
-                        System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
-                        System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+			if (item != null) {
+				if (item.isMalediction()) {
+					if (inCombat) {
+						System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
+					} else {
+						int penalty = 10;
+						hero.takeDamage(penalty);
+						System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
+						System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
 
-                        backpack.remove(item);
+						backpack.remove(item);
 
-                        // Nettoyer toutes les références
-                        if (item == placedMalediction) placedMalediction = null;
-                        if (item == currentMalediction) currentMalediction = null;
-                        floatingItems.removeIf(f -> f.item == item);
-                        placingMalediction = false;
-                        combatPausedByMalediction = false;
-                    }
-                } else {
-                    backpack.remove(item);
-                }
-            }
-        });
+						// Nettoyer toutes les références
+						if (item == placedMalediction)
+							placedMalediction = null;
+						if (item == currentMalediction)
+							currentMalediction = null;
+						floatingItems.removeIf(f -> f.item == item);
+						placingMalediction = false;
+						combatPausedByMalediction = false;
+					}
+				} else {
+					backpack.remove(item);
+				}
+			}
+		});
 
-    selectedItems.clear();
-}
-
+		selectedItems.clear();
+	}
 
 	private void resetDragState() {
-    
-    
-    draggedItem = null;
-    dragStartX = -1;
-    dragStartY = -1;
-    dragFromTreasure = false;
-    dragFromMerchant = false;
-    pointerDownX = -1;
-    pointerDownY = -1;
-    isDragging = false;
-}
+
+		draggedItem = null;
+		dragStartX = -1;
+		dragStartY = -1;
+		dragFromTreasure = false;
+		dragFromMerchant = false;
+		pointerDownX = -1;
+		pointerDownY = -1;
+		isDragging = false;
+	}
 
 	// ===================== FLOOR NAVIGATION =====================
 	private void goToNextFloor() {
