@@ -50,18 +50,20 @@ public class GameRun {
 			var floor0 = dungeon.getFloor(0);
 			GameView view = new GameView(context, floor0, backpack);
 
+//		Rayane M2
 			AtomicBoolean areAssetsLoaded = new AtomicBoolean(false);
 			long startTime = System.currentTimeMillis();
-
 			new Thread(() -> {
 				GameView.loadGameAssets();
 				areAssetsLoaded.set(true);
 			}).start();
-
+			
 			while (!areAssetsLoaded.get()) {
 				view.loadingDisplay(startTime);
 				context.pollOrWaitEvent(10);
 			}
+//			Jusqu'ici car Boolean classique marchait pas 
+//			+ affichage en continue
 			
 	
 

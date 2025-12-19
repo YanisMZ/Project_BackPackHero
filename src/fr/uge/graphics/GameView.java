@@ -3,13 +3,16 @@ package fr.uge.graphics;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -42,11 +45,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static BufferedImage attackOrDefenseBanner;
 	private static BufferedImage attackBanner;
 	private static BufferedImage defendBanner;
-	private static BufferedImage sword90;
-	private static BufferedImage sword180;
-	private static BufferedImage shield;
 	private static BufferedImage injuredEnemy;
 
+	private static Map<String, BufferedImage> weaponAssets = new HashMap<>();
 	private static List<BufferedImage> fightingAnimation1;
 	private static List<BufferedImage> fightingAnimation2;
 	private static List<BufferedImage> fightingAnimation3;
@@ -67,10 +68,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	public static void loadGameAssets() {
-		if (corridorImage != null) return;
-		
+		if (corridorImage != null)
+			return;
+
 		loadStaticImages();
 		loadAnimations();
+		loadAllWeapons();
 		System.out.println("Assets chargés !");
 	}
 
@@ -87,10 +90,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		attackOrDefenseBanner = loadImage("attackdefend.png");
 		attackBanner = loadImage("attack.png");
 		defendBanner = loadImage("defend.png");
-		sword90 = loadImage("./weapons/sword90.png");
-		sword180 = loadImage("./weapons/sword180.png");
-		shield = loadImage("./weapons/shield.png");
-		injuredEnemy = loadImage("./injuredRat.jpg");
 	}
 
 	private static void loadAnimations() {
@@ -104,6 +103,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		List<BufferedImage> frames = new ArrayList<>();
 		for (int i = 1; i < nbFrames; i++) {
 			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ").jpg"));
+			System.out.println("./" + folder + "/" + name + "(" + i + ").jpg");
 		}
 		return frames;
 	}
@@ -112,20 +112,50 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		List<BufferedImage> frames = new ArrayList<>();
 		for (int i = 1; i < nbFrames; i++) {
 			frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
+			System.out.println("Frame chargé : hit_(" + i + ").png");
 		}
 		return frames;
 	}
 
+	private static void loadAllWeapons() {
+		File folder = new File("./data/weapons");
+		File[] files = folder.listFiles();
+
+		if (files != null) {
+			for (File file : files) {
+				if (file.isFile() && file.getName().endsWith(".png")) {
+					String key = file.getName().substring(0, file.getName().lastIndexOf('.'));
+					
+					BufferedImage img = loadImage("weapons/" + file.getName());
+
+					if (img != null) {
+						weaponAssets.put(key, img);
+						System.out.println("Arme chargée : " + key);
+					}
+				}
+			}
+		} else {
+			System.out.println("Erreur : Dossier weapons introuvable !");
+		}
+	}
+
 	// ===================== MAIN DISPLAYS =====================
 	public void loadingDisplay(long startTime) {
+		int totalTime = 8000;
 		context.renderFrame(g -> {
 			clearScreen(g);
-			drawAnimation(g, startTime, 8000, loadingAnimation);
+			drawAnimation(g, 0, totalTime, loadingAnimation);
+			long currentTime = System.currentTimeMillis();
+			long totalElapsed = currentTime - startTime;
+			long loopElapsed = totalElapsed % totalTime;
+			long loopStartTime = currentTime - loopElapsed;
+
+			drawAnimation(g, loopStartTime, totalTime, loadingAnimation);
 		});
 	}
 
-	public void render(List<Integer> selectedSlots, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
+	public void render(List<Integer> selectedSlots, boolean isDragging, Item draggedItem, int dragOffsetX,
+			int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawGrid(g);
@@ -134,9 +164,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		});
 	}
 
-	public void combatDisplay(int nbEnemies, int status, List<Integer> selectedSlots, Hero hero,
-			List<Enemy> enemies, boolean isDragging, Item draggedItem, int dragOffsetX, 
-			int dragOffsetY, long lastAttackTime,List<FloatingItem> floatingItems) {
+	public void combatDisplay(int nbEnemies, int status, List<Integer> selectedSlots, Hero hero, List<Enemy> enemies,
+			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY, long lastAttackTime,
+			List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			if (isAnimationPlaying(lastAttackTime, 4500)) {
@@ -148,13 +178,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
-			
+
 		});
 	}
 
-	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging,
-			Item draggedItem, int dragOffsetX, int dragOffsetY, 
-			List<FloatingItem> floatingItems, long lastChangeRoom) {
+	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
+			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems, long lastChangeRoom) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			if (isAnimationPlaying(lastChangeRoom, 8000)) {
@@ -170,8 +199,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		});
 	}
 
-	public void expansionDisplay(List<Integer> selectedSlots, Hero hero, 
-			BackpackExpansionSystem expansionSystem) {
+	public void expansionDisplay(List<Integer> selectedSlots, Hero hero, BackpackExpansionSystem expansionSystem) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
@@ -182,38 +210,33 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		});
 	}
 
-	public void merchantDisplay(List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero,
-			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY,
-			List<FloatingItem> floatingItems) {
+	public void merchantDisplay(List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero, boolean isDragging,
+			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawAllHeroBars(g, hero);
-			drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, 
-				dragOffsetX, dragOffsetY);
+			drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void treasureDisplay(List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero,
-			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY,
-			List<FloatingItem> floatingItems) {
+	public void treasureDisplay(List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero, boolean isDragging,
+			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawAllHeroBars(g, hero);
 			drawTreasure(g);
-			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, 
-				dragOffsetX, dragOffsetY);
+			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawGrid(g);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void emptyRoomDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging,
-			Item draggedItem, int dragOffsetX, int dragOffsetY, 
-			List<FloatingItem> floatingItems) {
+	public void emptyRoomDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
+			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
@@ -228,10 +251,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	// ===================== COMBAT HELPERS =====================
 	private void drawCombatAnimation(Graphics2D g, int nbEnemies, long startTime) {
 		List<BufferedImage> animation = switch (nbEnemies) {
-			case 1 -> fightingAnimation1;
-			case 2 -> fightingAnimation2;
-			case 3 -> fightingAnimation3;
-			default -> fightingAnimation1;
+		case 1 -> fightingAnimation1;
+		case 2 -> fightingAnimation2;
+		case 3 -> fightingAnimation3;
+		default -> fightingAnimation1;
 		};
 		drawAnimation(g, startTime, 4500, animation);
 	}
@@ -262,10 +285,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		return System.currentTimeMillis() - startTime < duration;
 	}
 
-	private void drawAnimation(Graphics2D g, long startTime, int duration, 
-			List<BufferedImage> frames) {
+	private void drawAnimation(Graphics2D g, long startTime, int duration, List<BufferedImage> frames) {
 		long elapsed = System.currentTimeMillis() - startTime;
-		if (elapsed > duration) return;
+		if (elapsed > duration)
+			return;
 
 		int frameIndex = (int) ((elapsed * frames.size()) / duration);
 		frameIndex = Math.min(frameIndex, frames.size() - 1);
@@ -289,8 +312,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private void drawHero(Graphics2D g) {
 		var info = context.getScreenInfo();
-		g.drawImage(heroImage2, info.width() / 4, info.height() / 4, 
-			info.width(), info.height(), null);
+		g.drawImage(heroImage2, info.width() / 4, info.height() / 4, info.width(), info.height(), null);
 	}
 
 	private void drawCorridor(Graphics2D g) {
@@ -301,10 +323,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private void drawInjuredRat(Graphics2D g, int nbEnemies, int status) {
 		var info = context.getScreenInfo();
 		BufferedImage bg = switch (nbEnemies) {
-			case 1 -> injuredEnemy;
-			case 2 -> enemyRoomImage2;
-			case 3 -> enemyRoomImage3;
-			default -> enemyRoomImage3;
+		case 1 -> injuredEnemy;
+		case 2 -> enemyRoomImage2;
+		case 3 -> enemyRoomImage3;
+		default -> enemyRoomImage3;
 		};
 		g.drawImage(bg, 0, 0, info.width(), info.height(), null);
 		drawBattleBanner(g, status);
@@ -313,10 +335,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private void drawCombat(Graphics2D g, int nbEnemies, int status) {
 		var info = context.getScreenInfo();
 		BufferedImage bg = switch (nbEnemies) {
-			case 1 -> enemyRoomImage1;
-			case 2 -> enemyRoomImage2;
-			case 3 -> enemyRoomImage3;
-			default -> enemyRoomImage3;
+		case 1 -> enemyRoomImage1;
+		case 2 -> enemyRoomImage2;
+		case 3 -> enemyRoomImage3;
+		default -> enemyRoomImage3;
 		};
 		g.drawImage(bg, 0, 0, info.width(), info.height(), null);
 		drawBattleBanner(g, status);
@@ -330,10 +352,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int y = info.height() - bannerH - info.height() / 50;
 
 		BufferedImage banner = switch (status) {
-			case 0 -> attackOrDefenseBanner;
-			case 1 -> attackBanner;
-			case 2 -> defendBanner;
-			default -> throw new IllegalArgumentException("Invalid status: " + status);
+		case 0 -> attackOrDefenseBanner;
+		case 1 -> attackBanner;
+		case 2 -> defendBanner;
+		default -> throw new IllegalArgumentException("Invalid status: " + status);
 		};
 		g.drawImage(banner, x, y, bannerW, bannerH, null);
 	}
@@ -369,12 +391,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private Color getRoomColor(Room room) {
 		return switch (room.type()) {
-			case ENEMY -> new Color(200, 80, 80);
-			case TREASURE -> new Color(250, 220, 80);
-			case MERCHANT -> new Color(80, 180, 250);
-			case HEALER -> new Color(100, 220, 100);
-			case EXIT -> new Color(180, 80, 250);
-			default -> new Color(180, 180, 180);
+		case ENEMY -> new Color(200, 80, 80);
+		case TREASURE -> new Color(250, 220, 80);
+		case MERCHANT -> new Color(80, 180, 250);
+		case HEALER -> new Color(100, 220, 100);
+		case EXIT -> new Color(180, 80, 250);
+		default -> new Color(180, 180, 180);
 		};
 	}
 
@@ -386,8 +408,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== BACKPACK =====================
-	private void drawBackPack(Graphics2D g, List<Integer> selectedSlots, boolean isDragging,
-			Item draggedItem, int dragOffsetX, int dragOffsetY) {
+	private void drawBackPack(Graphics2D g, List<Integer> selectedSlots, boolean isDragging, Item draggedItem,
+			int dragOffsetX, int dragOffsetY) {
 		g.setColor(Color.BLACK);
 		g.drawString("Backpack :", BACKPACK_ORIGIN_X, BACKPACK_ORIGIN_Y - 10);
 
@@ -398,8 +420,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private void drawBackpackCells(Graphics2D g, List<Integer> selectedSlots, 
-			boolean isDragging, Item draggedItem) {
+	private void drawBackpackCells(Graphics2D g, List<Integer> selectedSlots, boolean isDragging, Item draggedItem) {
 		Item[][] grid = backpack.grid();
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
@@ -408,8 +429,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private void drawBackpackCell(Graphics2D g, int x, int y, Item item, 
-			List<Integer> selectedSlots, boolean isDragging, Item draggedItem) {
+	private void drawBackpackCell(Graphics2D g, int x, int y, Item item, List<Integer> selectedSlots, boolean isDragging,
+			Item draggedItem) {
 		int cellX = BACKPACK_ORIGIN_X + x * (CELL_SIZE + PADDING);
 		int cellY = BACKPACK_ORIGIN_Y + y * (CELL_SIZE + PADDING);
 		boolean isUnlocked = backpack.isUnlocked(x, y);
@@ -432,11 +453,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private Color getCellColor(boolean isUnlocked, Item item, boolean isDragging, 
-			Item draggedItem) {
-		if (!isUnlocked) return new Color(60, 60, 60);
-		if (isDragging && item == draggedItem) return Color.YELLOW;
-		if (item == null) return Color.YELLOW;
+	private Color getCellColor(boolean isUnlocked, Item item, boolean isDragging, Item draggedItem) {
+		if (!isUnlocked)
+			return new Color(60, 60, 60);
+		if (isDragging && item == draggedItem)
+			return Color.YELLOW;
+		if (item == null)
+			return Color.YELLOW;
 		return Color.BLACK;
 	}
 
@@ -451,8 +474,8 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
-				if (item == null || (isDragging && item == draggedItem) || 
-					!backpack.isUnlocked(x, y)) continue;
+				if (item == null || (isDragging && item == draggedItem) || !backpack.isUnlocked(x, y))
+					continue;
 
 				if (isItemTopLeft(grid, x, y, item)) {
 					int cellX = BACKPACK_ORIGIN_X + x * (CELL_SIZE + PADDING);
@@ -471,16 +494,14 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		drawExpansionItems(g);
 	}
 
-	private void drawExpansionInstructions(Graphics2D g, 
-			BackpackExpansionSystem expansionSystem) {
+	private void drawExpansionInstructions(Graphics2D g, BackpackExpansionSystem expansionSystem) {
 		g.setColor(Color.WHITE);
-		g.drawString("EXPANSION DU SAC - " + expansionSystem.getPendingUnlocks() + 
-			" case(s) à débloquer", BACKPACK_ORIGIN_X, BACKPACK_ORIGIN_Y - 30);
-		g.drawString("Cliquez sur une case verte pour la débloquer", 
-			BACKPACK_ORIGIN_X, BACKPACK_ORIGIN_Y - 10);
+		g.drawString("EXPANSION DU SAC - " + expansionSystem.getPendingUnlocks() + " case(s) à débloquer",
+				BACKPACK_ORIGIN_X, BACKPACK_ORIGIN_Y - 30);
+		g.drawString("Cliquez sur une case verte pour la débloquer", BACKPACK_ORIGIN_X, BACKPACK_ORIGIN_Y - 10);
 		g.setColor(Color.YELLOW);
-		g.drawString("(ESPACE pour passer)", BACKPACK_ORIGIN_X, 
-			BACKPACK_ORIGIN_Y + (backpack.height() + 1) * (CELL_SIZE + PADDING));
+		g.drawString("(ESPACE pour passer)", BACKPACK_ORIGIN_X,
+				BACKPACK_ORIGIN_Y + (backpack.height() + 1) * (CELL_SIZE + PADDING));
 	}
 
 	private void drawExpansionCells(Graphics2D g, BackpackExpansionSystem expansionSystem) {
@@ -492,8 +513,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private void drawExpansionCell(Graphics2D g, int x, int y, Item item,
-			BackpackExpansionSystem expansionSystem) {
+	private void drawExpansionCell(Graphics2D g, int x, int y, Item item, BackpackExpansionSystem expansionSystem) {
 		int cellX = BACKPACK_ORIGIN_X + x * (CELL_SIZE + PADDING);
 		int cellY = BACKPACK_ORIGIN_Y + y * (CELL_SIZE + PADDING);
 
@@ -512,8 +532,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	private Color getExpansionCellColor(boolean isUnlocked, boolean isExpandable, Item item) {
-		if (isExpandable) return new Color(0, 255, 0, 150);
-		if (isUnlocked) return item == null ? Color.YELLOW : Color.BLACK;
+		if (isExpandable)
+			return new Color(0, 255, 0, 150);
+		if (isUnlocked)
+			return item == null ? Color.YELLOW : Color.BLACK;
 		return new Color(80, 80, 80);
 	}
 
@@ -534,8 +556,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		for (int y = 0; y < backpack.height(); y++) {
 			for (int x = 0; x < backpack.width(); x++) {
 				Item item = grid[y][x];
-				if (item != null && backpack.isUnlocked(x, y) && 
-					isItemTopLeft(grid, x, y, item)) {
+				if (item != null && backpack.isUnlocked(x, y) && isItemTopLeft(grid, x, y, item)) {
 					int cellX = BACKPACK_ORIGIN_X + x * (CELL_SIZE + PADDING);
 					int cellY = BACKPACK_ORIGIN_Y + y * (CELL_SIZE + PADDING);
 					drawItem(g, item, cellX, cellY);
@@ -545,17 +566,16 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== TREASURE CHEST =====================
-	public void drawTreasureChest(Graphics2D g, Item[][] treasureGrid, 
-			List<Integer> selectedSlots, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY) {
+	public void drawTreasureChest(Graphics2D g, Item[][] treasureGrid, List<Integer> selectedSlots, boolean isDragging,
+			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		var coords = getTreasureCoords();
-		
+
 		g.setColor(Color.BLACK);
 		g.drawString("Coffre au trésor :", coords[0], coords[1] - 10);
 
 		drawTreasureCells(g, treasureGrid, coords, isDragging, draggedItem);
 		drawTreasureItems(g, treasureGrid, coords, isDragging, draggedItem);
-		
+
 		if (isDragging && draggedItem != null) {
 			drawDraggedItem(g, draggedItem, dragOffsetX, dragOffsetY);
 		}
@@ -568,8 +588,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		return new int[] { chestX, chestY + 170 };
 	}
 
-	private void drawTreasureCells(Graphics2D g, Item[][] grid, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawTreasureCells(Graphics2D g, Item[][] grid, int[] coords, boolean isDragging, Item draggedItem) {
 		for (int y = 0; y < grid.length; y++) {
 			for (int x = 0; x < grid[0].length; x++) {
 				drawTreasureCell(g, x, y, grid[y][x], coords, isDragging, draggedItem);
@@ -577,26 +596,24 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private void drawTreasureCell(Graphics2D g, int x, int y, Item item, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawTreasureCell(Graphics2D g, int x, int y, Item item, int[] coords, boolean isDragging,
+			Item draggedItem) {
 		int cellX = coords[0] + x * (CELL_SIZE + PADDING);
 		int cellY = coords[1] + y * (CELL_SIZE + PADDING);
 
-		g.setColor(isDragging && item == draggedItem ? Color.ORANGE : 
-			(item == null ? Color.ORANGE : new Color(255, 200, 100)));
+		g.setColor(
+				isDragging && item == draggedItem ? Color.ORANGE : (item == null ? Color.ORANGE : new Color(255, 200, 100)));
 		g.fill(new Rectangle2D.Float(cellX, cellY, CELL_SIZE, CELL_SIZE));
 
 		g.setColor(Color.BLACK);
 		g.draw(new Rectangle2D.Float(cellX, cellY, CELL_SIZE, CELL_SIZE));
 	}
 
-	private void drawTreasureItems(Graphics2D g, Item[][] grid, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawTreasureItems(Graphics2D g, Item[][] grid, int[] coords, boolean isDragging, Item draggedItem) {
 		for (int y = 0; y < grid.length; y++) {
 			for (int x = 0; x < grid[0].length; x++) {
 				Item item = grid[y][x];
-				if (item != null && !(isDragging && item == draggedItem) && 
-					isItemTopLeft(grid, x, y, item)) {
+				if (item != null && !(isDragging && item == draggedItem) && isItemTopLeft(grid, x, y, item)) {
 					int cellX = coords[0] + x * (CELL_SIZE + PADDING);
 					int cellY = coords[1] + y * (CELL_SIZE + PADDING);
 					drawItem(g, item, cellX, cellY);
@@ -606,15 +623,14 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== MERCHANT =====================
-	public void drawMerchantStock(Graphics2D g, Item[][] merchantGrid, 
-			List<Integer> selectedSlots, boolean isDragging, Item draggedItem,
-			int dragOffsetX, int dragOffsetY) {
+	public void drawMerchantStock(Graphics2D g, Item[][] merchantGrid, List<Integer> selectedSlots, boolean isDragging,
+			Item draggedItem, int dragOffsetX, int dragOffsetY) {
 		var coords = getTreasureCoords(); // Même position que trésor
-		
+
 		drawMerchantHeader(g, coords);
 		drawMerchantCells(g, merchantGrid, coords, isDragging, draggedItem);
 		drawMerchantItems(g, merchantGrid, coords, isDragging, draggedItem);
-		
+
 		if (isDragging && draggedItem != null) {
 			drawDraggedItem(g, draggedItem, dragOffsetX, dragOffsetY);
 		}
@@ -624,12 +640,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.setColor(Color.WHITE);
 		g.drawString("Stock du Marchand :", coords[0], coords[1] - 30);
 		g.setColor(Color.CYAN);
-		g.drawString("Cliquez pour acheter | Cliquez sur votre sac pour vendre", 
-			coords[0], coords[1] - 10);
+		g.drawString("Cliquez pour acheter | Cliquez sur votre sac pour vendre", coords[0], coords[1] - 10);
 	}
 
-	private void drawMerchantCells(Graphics2D g, Item[][] grid, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawMerchantCells(Graphics2D g, Item[][] grid, int[] coords, boolean isDragging, Item draggedItem) {
 		for (int y = 0; y < grid.length; y++) {
 			for (int x = 0; x < grid[0].length; x++) {
 				drawMerchantCell(g, x, y, grid[y][x], coords, isDragging, draggedItem);
@@ -637,26 +651,24 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	private void drawMerchantCell(Graphics2D g, int x, int y, Item item, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawMerchantCell(Graphics2D g, int x, int y, Item item, int[] coords, boolean isDragging,
+			Item draggedItem) {
 		int cellX = coords[0] + x * (CELL_SIZE + PADDING);
 		int cellY = coords[1] + y * (CELL_SIZE + PADDING);
 
-		g.setColor(isDragging && item == draggedItem ? new Color(100, 200, 255) :
-			(item == null ? new Color(100, 200, 255) : new Color(150, 220, 255)));
+		g.setColor(isDragging && item == draggedItem ? new Color(100, 200, 255)
+				: (item == null ? new Color(100, 200, 255) : new Color(150, 220, 255)));
 		g.fill(new Rectangle2D.Float(cellX, cellY, CELL_SIZE, CELL_SIZE));
 
 		g.setColor(Color.BLACK);
 		g.draw(new Rectangle2D.Float(cellX, cellY, CELL_SIZE, CELL_SIZE));
 	}
 
-	private void drawMerchantItems(Graphics2D g, Item[][] grid, int[] coords,
-			boolean isDragging, Item draggedItem) {
+	private void drawMerchantItems(Graphics2D g, Item[][] grid, int[] coords, boolean isDragging, Item draggedItem) {
 		for (int y = 0; y < grid.length; y++) {
 			for (int x = 0; x < grid[0].length; x++) {
 				Item item = grid[y][x];
-				if (item != null && !(isDragging && item == draggedItem) && 
-					isItemTopLeft(grid, x, y, item)) {
+				if (item != null && !(isDragging && item == draggedItem) && isItemTopLeft(grid, x, y, item)) {
 					int cellX = coords[0] + x * (CELL_SIZE + PADDING);
 					int cellY = coords[1] + y * (CELL_SIZE + PADDING);
 					drawMerchantItem(g, item, cellX, cellY);
@@ -672,7 +684,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		drawItemImage(g, item, cellX, cellY, itemW, itemH);
 		drawItemPrice(g, item, cellX, cellY, itemW, itemH);
 		drawStackQuantity(g, item, cellX, cellY, itemW, Color.CYAN);
-		
+
 		g.setColor(new Color(0, 0, 0, 150));
 		g.drawRect(cellX, cellY, itemW, itemH);
 	}
@@ -691,22 +703,38 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 		drawItemImage(g, item, cellX, cellY, itemW, itemH);
 		drawStackQuantity(g, item, cellX, cellY, itemW, Color.YELLOW);
-		
+
 		g.setColor(Color.BLACK);
 		g.drawRect(cellX, cellY, itemW, itemH);
 	}
 
 	private void drawItemImage(Graphics2D g, Item item, int x, int y, int w, int h) {
-		if (item.name().contains("Sword") || item.name().contains("Epee")) {
-			BufferedImage img = item.isRotated() ? sword180 : sword90;
+		String key = null;
+		var name = item.name().toLowerCase();
+		var damage = item.attackValue();
+
+		if (name.contains("sword") || name.contains("epee")) {
+			key = item.isRotated() ? "sword90" : "sword";
+		} else if (name.contains("bow") || name.contains("arc")) {
+			key = item.isRotated() ? "bow90" : "bow";
+		} else if (name.contains("shield") || name.contains("bouclier")) {
+			key = "shield";
+		}
+
+		if (key != null && !key.equals("shield")) {
+			if (damage >= 20) {
+				key += "o";
+			} else if (damage >= 10) {
+				key += "v";
+			}
+		}
+
+		BufferedImage img = (key != null) ? weaponAssets.get(key) : null;
+
+		if (img != null) {
 			g.drawImage(img, x, y, w, h, null);
-		} else if (item.name().contains("Shield") || item.name().contains("Bouclier")) {
-			g.drawImage(shield, x, y, w, h, null);
 		} else {
-			g.setColor(Color.BLACK);
-			String name = item.name().length() > 8 ? 
-				item.name().substring(0, 7) + "..." : item.name();
-			g.drawString(name, x + 5, y + CELL_SIZE / 2);
+			g.setColor(new Color(0, 0, 0, 0));
 		}
 	}
 
@@ -723,14 +751,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
 		int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
 
-		g.setComposite(java.awt.AlphaComposite.getInstance(
-			java.awt.AlphaComposite.SRC_OVER, 0.7f));
-		
+		g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
+
 		drawItemImage(g, item, mouseX, mouseY, itemW, itemH);
 		drawStackQuantity(g, item, mouseX, mouseY, itemW, Color.YELLOW);
-		
-		g.setComposite(java.awt.AlphaComposite.getInstance(
-			java.awt.AlphaComposite.SRC_OVER, 1f));
+
+		g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
 		g.setColor(Color.BLACK);
 		g.drawRect(mouseX, mouseY, itemW, itemH);
 	}
@@ -822,12 +848,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 		g.setColor(Color.BLACK);
 		g.drawRect(startX, startY, barWidth, 15);
-		g.drawString(hero.currentStamina() + " / " + hero.maxStamina(), 
-			startX + barWidth / 2 - 15, startY + 12);
+		g.drawString(hero.currentStamina() + " / " + hero.maxStamina(), startX + barWidth / 2 - 15, startY + 12);
 	}
 
 	private void drawEnemyHealthBars(Graphics2D g, List<Enemy> enemies) {
-		if (enemies == null || enemies.isEmpty()) return;
+		if (enemies == null || enemies.isEmpty())
+			return;
 
 		var info = context.getScreenInfo();
 		int startX = info.width() - 250;
@@ -865,16 +891,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	// ===================== UTILITIES =====================
 	private boolean isItemTopLeft(Item[][] grid, int x, int y, Item item) {
-		if (x > 0 && grid[y][x - 1] == item) return false;
-		if (y > 0 && grid[y - 1][x] == item) return false;
+		if (x > 0 && grid[y][x - 1] == item)
+			return false;
+		if (y > 0 && grid[y - 1][x] == item)
+			return false;
 		return true;
 	}
-	
-
 
 	private void clearScreen(Graphics2D g) {
 		g.setColor(Color.BLACK);
-		g.fillRect(0, 0, context.getScreenInfo().width(), 
-			context.getScreenInfo().height());
+		g.fillRect(0, 0, context.getScreenInfo().width(), context.getScreenInfo().height());
 	}
 }

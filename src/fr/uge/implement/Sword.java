@@ -2,7 +2,7 @@ package fr.uge.implement;
 
 import java.util.Objects;
 
-public record Sword(ItemType type, int dmg,int stamina, int width, int height, int durability) implements Item {
+public record Sword(ItemType type, int dmg, int stamina, int width, int height, int durability) implements Item {
   public Sword {
     Objects.requireNonNull(type);
     if (dmg < 0) throw new IllegalArgumentException("Damage can't be negative");
@@ -18,6 +18,9 @@ public record Sword(ItemType type, int dmg,int stamina, int width, int height, i
 		return stamina;
 	}
 	
+	public int getDamage() {
+		return dmg;
+	}
 	
 	@Override
   public Item rotate() {
