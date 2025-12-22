@@ -162,17 +162,17 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		});
 	}
 
-	public void render(List<Integer> selectedSlots, boolean isDragging, Item draggedItem, int dragOffsetX,
+	public void render(GameController controller,List<Integer> selectedSlots, boolean isDragging, Item draggedItem, int dragOffsetX,
 			int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void combatDisplay(int nbEnemies, int status, List<Integer> selectedSlots, Hero hero, List<Enemy> enemies,
+	public void combatDisplay(GameController controller,int nbEnemies, int status, List<Integer> selectedSlots, Hero hero, List<Enemy> enemies,
 			boolean isDragging, Item draggedItem, int dragOffsetX, int dragOffsetY, long lastAttackTime,
 			List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
@@ -183,14 +183,15 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				drawCombatScene(g, nbEnemies, status, enemies);
 			}
 			drawAllBars(g, hero, enemies);
-			drawGrid(g);
+			drawEnemyActionBubbles(g, controller.getEnemyActions(), enemies);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 
 		});
 	}
 
-	public void corridorDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
+	public void corridorDisplay(GameController controller,List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
 			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems, long lastChangeRoom, boolean fromMerchant) {
 		context.renderFrame(g -> {
 			clearScreen(g);
@@ -203,57 +204,57 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			}
 
 			drawAllHeroBars(g, hero);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void expansionDisplay(List<Integer> selectedSlots, Hero hero, BackpackExpansionSystem expansionSystem) {
+	public void expansionDisplay(GameController controller,List<Integer> selectedSlots, Hero hero, BackpackExpansionSystem expansionSystem) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
 			drawAllHeroBars(g, hero);
 			drawHero(g);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPackWithExpansion(g, selectedSlots, expansionSystem);
 		});
 	}
 
-	public void merchantDisplay(List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero, boolean isDragging,
+	public void merchantDisplay(GameController controller,List<Integer> selectedSlots, Item[][] merchantGrid, Hero hero, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawMerchantBackground(g);
 			drawAllHeroBars(g, hero);
 			drawMerchantStock(g, merchantGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void treasureDisplay(List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero, boolean isDragging,
+	public void treasureDisplay(GameController controller,List<Integer> selectedSlots, Item[][] treasureGrid, Hero hero, boolean isDragging,
 			Item draggedItem, int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawAllHeroBars(g, hero);
 			drawTreasure(g);
 			drawTreasureChest(g, treasureGrid, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
 	}
 
-	public void emptyRoomDisplay(List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
+	public void emptyRoomDisplay(GameController controller,List<Integer> selectedSlots, Hero hero, boolean isDragging, Item draggedItem,
 			int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
 		context.renderFrame(g -> {
 			clearScreen(g);
 			drawEmptyRoom(g);
 			drawAllHeroBars(g, hero);
 			drawHero(g);
-			drawGrid(g);
+			drawGrid(g, controller);
 			drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
 			drawFloatingItems(g, floatingItems);
 		});
@@ -372,33 +373,84 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== GRID (MAP) =====================
-	private void drawGrid(Graphics2D g) {
-		var adjacents = floor.adjacentRooms();
-		for (int i = 0; i < floor.rooms().size(); i++) {
-			drawRoomCell(g, i, floor.rooms().get(i), adjacents.contains(i));
-		}
-	}
+	private void drawGrid(Graphics2D g, GameController controller) {
+    var adjacents = floor.adjacentRooms();
+    
+    // Dessiner toutes les cases
+    for (int i = 0; i < floor.rooms().size(); i++) {
+        drawRoomCell(g, i, floor.rooms().get(i), adjacents.contains(i), false);
+    }
+    
+    // Dessiner le joueur avec animation
+    drawAnimatedPlayer(g, controller);
+}
+	
+	
+	
+	private void drawAnimatedPlayer(Graphics2D g, GameController controller) {
+    int currentIndex;
+    int imgSize = GRID_CELL_SIZE / 2;
+    
+    if (controller.isPlayerMoving()) {
+        // Animation en cours
+        float progress = controller.getPlayerAnimationProgress();
+        int startIdx = controller.getPlayerStartIndex();
+        int targetIdx = controller.getPlayerTargetIndex();
+        
+        // Calculer les positions de départ et d'arrivée
+        int[] startPos = getCellPosition(startIdx);
+        int[] targetPos = getCellPosition(targetIdx);
+        
+        // Interpoler la position
+        int x = (int) (startPos[0] + (targetPos[0] - startPos[0]) * progress);
+        int y = (int) (startPos[1] + (targetPos[1] - startPos[1]) * progress);
+        
+        // Centrer l'icône
+        int offset = (GRID_CELL_SIZE - imgSize) / 2;
+        x += offset;
+        y += offset;
+        
+        g.setColor(Color.RED);
+        g.drawImage(heroImage, x, y, imgSize, imgSize, null);
+    } else {
+        // Position statique
+        currentIndex = floor.playerIndex();
+        int[] pos = getCellPosition(currentIndex);
+        int offset = (GRID_CELL_SIZE - imgSize) / 2;
+        
+        g.setColor(Color.RED);
+        g.drawImage(heroImage, pos[0] + offset, pos[1] + offset, imgSize, imgSize, null);
+    }
+}
+	
+	
+	private int[] getCellPosition(int index) {
+    int row = index / GRID_COLS;
+    int col = index % GRID_COLS;
+    int x = GRID_PADDING + col * (GRID_CELL_SIZE + GRID_PADDING);
+    int y = GRID_PADDING + row * (GRID_CELL_SIZE + GRID_PADDING);
+    return new int[] {x, y};
+}
 
-	private void drawRoomCell(Graphics2D g, int index, Room room, boolean isAdjacent) {
-		int row = index / GRID_COLS;
-		int col = index % GRID_COLS;
-		int x = GRID_PADDING + col * (GRID_CELL_SIZE + GRID_PADDING);
-		int y = GRID_PADDING + row * (GRID_CELL_SIZE + GRID_PADDING);
 
-		Color color = isAdjacent ? Color.GREEN : getRoomColor(room);
-		g.setColor(color);
-		g.fill(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
+	private void drawRoomCell(Graphics2D g, int index, Room room, boolean isAdjacent, boolean skipPlayer) {
+    int row = index / GRID_COLS;
+    int col = index % GRID_COLS;
+    int x = GRID_PADDING + col * (GRID_CELL_SIZE + GRID_PADDING);
+    int y = GRID_PADDING + row * (GRID_CELL_SIZE + GRID_PADDING);
 
-		g.setColor(Color.BLACK);
-		g.draw(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
+    Color color = isAdjacent ? Color.GREEN : getRoomColor(room);
+    g.setColor(color);
+    g.fill(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
 
-		if (index == floor.playerIndex()) {
-			drawPlayerIcon(g, x, y);
-		}
+    g.setColor(Color.BLACK);
+    g.draw(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
 
-		g.setColor(Color.BLACK);
-		g.drawString(room.name(), x + 8, y + GRID_CELL_SIZE / 2);
-	}
+    // Ne plus dessiner le joueur ici - il sera dessiné séparément avec l'animation
+
+    g.setColor(Color.BLACK);
+    g.drawString(room.name(), x + 8, y + GRID_CELL_SIZE / 2);
+}
 
 	private Color getRoomColor(Room room) {
 		return switch (room.type()) {
@@ -910,6 +962,74 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.drawRect(x, y + 20, w, 15);
 		g.drawString(enemy.hp() + " HP", x + w / 2 - 20, y + 32);
 	}
+	
+	private void drawEnemyActionBubbles(Graphics2D g, List<Battle.EnemyAction> actions, List<Enemy> enemies) {
+    if (actions == null || actions.isEmpty()) {
+        return;
+    }
+
+    var info = context.getScreenInfo();
+    int bubbleWidth = 100;   // Augmenté pour les dégâts
+    int bubbleHeight = 70;   // Augmenté pour les dégâts
+    int startY = 100;
+    int padding = 10;        // Espacement interne pour le texte
+
+    // Calculer l'espacement horizontal
+    int totalWidth = Math.min(actions.size(), 3) * (bubbleWidth + 20);
+    int startX = (info.width() - totalWidth) / 2;
+
+    for (int i = 0; i < Math.min(actions.size(), enemies.size()); i++) {
+        Enemy enemy = enemies.get(i);
+        if (enemy.isAlive()) {
+            Battle.EnemyAction action = actions.get(i);
+            int bubbleX = startX + i * (bubbleWidth + 20);
+
+            // Bulle
+            g.setColor(new Color(255, 255, 255, 230));
+            g.fillRoundRect(bubbleX, startY, bubbleWidth, bubbleHeight, 15, 15);
+
+            // Bordure
+            Color borderColor = switch (action) {
+                case ATTACK -> Color.RED;
+                case DEFEND -> Color.BLUE;
+                case MALEDICTION -> new Color(150, 50, 200);
+            };
+            g.setColor(borderColor);
+            g.setStroke(new java.awt.BasicStroke(2));
+            g.drawRoundRect(bubbleX, startY, bubbleWidth, bubbleHeight, 15, 15);
+            g.setStroke(new java.awt.BasicStroke(1));
+
+            // Icône
+            g.setFont(g.getFont().deriveFont(28f));
+            String icon = switch (action) {
+                case ATTACK -> "⚔️"; // faire des images ici
+                case DEFEND -> "🛡️";
+                case MALEDICTION -> "☠️";
+            };
+            g.drawString(icon, bubbleX + padding, startY + 30);
+
+            // Texte
+            g.setFont(g.getFont().deriveFont(14f));
+            g.setColor(Color.BLACK);
+            String text = switch (action) {
+                case ATTACK -> "ATK";
+                case DEFEND -> "DEF";
+                case MALEDICTION -> "CURSE";
+            };
+            g.drawString(text, bubbleX + 50, startY + 25);
+
+            // Dégâts si attaque
+            if (action == Battle.EnemyAction.ATTACK) {
+                String dmgText = enemy.attackDamage() + " DMG";
+                g.setFont(g.getFont().deriveFont(12f));
+                g.setColor(Color.DARK_GRAY);
+                g.drawString(dmgText, bubbleX + 50, startY + 45);
+            }
+        }
+    }
+}
+
+
 
 	// ===================== UTILITIES =====================
 	private boolean isItemTopLeft(Item[][] grid, int x, int y, Item item) {

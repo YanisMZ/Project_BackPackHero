@@ -10,6 +10,7 @@ import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
 import fr.uge.implement.*;
+import fr.uge.implement.Battle.EnemyAction;
 
 public class GameController {
 	private final ApplicationContext context;
@@ -55,6 +56,13 @@ public class GameController {
 	private Item currentMalediction = null;
 	private Item placedMalediction = null; // nouvelle variable
 
+	// deplacment joueur
+	private boolean isPlayerMoving = false;
+	private int playerStartIndex = 0;
+	private int playerTargetIndex = 0;
+	private long moveStartTime = 0;
+	private static final long MOVE_DURATION = 10000; // 300ms pour l'animation
+
 	// Combat suspendu
 	private boolean combatPausedByMalediction = false;
 
@@ -82,8 +90,20 @@ public class GameController {
 		return placingMalediction;
 	}
 
+	public List<EnemyAction> getEnemyActions() {
+    return fight.getEnemyActions();
+}
+
+	public List<Enemy> getEnemies() {
+		return fight.getEnemy();
+	}
+
 	public Item getCurrentMalediction() {
 		return currentMalediction;
+	}
+
+	public boolean isPlayerMoving() {
+		return isPlayerMoving;
 	}
 
 	public boolean isInCorridor() {
@@ -112,6 +132,14 @@ public class GameController {
 
 	public Merchant getMerchant() {
 		return merchant;
+	}
+
+	public int getPlayerStartIndex() {
+		return playerStartIndex;
+	}
+
+	public int getPlayerTargetIndex() {
+		return playerTargetIndex;
 	}
 
 	public Hero getHero() {
@@ -162,8 +190,25 @@ public class GameController {
 		return floatingItems;
 	}
 
+	public float getPlayerAnimationProgress() {
+		if (!isPlayerMoving)
+			return 1.0f;
+
+		long elapsed = System.currentTimeMillis() - moveStartTime;
+		if (elapsed >= MOVE_DURATION) {
+			isPlayerMoving = false;
+			return 1.0f;
+		}
+
+		// Easing function pour un mouvement plus fluide (ease-out)
+		float t = (float) elapsed / MOVE_DURATION;
+		return 1 - (float) Math.pow(1 - t, 3); // cubic ease-out
+	}
+
 	// ===================== MAIN LOOP =====================
 	public void update(int pollTimeout) {
+		updatePlayerAnimation(); // Ajoutez cette ligne
+
 		var event = context.pollOrWaitEvent(pollTimeout);
 		if (event == null)
 			return;
@@ -472,36 +517,37 @@ public class GameController {
 	}
 
 	private boolean handleRoomNavigation(int mouseX, int mouseY) {
-    if (inCombat || (!inTreasure && !inMerchant)) {
-        int room = roomAt(mouseX, mouseY);
-        if (room != -1 && !inCombat) {
-            transitionFromMerchant = false;
-            handleRoomClick(room);
-            lastChangeRoom = System.currentTimeMillis();
-            return true;
-        }
-    }
+		if (inCombat || (!inTreasure && !inMerchant)) {
+			int room = roomAt(mouseX, mouseY);
+			if (room != -1 && !inCombat) {
+				transitionFromMerchant = false;
+				handleRoomClick(room);
+				lastChangeRoom = System.currentTimeMillis();
+				return true;
+			}
+		}
 
-    if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
-        int room = roomAt(mouseX, mouseY);
-        if (inCorridor) {
-        }
-        if (inMerchant) {
-            leaveMerchantRoom();
-            transitionFromMerchant = true;
-        } else {
-            transitionFromMerchant = false;
-        }
-        
-        if (inTreasure)
-            leaveTreasureRoom();
-            
-        lastChangeRoom = System.currentTimeMillis();
-        handleRoomClick(room);
-        return true;
-    }
-    return false;
-}
+		if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
+			int room = roomAt(mouseX, mouseY);
+			if (inCorridor) {
+			}
+			if (inMerchant) {
+				leaveMerchantRoom();
+				transitionFromMerchant = true;
+			} else {
+				transitionFromMerchant = false;
+			}
+
+			if (inTreasure)
+				leaveTreasureRoom();
+
+			lastChangeRoom = System.currentTimeMillis();
+			handleRoomClick(room);
+			return true;
+		}
+		return false;
+	}
+
 	private void handlePointerMove(int mouseX, int mouseY) {
 		if (draggedItem != null && !isDragging) {
 			checkDragThreshold(mouseX, mouseY);
@@ -685,11 +731,26 @@ public class GameController {
 		if (!floor.adjacentRooms().contains(clickedRoom))
 			return;
 
+		// Démarrer l'animation
+		playerStartIndex = floor.playerIndex();
+		playerTargetIndex = clickedRoom;
+		isPlayerMoving = true;
+		moveStartTime = System.currentTimeMillis();
+
 		floor.setPlayerIndex(clickedRoom);
 		floatingItems.clear();
 
 		processRoomType(clickedRoom);
 		floor.markVisited(clickedRoom);
+	}
+
+	public void updatePlayerAnimation() {
+		if (isPlayerMoving) {
+			long elapsed = System.currentTimeMillis() - moveStartTime;
+			if (elapsed >= MOVE_DURATION) {
+				isPlayerMoving = false;
+			}
+		}
 	}
 
 	private void processRoomType(int room) {

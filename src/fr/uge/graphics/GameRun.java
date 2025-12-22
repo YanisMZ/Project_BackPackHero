@@ -98,21 +98,21 @@ public class GameRun {
 				int dragOffsetY = controller.getDragOffsetY();
 
 				if (controller.isInExpansionMode()) {
-					view.expansionDisplay(selectedSlots, hero, controller.getExpansionSystem());
+					view.expansionDisplay(controller,selectedSlots, hero, controller.getExpansionSystem());
 				} else if (controller.isInCombat()) {
-					view.combatDisplay(fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
+					view.combatDisplay(controller,fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging, draggedItem,
 							dragOffsetX, dragOffsetY, controller.getLastAttackTime(),controller.getFloatingItems());
 				} else if (controller.isInCorridor()) {
-					view.corridorDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+					view.corridorDisplay(controller,selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems(), controller.getLastChangeRoom(), controller.isTransitionFromMerchant());
 				} else if (controller.isInTreasure()) {
-					view.treasureDisplay(selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+					view.treasureDisplay(controller,selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems());
 				} else if (controller.isInMerchant()) {
-					view.merchantDisplay(selectedSlots, getMerchantGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+					view.merchantDisplay(controller,selectedSlots, getMerchantGrid, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems());
 				} else {
-					view.emptyRoomDisplay(selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+					view.emptyRoomDisplay(controller,selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
 							controller.getFloatingItems());
 				}
 
