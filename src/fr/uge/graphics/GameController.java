@@ -523,7 +523,7 @@ public class GameController {
 		placingMalediction = true;
 		combatPausedByMalediction = true;
 
-		currentMalediction = Malediction.formeS();
+		currentMalediction = fight.chooseMalediction();
 		floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
 
 		System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");

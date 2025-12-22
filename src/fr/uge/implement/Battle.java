@@ -133,6 +133,15 @@ public class Battle {
 
         System.out.println("=========================================\n");
     }
+    
+    
+    public Malediction chooseMalediction() {
+      if (random.nextBoolean()) {
+          return Malediction.formeS();
+      } else {
+          return Malediction.carre();
+      }
+  }
 
 
     /** Exécute le tour ennemi pour ATTACK et DEFEND. MALEDICTION est gérée par GameController */
