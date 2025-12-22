@@ -97,7 +97,6 @@ public class GameRun {
 				int dragOffsetX = controller.getDragOffsetX();
 				int dragOffsetY = controller.getDragOffsetY();
 
-				// Vérifier d'abord le mode expansion
 				if (controller.isInExpansionMode()) {
 					view.expansionDisplay(selectedSlots, hero, controller.getExpansionSystem());
 				} else if (controller.isInCombat()) {

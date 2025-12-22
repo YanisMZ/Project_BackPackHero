@@ -47,6 +47,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static BufferedImage defendBanner;
 	private static BufferedImage injuredEnemy;
 	private static BufferedImage merchantImage;
+	
 
 	private static Map<String, BufferedImage> weaponAssets = new HashMap<>();
 	private static List<BufferedImage> fightingAnimation1;
@@ -736,9 +737,13 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			key = item.isRotated() ? "bow90" : "bow";
 		} else if (name.contains("shield") || name.contains("bouclier")) {
 			key = "shield";
+		} else if (name.contains("gold")) {
+			key = "gold";
+		} else if (name.contains("heal")) {
+			key = "heal";
 		}
 
-		if (key != null && !key.equals("shield")) {
+		if (key != null && !key.equals("shield") && !key.equals("gold") && !key.equals("heal")) {
 			if (damage >= 20) {
 				key += "o";
 			} else if (damage >= 10) {
