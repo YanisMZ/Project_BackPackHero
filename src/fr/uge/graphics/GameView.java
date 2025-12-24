@@ -768,15 +768,16 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	// ===================== ITEM RENDERING =====================
 	private void drawItem(Graphics2D g, Item item, int cellX, int cellY) {
-		int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
-		int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
+    int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
+    int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
 
-		drawItemImage(g, item, cellX, cellY, itemW, itemH);
-		drawStackQuantity(g, item, cellX, cellY, itemW, Color.YELLOW);
+    // Pour les malédictions dans le sac, on garde l'ancien rendu (rectangle simple)
+    drawItemImage(g, item, cellX, cellY, itemW, itemH);
+    drawStackQuantity(g, item, cellX, cellY, itemW, Color.YELLOW);
 
-		g.setColor(Color.BLACK);
-		g.drawRect(cellX, cellY, itemW, itemH);
-	}
+    g.setColor(Color.BLACK);
+    g.drawRect(cellX, cellY, itemW, itemH);
+}
 
 	private void drawItemImage(Graphics2D g, Item item, int x, int y, int w, int h) {
 		String key = null;
@@ -822,18 +823,22 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	private void drawDraggedItem(Graphics2D g, Item item, int mouseX, int mouseY) {
-		int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
-		int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
+    int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
+    int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
 
-		g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.7f));
+    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
 
-		drawItemImage(g, item, mouseX, mouseY, itemW, itemH);
-		drawStackQuantity(g, item, mouseX, mouseY, itemW, Color.YELLOW);
+    if (item.isMalediction()) {
+        drawMaledictionShape(g, item, mouseX, mouseY, itemW, itemH, true);
+    } else {
+        drawItemImage(g, item, mouseX, mouseY, itemW, itemH);
+        drawStackQuantity(g, item, mouseX, mouseY, itemW, Color.YELLOW);
+    }
 
-		g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1f));
-		g.setColor(Color.BLACK);
-		g.drawRect(mouseX, mouseY, itemW, itemH);
-	}
+    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+    g.setColor(Color.BLACK);
+    g.drawRect(mouseX, mouseY, itemW, itemH);
+}
 
 	// ===================== FLOATING ITEMS =====================
 	private void drawFloatingItems(Graphics2D g, List<FloatingItem> floatingItems) {
@@ -843,20 +848,24 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	private void drawFloatingItem(Graphics2D g, FloatingItem fItem) {
-		Item item = fItem.item();
-		int x = fItem.position.x;
-		int y = fItem.position.y;
-		int w = item.width() * (CELL_SIZE + PADDING) - PADDING;
-		int h = item.height() * (CELL_SIZE + PADDING) - PADDING;
+    Item item = fItem.item();
+    int x = fItem.position.x;
+    int y = fItem.position.y;
 
-		g.setColor(Color.CYAN);
-		g.fillRect(x, y, w, h);
-
-		drawItemImage(g, item, x, y, w, h);
-
-		g.setColor(Color.BLACK);
-		g.drawRect(x, y, w, h);
-	}
+    if (item.isMalediction()) {
+        // Dessiner uniquement les cellules de la forme, sans fond
+        drawMaledictionShape(g, item, x, y, 0, 0, true);
+    } else {
+        int w = item.width() * (CELL_SIZE + PADDING) - PADDING;
+        int h = item.height() * (CELL_SIZE + PADDING) - PADDING;
+        
+        g.setColor(Color.CYAN);
+        g.fillRect(x, y, w, h);
+        drawItemImage(g, item, x, y, w, h);
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, w, h);
+    }
+}
 
 	// ===================== HEALTH BARS =====================
 	private void drawHeroHealthBar(Graphics2D g, Hero hero) {
@@ -1024,6 +1033,53 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
                 g.setFont(g.getFont().deriveFont(12f));
                 g.setColor(Color.DARK_GRAY);
                 g.drawString(dmgText, bubbleX + 50, startY + 45);
+            }
+        }
+    }
+}
+	
+	
+	private void drawMaledictionShape(Graphics2D g, Item item, int x, int y, int w, int h, boolean isFloating) {
+    if (!item.isMalediction()) {
+        // Fallback pour les items normaux
+        drawItemImage(g, item, x, y, w, h);
+        return;
+    }
+
+    Malediction malediction = (Malediction) item;
+    
+    // Pour le sac/trésor : pas de padding entre les cellules
+    // Pour les items flottants : utiliser le padding pour bien voir la forme
+    int cellSize = isFloating ? CELL_SIZE : CELL_SIZE;
+    int spacing = isFloating ? PADDING : 0;
+    
+    // Couleur de la malédiction
+    Color maledictionColor = isFloating ? new Color(150, 50, 200, 180) : new Color(120, 30, 180);
+    
+    // Dessiner chaque cellule de la forme
+    for (int dy = 0; dy < item.height(); dy++) {
+        for (int dx = 0; dx < item.width(); dx++) {
+            if (malediction.occupies(dx, dy)) {
+                int cellX = x + dx * (cellSize + spacing);
+                int cellY = y + dy * (cellSize + spacing);
+                
+                // Remplissage de la cellule
+                g.setColor(maledictionColor);
+                g.fillRect(cellX, cellY, cellSize, cellSize);
+                
+                // Bordure de la cellule
+                g.setColor(new Color(200, 100, 255));
+                g.setStroke(new java.awt.BasicStroke(2));
+                g.drawRect(cellX, cellY, cellSize, cellSize);
+                g.setStroke(new java.awt.BasicStroke(1));
+                
+                // Icône de crâne sur la première cellule occupée
+                if (dx == 1 && dy == 0) {
+                    g.setColor(Color.WHITE);
+                    g.setFont(g.getFont().deriveFont(28f));
+                    g.drawString("☠️", cellX + 8, cellY + 38);
+                    g.setFont(g.getFont().deriveFont(12f));
+                }
             }
         }
     }

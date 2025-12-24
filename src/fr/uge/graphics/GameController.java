@@ -55,6 +55,7 @@ public class GameController {
 	private boolean placingMalediction = false;
 	private Item currentMalediction = null;
 	private Item placedMalediction = null; // nouvelle variable
+	private boolean firstMaledictionDrag = true;
 
 	// deplacment joueur
 	private boolean isPlayerMoving = false;
@@ -356,11 +357,17 @@ public class GameController {
 
 			// ⚠️ Pénalité uniquement si la malédiction est déplacée hors combat
 			if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
-				int penalty = 10;
-				hero.takeDamage(penalty);
-				System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-				System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
-			}
+		    if (firstMaledictionDrag) {
+		        firstMaledictionDrag = false;
+		        System.out.println("☠️ Premier déplacement de la malédiction : aucune pénalité.");
+		    } else {
+		        int penalty = 10;
+		        hero.takeDamage(penalty);
+		        System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+		        System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+		    }
+		}
+
 
 			// Supprimer l'item du sac ou du coffre si nécessaire
 			if (dragFromTreasure) {
@@ -560,20 +567,20 @@ public class GameController {
 	}
 
 	private void triggerMalediction() {
-		// Vérifie qu'aucune malédiction n'est déjà active
-		if (currentMalediction != null || placedMalediction != null) {
-			System.out.println("⛔ Une malédiction est déjà active !");
-			return;
-		}
+    if (currentMalediction != null || placedMalediction != null) {
+        return;
+    }
 
-		placingMalediction = true;
-		combatPausedByMalediction = true;
+    placingMalediction = true;
+    combatPausedByMalediction = true;
+    firstMaledictionDrag = true; // ✅ important
 
-		currentMalediction = fight.chooseMalediction();
-		floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
+    currentMalediction = fight.chooseMalediction();
+    floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
 
-		System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
-	}
+    System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
+}
+
 
 	private void handleMaledictionPlacement(int mouseX, int mouseY) {
 		int[] coords = backpackSlotCoordsAt(mouseX, mouseY);
