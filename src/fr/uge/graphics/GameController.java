@@ -271,7 +271,14 @@ public class GameController {
 	private boolean handleCombatEndTurn(KeyboardEvent ke) {
 		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
 			return false;
+		
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
+			// ☠️ BLOQUER LA FIN DU TOUR SI MALÉDICTION NON PLACÉE
+			if (placingMalediction || currentMalediction != null) {
+				System.out.println("☠️ Place la malédiction avant de terminer ton tour !");
+				return true; // On consomme l'événement sans terminer le tour
+			}
+
 			if (fight.isPlayerTurnActive()) {
 				fight.endPlayerTurn();
 
@@ -478,6 +485,11 @@ public class GameController {
 
 		Item item = backpack.grid()[y][x];
 		if (item != null) {
+			// ☠️ BLOQUER le drag de la malédiction placée pendant le combat
+			if (item == placedMalediction && inCombat) {
+				System.out.println("⛔ Impossible de déplacer la malédiction pendant le combat !");
+				return true; // Consomme l'événement
+			}
 			startBackpackDrag(x, y, item, mouseX, mouseY);
 			return true;
 		}
@@ -844,10 +856,16 @@ public class GameController {
     if (fight == null || fight.isRunning())
         return;
 
-    // ☠️ EMPÊCHER LA FIN DU COMBAT SI MALÉDICTION NON PLACÉE
-    if (placingMalediction || currentMalediction != null) {
+    // ☠️ EMPÊCHER LA FIN DU COMBAT SEULEMENT SI UNE MALÉDICTION A ÉTÉ DÉCLENCHÉE MAIS NON PLACÉE
+    if (combatPausedByMalediction && (placingMalediction || currentMalediction != null)) {
         System.out.println("☠️ Tu dois placer la malédiction avant de continuer !");
         return;
+    }
+
+    // ✅ Si on arrive ici et qu'une malédiction a été placée, réinitialiser le flag
+    if (combatPausedByMalediction && placedMalediction != null) {
+        combatPausedByMalediction = false;
+        System.out.println("✅ Malédiction placée, le combat peut se terminer.");
     }
 
     inCombat = false;
