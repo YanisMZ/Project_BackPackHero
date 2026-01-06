@@ -573,13 +573,28 @@ public class GameController {
 
     placingMalediction = true;
     combatPausedByMalediction = true;
-    firstMaledictionDrag = true; // ✅ important
+    firstMaledictionDrag = true;
 
     currentMalediction = fight.chooseMalediction();
-    floatingItems.add(new FloatingItem(currentMalediction, new Point(300, 300)));
+
+    // Position initiale
+    Point spawn = new Point(300, 300);
+    floatingItems.add(new FloatingItem(currentMalediction, spawn));
+
+    // ✅ DÉMARRER LE DRAG IMMÉDIATEMENT
+    draggedItem = currentMalediction;
+    isDragging = true;
+
+    // Simuler que la souris est au centre de l’item
+    dragOffsetX = currentMalediction.width() * (backpackCellSize + backpackPadding) / 2;
+    dragOffsetY = currentMalediction.height() * (backpackCellSize + backpackPadding) / 2;
+
+    dragMouseX = spawn.x;
+    dragMouseY = spawn.y;
 
     System.out.println("☠️ Une malédiction apparaît ! Place-la immédiatement !");
 }
+
 
 
 	private void handleMaledictionPlacement(int mouseX, int mouseY) {
