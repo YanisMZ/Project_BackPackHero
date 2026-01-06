@@ -780,38 +780,40 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 }
 
 	private void drawItemImage(Graphics2D g, Item item, int x, int y, int w, int h) {
-		String key = null;
-		var name = item.name().toLowerCase();
-		var damage = item.attackValue();
+    String key = null;
+    var name = item.name().toLowerCase();
+    var damage = item.attackValue();
 
-		if (name.contains("sword") || name.contains("epee")) {
-			key = item.isRotated() ? "sword90" : "sword";
-		} else if (name.contains("bow") || name.contains("arc")) {
-			key = item.isRotated() ? "bow90" : "bow";
-		} else if (name.contains("shield") || name.contains("bouclier")) {
-			key = "shield";
-		} else if (name.contains("gold")) {
-			key = "gold";
-		} else if (name.contains("heal")) {
-			key = "heal";
-		}
+    if (name.contains("sword") || name.contains("epee")) {
+        key = item.isRotated() ? "sword90" : "sword";
+    } else if (name.contains("bow") || name.contains("arc")) {
+        key = item.isRotated() ? "bow90" : "bow";
+    } else if (name.contains("shield") || name.contains("bouclier")) {
+        key = "shield";
+    } else if (name.contains("hachette")) {
+        key = item.isRotated() ? "hache90" : "hache";
+    } else if (name.contains("gold")) {
+        key = "gold";
+    } else if (name.contains("heal")) {
+        key = "heal";
+    }
 
-		if (key != null && !key.equals("shield") && !key.equals("gold") && !key.equals("heal")) {
-			if (damage >= 20) {
-				key += "o";
-			} else if (damage >= 10) {
-				key += "v";
-			}
-		}
+    if (key != null && !key.equals("shield") && !key.equals("gold") && !key.equals("heal")) {
+        if (damage >= 20) {
+            key += "o";
+        } else if (damage >= 10) {
+            key += "v";
+        }
+    }
 
-		BufferedImage img = (key != null) ? weaponAssets.get(key) : null;
+    BufferedImage img = (key != null) ? weaponAssets.get(key) : null;
 
-		if (img != null) {
-			g.drawImage(img, x, y, w, h, null);
-		} else {
-			g.setColor(new Color(0, 0, 0, 0));
-		}
-	}
+    if (img != null) {
+        g.drawImage(img, x, y, w, h, null);
+    } else {
+        g.setColor(new Color(0, 0, 0, 0));
+    }
+}
 
 	private void drawStackQuantity(Graphics2D g, Item item, int x, int y, int w, Color color) {
 		if (item.isStackable() && item.quantity() > 1) {
