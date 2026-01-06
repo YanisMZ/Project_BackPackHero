@@ -91,6 +91,10 @@ public class MapDungeon {
     return rooms().get(playerIndex()).type() == Room.Type.MERCHANT;
  
 }
+  
+  public boolean playerOnHealerRoom() {
+    return rooms.get(playerIndex).type() == Type.HEALER;
+}
 
   public boolean isVisited(int index) {
     return visited.contains(index);

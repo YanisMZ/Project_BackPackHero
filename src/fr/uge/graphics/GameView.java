@@ -47,6 +47,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private static BufferedImage defendBanner;
 	private static BufferedImage injuredEnemy;
 	private static BufferedImage merchantImage;
+	private static BufferedImage healerRoomImage;
 	
 
 	private static Map<String, BufferedImage> weaponAssets = new HashMap<>();
@@ -259,6 +260,19 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawFloatingItems(g, floatingItems);
 		});
 	}
+	
+	public void healerDisplay(GameController controller, List<Integer> selectedSlots, Hero hero, 
+      HealerRoom healerRoom, boolean isDragging, Item draggedItem, 
+      int dragOffsetX, int dragOffsetY, List<FloatingItem> floatingItems) {
+  context.renderFrame(g -> {
+      clearScreen(g);
+      drawHealerRoom(g, hero, healerRoom);
+      drawAllHeroBars(g, hero);
+      drawGrid(g, controller);
+      drawBackPack(g, selectedSlots, isDragging, draggedItem, dragOffsetX, dragOffsetY);
+      drawFloatingItems(g, floatingItems);
+  });
+}
 
 	// ===================== COMBAT HELPERS =====================
 	private void drawCombatAnimation(Graphics2D g, int nbEnemies, long startTime) {
@@ -765,6 +779,58 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.setColor(Color.YELLOW);
 		g.drawString(item.price() + " 💰", x + 5, y + h - 5);
 	}
+	
+	
+//===================== HEALERROOM=====================
+	
+	private void drawHealerRoom(Graphics2D g, Hero hero, HealerRoom healerRoom) {
+    var info = context.getScreenInfo();
+    
+    // Background (utiliser healerRoomImage si disponible, sinon couleur)
+    if (healerRoomImage != null) {
+        g.drawImage(healerRoomImage, 0, 0, info.width(), info.height(), null);
+    } else {
+        g.setColor(new Color(100, 150, 100));
+        g.fillRect(0, 0, info.width(), info.height());
+    }
+    
+    // Bouton de soin
+    int buttonWidth = 200;
+    int buttonHeight = 80;
+    int buttonX = (info.width() - buttonWidth) / 2;
+    int buttonY = (info.height() - buttonHeight) / 2;
+    
+    boolean canHeal = healerRoom.canHeal(hero);
+    
+    // Fond du bouton
+    g.setColor(canHeal ? new Color(100, 200, 100) : new Color(150, 150, 150));
+    g.fillRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 20, 20);
+    
+    // Bordure
+    g.setColor(canHeal ? new Color(50, 150, 50) : new Color(100, 100, 100));
+    g.setStroke(new java.awt.BasicStroke(3));
+    g.drawRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 20, 20);
+    g.setStroke(new java.awt.BasicStroke(1));
+    
+    // Texte
+    g.setColor(Color.WHITE);
+    g.setFont(g.getFont().deriveFont(20f));
+    String text = "❤️ SE SOIGNER";
+    g.drawString(text, buttonX + 30, buttonY + 35);
+    
+    g.setFont(g.getFont().deriveFont(14f));
+    String cost = healerRoom.getHealCost() + " 💰 → +" + healerRoom.getHealAmount() + " HP";
+    g.drawString(cost, buttonX + 40, buttonY + 60);
+    
+    // Message si impossible
+    if (!canHeal) {
+        g.setFont(g.getFont().deriveFont(16f));
+        g.setColor(Color.YELLOW);
+        String msg = !hero.hasEnoughGold(healerRoom.getHealCost()) ? 
+            "Pas assez d'or" : "HP au maximum";
+        g.drawString(msg, buttonX + 40, buttonY + buttonHeight + 30);
+    }
+}
 
 	// ===================== ITEM RENDERING =====================
 	private void drawItem(Graphics2D g, Item item, int cellX, int cellY) {
