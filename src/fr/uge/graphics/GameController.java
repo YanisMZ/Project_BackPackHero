@@ -2,8 +2,12 @@ package fr.uge.graphics;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
@@ -11,6 +15,7 @@ import com.github.forax.zen.PointerEvent;
 
 import fr.uge.implement.*;
 import fr.uge.implement.Battle.EnemyAction;
+import fr.uge.implement.Room.Type;
 
 public class GameController {
 	private final ApplicationContext context;
@@ -20,7 +25,7 @@ public class GameController {
 	private final Hero hero;
 	private final Battle fight;
 	private final Dungeon dungeon;
-	private final TreasureChest treasureChest;
+	private TreasureChest treasureChest;
 	private final Merchant merchant;
 	private final BackpackExpansionSystem expansionSystem;
 	private final List<FloatingItem> floatingItems = new ArrayList<>();
@@ -57,13 +62,23 @@ public class GameController {
 	private Item currentMalediction = null;
 	private Item placedMalediction = null; // nouvelle variable
 	private boolean firstMaledictionDrag = true;
+	
+	private final Set<Integer> clearedTreasureRooms = new HashSet<>();
+	private final Set<Integer> clearedEnemyRooms = new HashSet<>();
+	private final Map<Integer, TreasureChest> treasureChests = new HashMap<>();
+
+
+
 
 	// deplacment joueur
+	private List<Integer> currentPath = new ArrayList<>();
+	private int pathIndex = 0;
+	private boolean isFollowingPath = false;
 	private boolean isPlayerMoving = false;
 	private int playerStartIndex = 0;
 	private int playerTargetIndex = 0;
 	private long moveStartTime = 0;
-	private static final long MOVE_DURATION = 10000; // 300ms pour l'animation
+	private static final long MOVE_DURATION = 300; // 300ms pour l'animation
 
 	// Combat suspendu
 	private boolean combatPausedByMalediction = false;
@@ -91,6 +106,18 @@ public class GameController {
 
 	public boolean isPlacingMalediction() {
 		return placingMalediction;
+	}
+
+	public boolean isFollowingPath() {
+		return isFollowingPath;
+	}
+
+	public List<Integer> getCurrentPath() {
+		return currentPath;
+	}
+
+	public int getPathIndex() {
+		return pathIndex;
 	}
 
 	public List<EnemyAction> getEnemyActions() {
@@ -202,19 +229,19 @@ public class GameController {
 	}
 
 	public float getPlayerAnimationProgress() {
-		if (!isPlayerMoving)
-			return 1.0f;
+    if (!isPlayerMoving)
+        return 1.0f;
 
-		long elapsed = System.currentTimeMillis() - moveStartTime;
-		if (elapsed >= MOVE_DURATION) {
-			isPlayerMoving = false;
-			return 1.0f;
-		}
+    long elapsed = System.currentTimeMillis() - moveStartTime;
+    if (elapsed >= MOVE_DURATION) {
+        System.out.println("✅ [getProgress] Animation terminée !");
+        completeMovement(); // ✅ Méthode commune
+        return 1.0f;
+    }
 
-		// Easing function pour un mouvement plus fluide (ease-out)
-		float t = (float) elapsed / MOVE_DURATION;
-		return 1 - (float) Math.pow(1 - t, 3); // cubic ease-out
-	}
+    float t = (float) elapsed / MOVE_DURATION;
+    return 1 - (float) Math.pow(1 - t, 3);
+}
 
 	// ===================== MAIN LOOP =====================
 	public void update(int pollTimeout) {
@@ -327,7 +354,7 @@ public class GameController {
     pointerDownX = mouseX;
     pointerDownY = mouseY;
 
-    if (handleHealerClick(mouseX, mouseY))  // ✅ AJOUT
+    if (handleHealerClick(mouseX, mouseY))
         return;
     if (handleExpansionClick(mouseX, mouseY))
         return;
@@ -339,31 +366,29 @@ public class GameController {
         return;
     if (handleBackpackDragStart(mouseX, mouseY))
         return;
-    if (handleRoomNavigation(mouseX, mouseY))
+    
+    // ⛔ BLOQUER la navigation si en combat
+    if (!inCombat && handleRoomNavigation(mouseX, mouseY))
         return;
 }
-	
-	
-	
-	
+
 //Ajouter la méthode handleHealerClick :
-private boolean handleHealerClick(int mouseX, int mouseY) {
-   if (!inHealer)
-       return false;
-   
-   var info = context.getScreenInfo();
-   int buttonWidth = 200;
-   int buttonHeight = 80;
-   int buttonX = (info.width() - buttonWidth) / 2;
-   int buttonY = (info.height() - buttonHeight) / 2;
-   
-   if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth &&
-       mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-       healerRoom.healHero(hero);
-       return true;
-   }
-   return false;
-}
+	private boolean handleHealerClick(int mouseX, int mouseY) {
+		if (!inHealer)
+			return false;
+
+		var info = context.getScreenInfo();
+		int buttonWidth = 200;
+		int buttonHeight = 80;
+		int buttonX = (info.width() - buttonWidth) / 2;
+		int buttonY = (info.height() - buttonHeight) / 2;
+
+		if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
+			healerRoom.healHero(hero);
+			return true;
+		}
+		return false;
+	}
 
 	private void checkDragThreshold(int mouseX, int mouseY) {
 		int deltaX = Math.abs(mouseX - pointerDownX);
@@ -547,42 +572,39 @@ private boolean handleHealerClick(int mouseX, int mouseY) {
 	}
 
 	private boolean handleRoomNavigation(int mouseX, int mouseY) {
-		// ☠️ BLOQUER LA NAVIGATION SI MALÉDICTION NON PLACÉE
-		if (placingMalediction || currentMalediction != null) {
-			System.out.println("☠️ Place la malédiction avant de quitter le combat !");
-			return true; // on consomme le clic
-		}
+    if (inCombat) {
+        int room = roomAt(mouseX, mouseY);
+        if (room != -1 && room != floor.playerIndex()) {
+            System.out.println("⚔️ IMPOSSIBLE DE FUIR ! Terminez le combat d'abord !");
+        }
+        return false;
+    }
+    
+    if (isFollowingPath || isPlayerMoving) {
+        return false;
+    }
 
-		if (inCombat || (!inTreasure && !inMerchant)) {
-			int room = roomAt(mouseX, mouseY);
-			if (room != -1 && !inCombat) {
-				transitionFromMerchant = false;
-				handleRoomClick(room);
-				lastChangeRoom = System.currentTimeMillis();
-				return true;
-			}
-		}
+    int room = roomAt(mouseX, mouseY);
 
-		if ((inTreasure || inMerchant) && roomAt(mouseX, mouseY) != -1) {
-			int room = roomAt(mouseX, mouseY);
-			if (inCorridor) {
-			}
-			if (inMerchant) {
-				leaveMerchantRoom();
-				transitionFromMerchant = true;
-			} else {
-				transitionFromMerchant = false;
-			}
+    if (room != -1 && room != floor.playerIndex()) {
+        // ✅ Toujours utiliser findClearPath (même pour adjacents)
+        List<Integer> path = floor.findClearPath(floor.playerIndex(), room);
 
-			if (inTreasure)
-				leaveTreasureRoom();
+        if (path != null && !path.isEmpty()) {
+            System.out.println("🗺️ Chemin trouvé : " + path);
+            this.currentPath = new ArrayList<>(path); // ✅ ArrayList mutable
+            this.pathIndex = 0;
+            this.isFollowingPath = true;
+            moveToNextRoomInPath();
+            return true;
+        } else {
+            System.out.println("❌ Aucun chemin disponible !");
+        }
+    }
+    return false;
+}
 
-			lastChangeRoom = System.currentTimeMillis();
-			handleRoomClick(room);
-			return true;
-		}
-		return false;
-	}
+
 
 	private void handlePointerMove(int mouseX, int mouseY) {
 
@@ -708,15 +730,23 @@ private boolean handleHealerClick(int mouseX, int mouseY) {
 	}
 
 	private void handleSimpleClick() {
-		if (inMerchant) {
-			handleMerchantClick(pointerDownX, pointerDownY);
-		} else if (inCombat && !dragFromTreasure) {
-			handleCombatClick();
-		} else if (!inCombat && !dragFromTreasure) {
-			handleSelectionClick();
-		}
-		resetDragState();
-	}
+    if (inCombat) {                       
+        handleCombatClick();
+
+    } else if (inTreasure) {
+        // ✅ QUITTER LE TRÉSOR ICI
+        leaveTreasureRoom();
+
+    } else if (inMerchant) {
+        handleMerchantClick(pointerDownX, pointerDownY);
+
+    } else {
+        handleSelectionClick();
+    }
+    resetDragState();
+}
+
+
 
 	private void handleCombatClick() {
 		int[] coords = backpackSlotCoordsAt(pointerDownX, pointerDownY);
@@ -815,77 +845,85 @@ private boolean handleHealerClick(int mouseX, int mouseY) {
 	}
 
 	// ===================== ROOM HANDLING =====================
-	private void handleRoomClick(int clickedRoom) {
-		if (!floor.adjacentRooms().contains(clickedRoom))
-			return;
 
-		// Démarrer l'animation
-		playerStartIndex = floor.playerIndex();
-		playerTargetIndex = clickedRoom;
-		isPlayerMoving = true;
-		moveStartTime = System.currentTimeMillis();
-
-		floor.setPlayerIndex(clickedRoom);
-		floatingItems.clear();
-
-		processRoomType(clickedRoom);
-		floor.markVisited(clickedRoom);
-	}
-
-	public void updatePlayerAnimation() {
-		if (isPlayerMoving) {
-			long elapsed = System.currentTimeMillis() - moveStartTime;
-			if (elapsed >= MOVE_DURATION) {
-				isPlayerMoving = false;
-			}
-		}
-	}
 
 	private void processRoomType(int room) {
-    if (floor.playerOnEnemyRoom() && !floor.isVisited(room)) {
-        startCombat();
-    } else if (floor.playerOnTreasureRoom() && !floor.isVisited(room)) {
-        treasureChest.generateTreasure();
-        setTreasureState();
-    } else if (floor.playerOnMerchantRoom()) {
-        merchant.generateStock();
-        setMerchantState();
-    } else if (floor.playerOnHealerRoom()) {  // ✅ AJOUT
-        setHealerState();
-    } else if (floor.playerOnCorridor()) {
-        setCorridorState();
-    } else if (floor.playeOnExitRom()) {
-        goToNextFloor();
-    } else {
-        setEmptyRoomState();
-    }
-}
+		System.out.println("📍 Analyse de la salle : " + room + " | Type : " + floor.rooms().get(room).type());
+
+		// ✅ Vérifier le type de la salle passée en paramètre, pas playerIndex()
+		Type roomType = floor.rooms().get(room).type();
+		this.lastChangeRoom = System.currentTimeMillis();
+
+		switch (roomType) {
+		case ENEMY -> {
+	    if (clearedEnemyRooms.contains(room)) {
+	        // ennemis déjà vaincus → corridor
+	        setCorridorState();
+	    } else {
+	        startCombat();
+	    }
+	}
+
+		case TREASURE -> {
+	    if (clearedTreasureRooms.contains(room)) {
+	        setCorridorState();
+	    } else {
+	        TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
+	            TreasureChest newChest = new TreasureChest(3, 5);
+	            newChest.generateTreasure(); // génère une seule fois
+	            return newChest;
+	        });
+	        this.treasureChest = chest; // mettre à jour la référence pour l'affichage
+	        setTreasureState();
+	    }
+	}
+
+
+		case MERCHANT -> {
+			merchant.generateStock();
+			setMerchantState();
+		}
+		case HEALER -> {
+			setHealerState();
+		}
+		case EXIT -> {
+			goToNextFloor();
+		}
+		default -> {
+			setEmptyRoomState();
+		}
+		}
+	}
 
 	private void leaveTreasureRoom() {
-		treasureChest.getGrid().clear();
-		floatingItems.clear();
-		if (floor.playerOnCorridor()) {
-			setCorridorState();
-		} else {
-			setEmptyRoomState();
-		}
-	}
+    int room = floor.playerIndex();
+    clearedTreasureRooms.add(room);
 
-	private void leaveMerchantRoom() {
-		merchant.getStock().clear();
-		floatingItems.clear();
-		if (floor.playerOnCorridor()) {
-			setCorridorState();
-		} else {
-			setEmptyRoomState();
-		}
-	}
+    TreasureChest chest = treasureChests.get(room);
+    if (chest != null) {
+        chest.getGrid().clear();
+    }
+    floatingItems.clear();
+
+    setCorridorState();
+}
+
+
+
+
 
 	// ===================== COMBAT =====================
 	private void startCombat() {
-		fight.initEnemies();
-		inCombat = true;
-	}
+    fight.initEnemies();
+    inCombat = true;
+
+    // ✅ RESET DES AUTRES ÉTATS
+    inMerchant = false;
+    inTreasure = false;
+    inHealer = false;
+    inCorridor = false;
+}
+
 
 	private void checkCombatEnd() {
 		if (fight == null || fight.isRunning())
@@ -905,6 +943,7 @@ private boolean handleHealerClick(int mouseX, int mouseY) {
 		}
 
 		inCombat = false;
+		clearedEnemyRooms.add(floor.playerIndex());
 		int defeated = fight.getDefeatedEnemiesCount();
 		expansionSystem.addPendingUnlocks(defeated);
 
@@ -920,50 +959,50 @@ private boolean handleHealerClick(int mouseX, int mouseY) {
 
 	// ===================== STATE MANAGEMENT =====================
 	private void setHealerState() {
-    inHealer = true;
-    inCorridor = false;
-    inTreasure = false;
-    inCombat = false;
-    inMerchant = false;
-}
+		inHealer = true;
+		inCorridor = false;
+		inTreasure = false;
+		inCombat = false;
+		inMerchant = false;
+	}
 
 // Modifier setCorridorState :
-private void setCorridorState() {
-    inCorridor = true;
-    inMerchant = false;
-    inTreasure = false;
-    inCombat = false;
-    inHealer = false;  // ✅ AJOUT
-}
+	private void setCorridorState() {
+		inCorridor = true;
+		inMerchant = false;
+		inTreasure = false;
+		inCombat = false;
+		inHealer = false; // ✅ AJOUT
+	}
 
 // Modifier setTreasureState :
-private void setTreasureState() {
-    inTreasure = true;
-    inCorridor = false;
-    inCombat = false;
-    inMerchant = false;
-    inHealer = false;  // ✅ AJOUT
-    setTreasureDisplayCoords();
-}
+	private void setTreasureState() {
+		inTreasure = true;
+		inCorridor = false;
+		inCombat = false;
+		inMerchant = false;
+		inHealer = false; // ✅ AJOUT
+		setTreasureDisplayCoords();
+	}
 
 // Modifier setMerchantState :
-private void setMerchantState() {
-    inMerchant = true;
-    inCorridor = false;
-    inTreasure = false;
-    inCombat = false;
-    inHealer = false;  // ✅ AJOUT
-    setMerchantDisplayCoords();
-}
+	private void setMerchantState() {
+		inMerchant = true;
+		inCorridor = false;
+		inTreasure = false;
+		inCombat = false;
+		inHealer = false; // ✅ AJOUT
+		setMerchantDisplayCoords();
+	}
 
 // Modifier setEmptyRoomState :
-private void setEmptyRoomState() {
-    inTreasure = false;
-    inCorridor = false;
-    inCombat = false;
-    inMerchant = false;
-    inHealer = false;  // ✅ AJOUT
-}
+	private void setEmptyRoomState() {
+		inTreasure = false;
+		inCorridor = false;
+		inCombat = false;
+		inMerchant = false;
+		inHealer = false; // ✅ AJOUT
+	}
 
 	// ===================== MERCHANT =====================
 	private void handleMerchantClick(int mouseX, int mouseY) {
@@ -1155,4 +1194,89 @@ private void setEmptyRoomState() {
 			}
 		}
 	}
+
+	public void updatePlayerAnimation() {
+    if (isPlayerMoving) {
+        long elapsed = System.currentTimeMillis() - moveStartTime;
+        
+        if (elapsed >= MOVE_DURATION) {
+            System.out.println("✅ [update] Animation terminée !");
+            completeMovement(); // ✅ Méthode commune
+        }
+    }
+}
+
+
+
+// ✅ Nouvelle méthode pour éviter la duplication
+	private void completeMovement() {
+    System.out.println("✅ Animation de case terminée !");
+    isPlayerMoving = false;
+    
+    // Si on est encore dans un chemin (trajet de plusieurs cases)
+    if (isFollowingPath && pathIndex < currentPath.size() - 1) {
+        moveToNextRoomInPath();
+    } 
+    // Si on vient d'arriver à la destination FINALE du chemin
+    else if (isFollowingPath) {
+        isFollowingPath = false;
+        int finalRoom = currentPath.get(currentPath.size() - 1);
+        
+        // --- AJOUT POUR DÉCLENCHER L'ANIMATION DANS GAMEVIEW ---
+        this.lastChangeRoom = System.currentTimeMillis(); 
+        // On vérifie si on vient d'une salle marchand pour l'anim spéciale
+        this.transitionFromMerchant = (floor.rooms().get(floor.playerIndex()).type() == Type.MERCHANT);
+        // -------------------------------------------------------
+
+        floor.setPlayerIndex(finalRoom);
+        floor.markVisited(finalRoom);
+        processRoomType(finalRoom);
+    }
+}
+
+
+// Vérifier que moveToNextRoomInPath est bien comme ceci :
+	private void moveToNextRoomInPath() {
+		System.out.println("🚶 moveToNextRoomInPath - pathIndex: " + pathIndex + " / " + (currentPath.size() - 1));
+
+		if (!isFollowingPath || pathIndex >= currentPath.size() - 1) {
+			finishPathMovement();
+			return;
+		}
+
+		pathIndex++;
+		int nextRoom = currentPath.get(pathIndex);
+		System.out.println("➡️ Déplacement vers case " + nextRoom);
+
+		playerStartIndex = floor.playerIndex();
+		playerTargetIndex = nextRoom;
+		isPlayerMoving = true;
+		moveStartTime = System.currentTimeMillis();
+
+		floor.setPlayerIndex(nextRoom);
+		floor.markVisited(nextRoom);
+	}
+
+// Vérifier que finishPathMovement est bien comme ceci :
+	private void finishPathMovement() {
+    System.out.println("🎯 Arrivée à destination !");
+
+    this.isFollowingPath = false;
+    this.isPlayerMoving = false;
+
+    // ✅ RÉCUPÉRER la salle de départ pour savoir si on vient d'un marchand
+    int startRoom = floor.playerIndex();
+    this.transitionFromMerchant = (floor.rooms().get(startRoom).type() == Type.MERCHANT);
+
+    // ✅ RÉCUPÉRER la destination finale
+    int finalRoom = currentPath.get(currentPath.size() - 1);
+
+    // ✅ DÉCLENCHER LE CHRONO POUR L'ANIMATION
+    this.lastChangeRoom = System.currentTimeMillis(); 
+
+    // ✅ Mettre à jour la position et traiter le type de salle
+    floor.setPlayerIndex(finalRoom);
+    floor.markVisited(finalRoom);
+    processRoomType(finalRoom);
+}
 }

@@ -392,11 +392,41 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
     
     // Dessiner toutes les cases
     for (int i = 0; i < floor.rooms().size(); i++) {
-        drawRoomCell(g, i, floor.rooms().get(i), adjacents.contains(i), false);
+        boolean isAdjacent = adjacents.contains(i);
+        boolean isAccessible = floor.isRoomAccessible(i);
+        
+        drawRoomCell(g, i, floor.rooms().get(i), isAdjacent, isAccessible);
     }
     
     // Dessiner le joueur avec animation
     drawAnimatedPlayer(g, controller);
+    
+    // Dessiner le chemin si en cours
+    if (controller.isFollowingPath()) {
+        drawPath(g, controller.getCurrentPath(), controller.getPathIndex());
+    }
+}
+	
+	
+	private void drawPath(Graphics2D g, List<Integer> path, int currentIndex) {
+    if (path == null || path.isEmpty()) return;
+    
+    g.setColor(new Color(255, 255, 0, 100)); // Jaune transparent
+    g.setStroke(new java.awt.BasicStroke(4));
+    
+    for (int i = currentIndex; i < path.size() - 1; i++) {
+        int[] from = getCellPosition(path.get(i));
+        int[] to = getCellPosition(path.get(i + 1));
+        
+        int fromX = from[0] + GRID_CELL_SIZE / 2;
+        int fromY = from[1] + GRID_CELL_SIZE / 2;
+        int toX = to[0] + GRID_CELL_SIZE / 2;
+        int toY = to[1] + GRID_CELL_SIZE / 2;
+        
+        g.drawLine(fromX, fromY, toX, toY);
+    }
+    
+    g.setStroke(new java.awt.BasicStroke(1));
 }
 	
 	
@@ -447,20 +477,26 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 }
 
 
-	private void drawRoomCell(Graphics2D g, int index, Room room, boolean isAdjacent, boolean skipPlayer) {
+	private void drawRoomCell(Graphics2D g, int index, Room room, boolean isAdjacent, boolean isAccessible) {
     int row = index / GRID_COLS;
     int col = index % GRID_COLS;
     int x = GRID_PADDING + col * (GRID_CELL_SIZE + GRID_PADDING);
     int y = GRID_PADDING + row * (GRID_CELL_SIZE + GRID_PADDING);
 
-    Color color = isAdjacent ? Color.GREEN : getRoomColor(room);
+    Color color;
+    if (isAdjacent) {
+        color = Color.GREEN;
+    } else if (isAccessible && index != floor.playerIndex()) {
+        color = new Color(100, 255, 100); // Vert clair pour accessible
+    } else {
+        color = getRoomColor(room);
+    }
+    
     g.setColor(color);
     g.fill(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
 
     g.setColor(Color.BLACK);
     g.draw(new Rectangle2D.Float(x, y, GRID_CELL_SIZE, GRID_CELL_SIZE));
-
-    // Ne plus dessiner le joueur ici - il sera dessiné séparément avec l'animation
 
     g.setColor(Color.BLACK);
     g.drawString(room.name(), x + 8, y + GRID_CELL_SIZE / 2);

@@ -33,11 +33,11 @@ public class GameRun {
 
 			BackPack backpack = new BackPack(5, 7);
 
-			// Déblocage des cellules nécessaires pour la forme S (3x2)
-			// int[][] sCells = { {1,1}, {2,1}, {0,2}, {1,2}, {2,2} };
-			// backpack.unlockCells(sCells);
+			 //Déblocage des cellules nécessaires pour la forme S (3x2)
+//			 int[][] sCells = { {1,1}, {2,1}, {0,2}, {1,2}, {2,2} };
+//			 backpack.unlockCells(sCells);
 
-			// Placement
+//			// Placement
 
 			for (int y = 0; y < 7; y++) {
 				for (int x = 0; x < 5; x++) {
@@ -80,45 +80,50 @@ public class GameRun {
 			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero);
 
 			while (true) {
-				int pollTimeout = controller.isDragging() ? 0 : 10;
-				controller.update(pollTimeout);
+		    // ✅ Timeout dynamique selon l'état du jeu
+		    boolean needsFastUpdate = controller.isDragging() 
+		                           || controller.isPlayerMoving() 
+		                           || controller.isFollowingPath();
+		    int pollTimeout = needsFastUpdate ? 0 : 10;
+		    
+		    controller.update(pollTimeout);
 
-				List<Integer> selectedSlots = controller.getSelectedSlots();
-				Item[][] treasureGrid = controller.getTreasureGrid();
-				Item[][] getMerchantGrid = controller.getMerchantGrid();
-				boolean isDragging = controller.isDragging();
-				Item draggedItem = controller.getDraggedItem();
-				int dragOffsetX = controller.getDragOffsetX();
-				int dragOffsetY = controller.getDragOffsetY();
+		    List<Integer> selectedSlots = controller.getSelectedSlots();
+		    Item[][] treasureGrid = controller.getTreasureGrid();
+		    Item[][] getMerchantGrid = controller.getMerchantGrid();
+		    boolean isDragging = controller.isDragging();
+		    Item draggedItem = controller.getDraggedItem();
+		    int dragOffsetX = controller.getDragOffsetX();
+		    int dragOffsetY = controller.getDragOffsetY();
 
-				if (controller.isInExpansionMode()) {
-					view.expansionDisplay(controller, selectedSlots, hero, controller.getExpansionSystem());
-				} else if (controller.isInCombat()) {
-					view.combatDisplay(controller, fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging,
-							draggedItem, dragOffsetX, dragOffsetY, controller.getLastAttackTime(), controller.getFloatingItems());
-				} else if (controller.isInCorridor()) {
-					view.corridorDisplay(controller, selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
-							controller.getFloatingItems(), controller.getLastChangeRoom(), controller.isTransitionFromMerchant());
-				} else if (controller.isInTreasure()) {
-					view.treasureDisplay(controller, selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX,
-							dragOffsetY, controller.getFloatingItems());
-				} else if (controller.isInMerchant()) {
-					view.merchantDisplay(controller, selectedSlots, getMerchantGrid, hero, isDragging, draggedItem, dragOffsetX,
-							dragOffsetY, controller.getFloatingItems());
-				} else if (controller.isInHealer()) {
-					view.healerDisplay(controller, controller.getSelectedSlots(), controller.getHero(),
-							controller.getHealerRoom(), controller.isDragging(), controller.getDraggedItem(),
-							controller.getDragOffsetX(), controller.getDragOffsetY(), controller.getFloatingItems());
-				} else {
-					view.emptyRoomDisplay(controller, selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
-							controller.getFloatingItems());
-				}
+		    if (controller.isInExpansionMode()) {
+		        view.expansionDisplay(controller, selectedSlots, hero, controller.getExpansionSystem());
+		    } else if (controller.isInCombat()) {
+		        view.combatDisplay(controller, fight.nbEnemy(), status, selectedSlots, hero, fight.getEnemy(), isDragging,
+		                draggedItem, dragOffsetX, dragOffsetY, controller.getLastAttackTime(), controller.getFloatingItems());
+		    } else if (controller.isInCorridor()) {
+		        view.corridorDisplay(controller, selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+		                controller.getFloatingItems(), controller.getLastChangeRoom(), controller.isTransitionFromMerchant());
+		    } else if (controller.isInTreasure()) {
+		        view.treasureDisplay(controller, selectedSlots, treasureGrid, hero, isDragging, draggedItem, dragOffsetX,
+		                dragOffsetY, controller.getFloatingItems());
+		    } else if (controller.isInMerchant()) {
+		        view.merchantDisplay(controller, selectedSlots, getMerchantGrid, hero, isDragging, draggedItem, dragOffsetX,
+		                dragOffsetY, controller.getFloatingItems());
+		    } else if (controller.isInHealer()) {
+		        view.healerDisplay(controller, controller.getSelectedSlots(), controller.getHero(),
+		                controller.getHealerRoom(), controller.isDragging(), controller.getDraggedItem(),
+		                controller.getDragOffsetX(), controller.getDragOffsetY(), controller.getFloatingItems());
+		    } else {
+		        view.emptyRoomDisplay(controller, selectedSlots, hero, isDragging, draggedItem, dragOffsetX, dragOffsetY,
+		                controller.getFloatingItems());
+		    }
 
-				if (hero.hp() <= 0) {
-					System.out.println("Votre personnage est MORT !");
-					System.exit(0);
-				}
-			}
+		    if (hero.hp() <= 0) {
+		        System.out.println("Votre personnage est MORT !");
+		        System.exit(0);
+		    }
+		}
 		});
 	}
 }

@@ -1,118 +1,285 @@
 package fr.uge.implement;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.Set;
 
 import fr.uge.implement.Room.Type;
 
 public class MapDungeon {
-  private final ArrayList<Room> rooms;
-  private int playerIndex = 0;
-  private final ArrayList<Integer> visited = new ArrayList<>();
+	private final ArrayList<Room> rooms;
+	private int playerIndex = 0;
+	private final ArrayList<Integer> visited = new ArrayList<>();
 
-  public MapDungeon() {
-    this.rooms = new ArrayList<>();
-  }
+	public MapDungeon() {
+		this.rooms = new ArrayList<>();
+	}
 
-  public void add(Room ele) {
-    Objects.requireNonNull(ele);
-    rooms.add(ele);
-  }
+	public void add(Room ele) {
+		Objects.requireNonNull(ele);
+		rooms.add(ele);
+	}
 
-  public List<Room> rooms() {
-    return rooms;
-  }
+	public List<Room> rooms() {
+		return rooms;
+	}
 
-  public int playerIndex() {
-    return playerIndex;
-  }
+	public int playerIndex() {
+		return playerIndex;
+	}
 
-  public void movePlayerTo(int newIndex) {
-    if (newIndex >= 0 && newIndex < rooms.size()) {
-      playerIndex = newIndex;
+	public void movePlayerTo(int newIndex) {
+		if (newIndex >= 0 && newIndex < rooms.size()) {
+			playerIndex = newIndex;
+		}
+	}
+
+	public List<Integer> adjacentRooms() {
+		int cols = 4;
+		List<Integer> adj = new ArrayList<>();
+
+		int maxIndex = rooms.size() - 1;
+		int row = playerIndex / cols;
+		int col = playerIndex % cols;
+		int maxRow = maxIndex / cols;
+
+		// left
+		if (col > 0)
+			adj.add(playerIndex - 1);
+		// right
+		if (col < cols - 1 && playerIndex + 1 <= maxIndex)
+			adj.add(playerIndex + 1);
+		// up
+		if (row > 0)
+			adj.add(playerIndex - cols);
+		// down
+		if (row < maxRow && playerIndex + cols <= maxIndex)
+			adj.add(playerIndex + cols);
+
+		return adj;
+	}
+
+	public void show() {
+		System.out.println("=== Floor ===");
+		for (Room r : rooms) {
+			System.out.println(" - " + r.name());
+		}
+		System.out.println();
+	}
+
+	public void setPlayerIndex(int index) {
+		this.playerIndex = index;
+	}
+
+	public boolean playerOnEnemyRoom() {
+		return rooms.get(playerIndex).type() == Type.ENEMY;
+	}
+
+	public boolean playerOnTreasureRoom() {
+		return rooms.get(playerIndex).type() == Type.TREASURE;
+	}
+
+	public boolean playerOnCorridor() {
+		return rooms.get(playerIndex).type() == Type.CORRIDOR;
+	}
+
+	public boolean playeOnExitRom() {
+		return rooms.get(playerIndex).type() == Type.EXIT;
+
+	}
+
+	public boolean playerOnMerchantRoom() {
+		return rooms().get(playerIndex()).type() == Room.Type.MERCHANT;
+
+	}
+
+	public boolean playerOnHealerRoom() {
+		return rooms.get(playerIndex).type() == Type.HEALER;
+	}
+
+	public boolean isVisited(int index) {
+		return visited.contains(index);
+	}
+
+	public void markVisited(int index) {
+		if (!visited.contains(index)) {
+			visited.add(index);
+		}
+	}
+
+	public List<Integer> visitedRooms() {
+		return List.copyOf(visited);
+	}
+
+	public void clearVisited() {
+		visited.clear();
+	}
+
+	public List<Integer> findPath(int start, int end) {
+		if (start == end) {
+			return List.of(start);
+		}
+
+		Queue<Integer> queue = new LinkedList<>();
+		Map<Integer, Integer> parent = new HashMap<>();
+		Set<Integer> visited = new HashSet<>();
+
+		queue.add(start);
+		visited.add(start);
+		parent.put(start, null);
+
+		while (!queue.isEmpty()) {
+			int current = queue.poll();
+
+			if (current == end) {
+				return reconstructPath(parent, start, end);
+			}
+
+			for (int neighbor : getAdjacentRooms(current)) {
+				if (!visited.contains(neighbor)) {
+					visited.add(neighbor);
+					parent.put(neighbor, current);
+					queue.add(neighbor);
+				}
+			}
+		}
+
+		return null; // Aucun chemin trouvé
+	}
+
+	/**
+	 * Reconstruit le chemin depuis la map des parents
+	 */
+	private List<Integer> reconstructPath(Map<Integer, Integer> parent, int start, int end) {
+		List<Integer> path = new ArrayList<>();
+		Integer current = end;
+
+		while (current != null) {
+			path.add(current);
+			current = parent.get(current);
+		}
+
+		Collections.reverse(path);
+		return path;
+	}
+
+	/**
+	 * Retourne les salles adjacentes pour n'importe quelle position
+	 */
+	private List<Integer> getAdjacentRooms(int index) {
+		int cols = 4;
+		List<Integer> adj = new ArrayList<>();
+		int maxIndex = rooms.size() - 1;
+		int row = index / cols;
+		int col = index % cols;
+		int maxRow = maxIndex / cols;
+
+		if (col > 0)
+			adj.add(index - 1);
+		if (col < cols - 1 && index + 1 <= maxIndex)
+			adj.add(index + 1);
+		if (row > 0)
+			adj.add(index - cols);
+		if (row < maxRow && index + cols <= maxIndex)
+			adj.add(index + cols);
+
+		return adj;
+	}
+
+	/**
+	 * Vérifie si une salle est cliquable (adjacente OU accessible via corridors)
+	 */
+	public boolean isRoomAccessible(int roomIndex) {
+		// Si c'est adjacent, toujours accessible
+		if (adjacentRooms().contains(roomIndex)) {
+			return true;
+		}
+
+		// Sinon, vérifier s'il existe un chemin
+		List<Integer> path = findPath(playerIndex, roomIndex);
+		return path != null && !path.isEmpty();
+	}
+
+	public boolean isPathClear(List<Integer> path) {
+		if (path == null || path.isEmpty()) {
+			return false;
+		}
+
+		// On ne vérifie pas la première case (position actuelle) ni la dernière
+		// (destination)
+		for (int i = 1; i < path.size() - 1; i++) {
+			int roomIndex = path.get(i);
+			Room room = rooms.get(roomIndex);
+
+			// ✅ Si c'est un corridor, toujours OK
+			if (room.type() == Type.CORRIDOR) {
+				continue;
+			}
+
+			// ⛔ Si c'est une autre salle ET qu'elle n'a pas été visitée, chemin bloqué
+			if (!isVisited(roomIndex)) {
+				System.out.println("⛔ Chemin bloqué par la salle " + roomIndex + " (" + room.type() + ")");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Trouve un chemin praticable vers une destination
+	 */
+	public List<Integer> findClearPath(int start, int end) {
+    if (start == end) {
+        return List.of(start);
     }
-  }
 
-  public List<Integer> adjacentRooms() {
-    int cols = 4;
-    List<Integer> adj = new ArrayList<>();
+    Queue<Integer> queue = new LinkedList<>();
+    Map<Integer, Integer> parent = new HashMap<>();
+    Set<Integer> visited = new HashSet<>();
 
-    int maxIndex = rooms.size() - 1;
-    int row = playerIndex / cols;
-    int col = playerIndex % cols;
-    int maxRow = maxIndex / cols;
+    queue.add(start);
+    visited.add(start);
+    parent.put(start, null);
 
-    // left
-    if (col > 0)
-      adj.add(playerIndex - 1);
-    // right
-    if (col < cols - 1 && playerIndex + 1 <= maxIndex)
-      adj.add(playerIndex + 1);
-    // up
-    if (row > 0)
-      adj.add(playerIndex - cols);
-    // down
-    if (row < maxRow && playerIndex + cols <= maxIndex)
-      adj.add(playerIndex + cols);
+    while (!queue.isEmpty()) {
+        int current = queue.poll();
 
-    return adj;
-  }
+        if (current == end) {
+            return reconstructPath(parent, start, end);
+        }
 
-  public void show() {
-    System.out.println("=== Floor ===");
-    for (Room r : rooms) {
-      System.out.println(" - " + r.name());
+        for (int neighbor : getAdjacentRooms(current)) {
+            // CONDITION MODIFIÉE : On ne va vers le voisin que s'il n'est pas visité par l'algo 
+            // ET s'il est "praticable" (soit c'est la destination, soit c'est un corridor/salle visitée)
+            if (!visited.contains(neighbor) && canPassThrough(neighbor, end)) {
+                visited.add(neighbor);
+                parent.put(neighbor, current);
+                queue.add(neighbor);
+            }
+        }
     }
-    System.out.println();
-  }
-
-  public void setPlayerIndex(int index) {
-    this.playerIndex = index;
-  }
-
-  public boolean playerOnEnemyRoom() {
-    return rooms.get(playerIndex).type() == Type.ENEMY;
-  }
-
-  public boolean playerOnTreasureRoom() {
-    return rooms.get(playerIndex).type() == Type.TREASURE;
-  }
-
-  public boolean playerOnCorridor() {
-    return rooms.get(playerIndex).type() == Type.CORRIDOR;
-  }
-  
-  public boolean playeOnExitRom() {
-  	return rooms.get(playerIndex).type() == Type.EXIT;
-  	
-  }
-  public boolean playerOnMerchantRoom() {
-    return rooms().get(playerIndex()).type() == Room.Type.MERCHANT;
- 
-}
-  
-  public boolean playerOnHealerRoom() {
-    return rooms.get(playerIndex).type() == Type.HEALER;
+    return null; 
 }
 
-  public boolean isVisited(int index) {
-    return visited.contains(index);
-  }
-
-  public void markVisited(int index) {
-    if (!visited.contains(index)) {
-      visited.add(index);
-    }
-  }
-
-  public List<Integer> visitedRooms() {
-    return List.copyOf(visited);
-  }
-  
-  public void clearVisited() {
-    visited.clear();
+/**
+ * Règle de déplacement : on peut passer si c'est la cible, 
+ * un corridor, ou une salle déjà découverte.
+ */
+private boolean canPassThrough(int roomIndex, int destinationIndex) {
+    // Si c'est la destination finale, on doit pouvoir y entrer
+    if (roomIndex == destinationIndex) return true;
+    
+    Room room = rooms.get(roomIndex);
+    // On passe si c'est un corridor OU si c'est une salle déjà visitée par le joueur
+    return room.type() == Type.CORRIDOR || isVisited(roomIndex);
 }
-
 
 }
