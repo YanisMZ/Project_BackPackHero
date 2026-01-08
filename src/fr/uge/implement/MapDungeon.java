@@ -16,6 +16,7 @@ import fr.uge.implement.Room.Type;
 public class MapDungeon {
 	private final ArrayList<Room> rooms;
 	private int playerIndex = 0;
+	private int previousPlayerIndex = 0;
 	private final ArrayList<Integer> visited = new ArrayList<>();
 
 	public MapDungeon() {
@@ -34,9 +35,19 @@ public class MapDungeon {
 	public int playerIndex() {
 		return playerIndex;
 	}
+	
+	public int previousPlayerIndex() {
+		return previousPlayerIndex;
+	}
 
 	public void movePlayerTo(int newIndex) {
+		System.err.println("set move to");
+		StackTraceElement[] elem = Thread.currentThread().getStackTrace();
+		for (var i: elem) {
+			System.err.println("\tat " + i.getClassName() + "." + i.getMethodName());
+		}
 		if (newIndex >= 0 && newIndex < rooms.size()) {
+			previousPlayerIndex = playerIndex;
 			playerIndex = newIndex;
 		}
 	}
@@ -72,10 +83,6 @@ public class MapDungeon {
 			System.out.println(" - " + r.name());
 		}
 		System.out.println();
-	}
-
-	public void setPlayerIndex(int index) {
-		this.playerIndex = index;
 	}
 
 	public boolean playerOnEnemyRoom() {
