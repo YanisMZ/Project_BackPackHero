@@ -77,7 +77,7 @@ public class GameController {
 	private int playerStartIndex = 0;
 	private int playerTargetIndex = 0;
 	private long moveStartTime = 0;
-	private static final long MOVE_DURATION = 3000;
+	private static final long MOVE_DURATION = 0;
 
 	// Combat suspendu
 	private boolean combatPausedByMalediction = false;

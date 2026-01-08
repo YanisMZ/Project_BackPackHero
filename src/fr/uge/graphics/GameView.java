@@ -955,7 +955,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int y = fItem.position.y;
 
 		if (item.isMalediction()) {
-			// Dessiner uniquement les cellules de la forme, sans fond
 			drawMaledictionShape(g, item, x, y, 0, 0, true);
 		} else {
 			int w = item.width() * (CELL_SIZE + PADDING) - PADDING;

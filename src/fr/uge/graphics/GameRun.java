@@ -80,7 +80,6 @@ public class GameRun {
 			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero);
 
 			while (true) {
-		    // ✅ Timeout dynamique selon l'état du jeu
 		    boolean needsFastUpdate = controller.isDragging() 
 		                           || controller.isPlayerMoving() 
 		                           || controller.isFollowingPath();
