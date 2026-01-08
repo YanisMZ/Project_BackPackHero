@@ -264,10 +264,9 @@ public class GameController {
 		return 1 - (float) Math.pow(1 - t, 3);
 	}
 
-
 	// ===================== MAIN LOOP =====================
 	public void update(int pollTimeout) {
-		updatePlayerAnimation(); 
+		updatePlayerAnimation();
 
 		var event = context.pollOrWaitEvent(pollTimeout);
 		if (event == null)
@@ -295,7 +294,6 @@ public class GameController {
 		if (handleCombatEndTurn(ke))
 			return;
 
-		
 	}
 
 	private boolean handleRotation(KeyboardEvent ke) {
@@ -334,14 +332,13 @@ public class GameController {
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
 			// BLOQUER LA FIN DU TOUR SI MALÉDICTION NON PLACÉE
 			if (placingMalediction || currentMalediction != null) {
-			
-				return true; 
+
+				return true;
 			}
 
 			if (fight.isPlayerTurnActive()) {
 				fight.endPlayerTurn();
 
-				
 				for (Battle.EnemyAction action : fight.getEnemyActions()) {
 					if (action == Battle.EnemyAction.MALEDICTION) {
 						triggerMalediction();
@@ -393,7 +390,6 @@ public class GameController {
 			return;
 	}
 
-
 	private boolean handleHealerClick(int mouseX, int mouseY) {
 		if (!inHealer)
 			return false;
@@ -418,35 +414,30 @@ public class GameController {
 		if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
 			isDragging = true;
 
-		
 			if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
-					int penalty = 10;
-					hero.takeDamage(penalty);
-					System.out.println("Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-					System.out.println("HP restants : " + hero.hp() + "/" + hero.maxHp());
-				}
-			}
-
-		
-			if (dragFromTreasure) {
-				treasureChest.getGrid().removeItem(draggedItem);
-			} else if (!dragFromMerchant) {
-				backpack.remove(draggedItem);
-			}
-
-			
-
-			if (draggedItem != null && draggedItem.isMalediction()) {
-				if (draggedItem == placedMalediction)
-					placedMalediction = null;
-				if (draggedItem == currentMalediction)
-					currentMalediction = null;
-				floatingItems.removeIf(f -> f.item == draggedItem);
-				placingMalediction = false;
-				combatPausedByMalediction = false;
+				int penalty = 10;
+				hero.takeDamage(penalty);
+				System.out.println("Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+				System.out.println("HP restants : " + hero.hp() + "/" + hero.maxHp());
 			}
 		}
-	
+
+		if (dragFromTreasure) {
+			treasureChest.getGrid().removeItem(draggedItem);
+		} else if (!dragFromMerchant) {
+			backpack.remove(draggedItem);
+		}
+
+		if (draggedItem != null && draggedItem.isMalediction()) {
+			if (draggedItem == placedMalediction)
+				placedMalediction = null;
+			if (draggedItem == currentMalediction)
+				currentMalediction = null;
+			floatingItems.removeIf(f -> f.item == draggedItem);
+			placingMalediction = false;
+			combatPausedByMalediction = false;
+		}
+	}
 
 	private boolean handleExpansionClick(int mouseX, int mouseY) {
 		if (!inExpansionMode)
@@ -468,7 +459,7 @@ public class GameController {
 	private boolean handleFloatingItemClick(int mouseX, int mouseY) {
 		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
 		if (fItem != null) {
-		
+
 			if (fItem.item == currentMalediction && !placingMalediction) {
 				return true;
 			}
@@ -476,11 +467,10 @@ public class GameController {
 			draggedItem = fItem.item;
 			dragOffsetX = mouseX - fItem.position.x;
 			dragOffsetY = mouseY - fItem.position.y;
-			isDragging = false; 
+			isDragging = false;
 			dragMouseX = mouseX - dragOffsetX;
 			dragMouseY = mouseY - dragOffsetY;
 
-			
 			floatingItems.remove(fItem);
 
 			dragFromTreasure = false;
@@ -563,7 +553,7 @@ public class GameController {
 		if (item != null) {
 			if (item == placedMalediction && inCombat) {
 				System.out.println("Impossible de déplacer la malédiction pendant le combat !");
-				return true; 
+				return true;
 			}
 			startBackpackDrag(x, y, item, mouseX, mouseY);
 			return true;
@@ -614,10 +604,8 @@ public class GameController {
 		return true;
 	}
 
-
 	private void handlePointerMove(int mouseX, int mouseY) {
 
-		
 		if (draggedItem == currentMalediction && placingMalediction) {
 			dragMouseX = mouseX - dragOffsetX;
 			dragMouseY = mouseY - dragOffsetY;
@@ -625,7 +613,6 @@ public class GameController {
 			return;
 		}
 
-	
 		if (draggedItem != null && !isDragging) {
 			checkDragThreshold(mouseX, mouseY);
 		}
@@ -647,15 +634,12 @@ public class GameController {
 
 		currentMalediction = fight.chooseMalediction();
 
-		
 		Point spawn = new Point(300, 300);
 		floatingItems.add(new FloatingItem(currentMalediction, spawn));
 
-	
 		draggedItem = currentMalediction;
 		isDragging = true;
 
-		
 		dragOffsetX = currentMalediction.width() * (backpackCellSize + backpackPadding) / 2;
 		dragOffsetY = currentMalediction.height() * (backpackCellSize + backpackPadding) / 2;
 
@@ -681,7 +665,6 @@ public class GameController {
 		if (!blocking.isEmpty())
 			return false;
 
-	
 		backpack.forcePlace(currentMalediction, x, y);
 		floatingItems.removeIf(f -> f.item == currentMalediction);
 
@@ -696,7 +679,6 @@ public class GameController {
 
 	private void handlePointerUp(int mouseX, int mouseY) {
 
-		
 		if (draggedItem == currentMalediction && placingMalediction) {
 
 			boolean placed = handleMaledictionPlacement(mouseX, mouseY);
@@ -704,17 +686,15 @@ public class GameController {
 			if (placed) {
 				resetDragState();
 			} else {
-				
+
 				Point spawn = new Point(dragMouseX, dragMouseY);
 
-			
 				boolean alreadyFloating = floatingItems.stream().anyMatch(f -> f.item == currentMalediction);
 
 				if (!alreadyFloating) {
 					floatingItems.add(new FloatingItem(currentMalediction, spawn));
 				}
 
-				
 				draggedItem = null;
 				isDragging = false;
 				dragOffsetX = 0;
@@ -727,7 +707,6 @@ public class GameController {
 			return;
 		}
 
-		
 		if (isDragging && draggedItem != null) {
 			handleDragAndDrop(mouseX, mouseY);
 			return;
@@ -743,7 +722,7 @@ public class GameController {
 			handleCombatClick();
 
 		} else if (inTreasure) {
-		
+
 			leaveTreasureRoom();
 
 		} else if (inMerchant) {
@@ -769,7 +748,6 @@ public class GameController {
 		fight.useItem(item);
 		lastAttackTime = System.currentTimeMillis();
 
-	
 		for (Battle.EnemyAction action : fight.getEnemyActions()) {
 			if (action == Battle.EnemyAction.MALEDICTION) {
 				triggerMalediction();
@@ -854,18 +832,16 @@ public class GameController {
 	// ===================== ROOM HANDLING =====================
 
 	private void processRoomType(int room) {
-		
 
-	
 		Type roomType = floor.rooms().get(room).type();
 		this.lastChangeRoom = System.currentTimeMillis();
 
 		switch (roomType) {
 		case ENEMY -> {
 			if (clearedEnemyRooms.contains(room)) {
-			
+
 				setEmptyRoomState();
-				
+
 			} else {
 				startCombat();
 			}
@@ -877,10 +853,10 @@ public class GameController {
 			} else {
 				TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
 					TreasureChest newChest = new TreasureChest(3, 5);
-					newChest.generateTreasure(); 
+					newChest.generateTreasure();
 					return newChest;
 				});
-				this.treasureChest = chest; 
+				this.treasureChest = chest;
 				setTreasureState();
 			}
 		}
@@ -919,7 +895,6 @@ public class GameController {
 		fight.initEnemies();
 		inCombat = true;
 
-
 		inMerchant = false;
 		inTreasure = false;
 		inHealer = false;
@@ -935,7 +910,6 @@ public class GameController {
 			return;
 		}
 
-		
 		if (combatPausedByMalediction && placedMalediction != null) {
 			combatPausedByMalediction = false;
 			System.out.println("✅ Malédiction placée, le combat peut se terminer.");
@@ -965,42 +939,38 @@ public class GameController {
 		inMerchant = false;
 	}
 
-
 	private void setCorridorState() {
 		inCorridor = true;
 		inMerchant = false;
 		inTreasure = false;
 		inCombat = false;
-		inHealer = false; 
+		inHealer = false;
 	}
-
 
 	private void setTreasureState() {
 		inTreasure = true;
 		inCorridor = false;
 		inCombat = false;
 		inMerchant = false;
-		inHealer = false; 
+		inHealer = false;
 		setTreasureDisplayCoords();
 	}
-
 
 	private void setMerchantState() {
 		inMerchant = true;
 		inCorridor = false;
 		inTreasure = false;
 		inCombat = false;
-		inHealer = false; 
+		inHealer = false;
 		setMerchantDisplayCoords();
 	}
-
 
 	private void setEmptyRoomState() {
 		inTreasure = false;
 		inCorridor = false;
 		inCombat = false;
 		inMerchant = false;
-		inHealer = false; 
+		inHealer = false;
 	}
 
 	// ===================== MERCHANT =====================
@@ -1059,7 +1029,6 @@ public class GameController {
 
 						backpack.remove(item);
 
-						
 						if (item == placedMalediction)
 							placedMalediction = null;
 						if (item == currentMalediction)
@@ -1206,8 +1175,6 @@ public class GameController {
 		}
 	}
 
-
-
 	private void completeMovement() {
 		System.out.println(" Animation terminée");
 
@@ -1218,19 +1185,16 @@ public class GameController {
 			return;
 		}
 
-	
 		finishPathMovement();
 	}
 
-	
 	public Room.Type getCurrentRoomType() {
 		return floor.rooms().get(floor.playerIndex()).type();
 	}
-	
+
 	public Room.Type getPreviousRoomType() {
 		return floor.rooms().get(floor.previousPlayerIndex()).type();
 	}
-
 
 	private void moveToNextRoomInPath() {
 		if (!isFollowingPath || pathIndex >= currentPath.size() - 1) {
@@ -1243,32 +1207,52 @@ public class GameController {
 		playerStartIndex = animatedPlayerIndex;
 		playerTargetIndex = currentPath.get(pathIndex);
 
-	
 		animatedPlayerIndex = playerTargetIndex;
 
 		isPlayerMoving = true;
 		moveStartTime = System.currentTimeMillis();
 	}
 
-
 	private void finishPathMovement() {
-	
 
 		isFollowingPath = false;
 		isPlayerMoving = false;
 
 		int finalRoom = currentPath.get(currentPath.size() - 1);
 
-
 		lastChangeRoom = System.currentTimeMillis();
 		transitionFromMerchant = floor.rooms().get(floor.playerIndex()).type() == Room.Type.MERCHANT;
 		transitionFromCorridor = !transitionFromMerchant;
-
-		
+		cleanupFloatingItems();
 		floor.movePlayerTo(finalRoom);
 		floor.markVisited(finalRoom);
 
 		processRoomType(finalRoom);
 	}
+	
+	
+	private void cleanupFloatingItems() {
+   
+    if (draggedItem != null && !backpack.contains(draggedItem)) {
+        draggedItem = null;
+        isDragging = false;
+        resetDragState();
+    }
+    
+    if (currentMalediction != null && !backpack.contains(currentMalediction)) {
+        currentMalediction = null;
+        placingMalediction = false;
+        combatPausedByMalediction = false;
+    }
+     
+    if (placedMalediction != null && !backpack.contains(placedMalediction)) {
+        placedMalediction = null;
+    }
+
+    if (!floatingItems.isEmpty()) {
+        floatingItems.clear();
+     
+    }
+}
 
 }

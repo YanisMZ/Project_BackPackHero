@@ -228,6 +228,20 @@ public class BackPack {
           }
       }
   }
+    
+    
+    public boolean contains(Item item) {
+      if (item == null) return false;
+      
+      for (int y = 0; y < height; y++) {
+          for (int x = 0; x < width; x++) {
+              if (grid[y][x] == item) {
+                  return true;
+              }
+          }
+      }
+      return false;
+  }
 
     
     
