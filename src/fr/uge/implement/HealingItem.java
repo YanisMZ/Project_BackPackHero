@@ -1,7 +1,5 @@
 package fr.uge.implement;
 
-import java.util.Objects;
-
 public record HealingItem(String name, int healAmount, int width, int height, int durability) implements Item {
     
     public HealingItem(String name, int healAmount, int width, int height) {

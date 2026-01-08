@@ -53,29 +53,8 @@ public class MapDungeon {
 	}
 
 	public List<Integer> adjacentRooms() {
-		int cols = 4;
-		List<Integer> adj = new ArrayList<>();
-
-		int maxIndex = rooms.size() - 1;
-		int row = playerIndex / cols;
-		int col = playerIndex % cols;
-		int maxRow = maxIndex / cols;
-
-		// left
-		if (col > 0)
-			adj.add(playerIndex - 1);
-		// right
-		if (col < cols - 1 && playerIndex + 1 <= maxIndex)
-			adj.add(playerIndex + 1);
-		// up
-		if (row > 0)
-			adj.add(playerIndex - cols);
-		// down
-		if (row < maxRow && playerIndex + cols <= maxIndex)
-			adj.add(playerIndex + cols);
-
-		return adj;
-	}
+    return getAdjacentRooms(this.playerIndex);
+}
 
 	public void show() {
 		System.out.println("=== Floor ===");
@@ -158,12 +137,10 @@ public class MapDungeon {
 			}
 		}
 
-		return null; // Aucun chemin trouvé
+		return null; 
 	}
 
-	/**
-	 * Reconstruit le chemin depuis la map des parents
-	 */
+	
 	private List<Integer> reconstructPath(Map<Integer, Integer> parent, int start, int end) {
 		List<Integer> path = new ArrayList<>();
 		Integer current = end;
@@ -177,9 +154,7 @@ public class MapDungeon {
 		return path;
 	}
 
-	/**
-	 * Retourne les salles adjacentes pour n'importe quelle position
-	 */
+	
 	private List<Integer> getAdjacentRooms(int index) {
 		int cols = 4;
 		List<Integer> adj = new ArrayList<>();
@@ -200,16 +175,14 @@ public class MapDungeon {
 		return adj;
 	}
 
-	/**
-	 * Vérifie si une salle est cliquable (adjacente OU accessible via corridors)
-	 */
+
 	public boolean isRoomAccessible(int roomIndex) {
-		// Si c'est adjacent, toujours accessible
+		
 		if (adjacentRooms().contains(roomIndex)) {
 			return true;
 		}
 
-		// Sinon, vérifier s'il existe un chemin
+		
 		List<Integer> path = findPath(playerIndex, roomIndex);
 		return path != null && !path.isEmpty();
 	}
@@ -219,20 +192,19 @@ public class MapDungeon {
 			return false;
 		}
 
-		// On ne vérifie pas la première case (position actuelle) ni la dernière
-		// (destination)
+	
 		for (int i = 1; i < path.size() - 1; i++) {
 			int roomIndex = path.get(i);
 			Room room = rooms.get(roomIndex);
 
-			// ✅ Si c'est un corridor, toujours OK
+			
 			if (room.type() == Type.CORRIDOR) {
 				continue;
 			}
 
-			// ⛔ Si c'est une autre salle ET qu'elle n'a pas été visitée, chemin bloqué
+		
 			if (!isVisited(roomIndex)) {
-				System.out.println("⛔ Chemin bloqué par la salle " + roomIndex + " (" + room.type() + ")");
+			
 				return false;
 			}
 		}
@@ -240,9 +212,7 @@ public class MapDungeon {
 		return true;
 	}
 
-	/**
-	 * Trouve un chemin praticable vers une destination
-	 */
+
 	public List<Integer> findClearPath(int start, int end) {
     if (start == end) {
         return List.of(start);
@@ -264,8 +234,7 @@ public class MapDungeon {
         }
 
         for (int neighbor : getAdjacentRooms(current)) {
-            // CONDITION MODIFIÉE : On ne va vers le voisin que s'il n'est pas visité par l'algo 
-            // ET s'il est "praticable" (soit c'est la destination, soit c'est un corridor/salle visitée)
+
             if (!visited.contains(neighbor) && canPassThrough(neighbor, end)) {
                 visited.add(neighbor);
                 parent.put(neighbor, current);
@@ -276,16 +245,13 @@ public class MapDungeon {
     return null; 
 }
 
-/**
- * Règle de déplacement : on peut passer si c'est la cible, 
- * un corridor, ou une salle déjà découverte.
- */
+
 private boolean canPassThrough(int roomIndex, int destinationIndex) {
-    // Si c'est la destination finale, on doit pouvoir y entrer
+    
     if (roomIndex == destinationIndex) return true;
     
     Room room = rooms.get(roomIndex);
-    // On passe si c'est un corridor OU si c'est une salle déjà visitée par le joueur
+   
     return room.type() == Type.CORRIDOR || isVisited(roomIndex);
 }
 

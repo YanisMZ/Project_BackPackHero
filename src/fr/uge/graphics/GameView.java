@@ -3,7 +3,6 @@ package fr.uge.graphics;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -18,7 +17,17 @@ import javax.imageio.ImageIO;
 
 import com.github.forax.zen.ApplicationContext;
 
-import fr.uge.implement.*;
+import fr.uge.implement.BackPack;
+import fr.uge.implement.BackpackExpansionSystem;
+import fr.uge.implement.Battle;
+import fr.uge.implement.Enemy;
+import fr.uge.implement.FloatingItem;
+import fr.uge.implement.HealerRoom;
+import fr.uge.implement.Hero;
+import fr.uge.implement.Item;
+import fr.uge.implement.Malediction;
+import fr.uge.implement.MapDungeon;
+import fr.uge.implement.Room;
 
 public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack) {
 

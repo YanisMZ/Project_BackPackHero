@@ -13,9 +13,22 @@ import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
-import fr.uge.implement.*;
+import fr.uge.implement.BackPack;
+import fr.uge.implement.BackpackExpansionSystem;
+import fr.uge.implement.Battle;
 import fr.uge.implement.Battle.EnemyAction;
+import fr.uge.implement.Dungeon;
+import fr.uge.implement.Enemy;
+import fr.uge.implement.FloatingItem;
+import fr.uge.implement.Grid;
+import fr.uge.implement.HealerRoom;
+import fr.uge.implement.Hero;
+import fr.uge.implement.Item;
+import fr.uge.implement.MapDungeon;
+import fr.uge.implement.Merchant;
+import fr.uge.implement.Room;
 import fr.uge.implement.Room.Type;
+import fr.uge.implement.TreasureChest;
 
 public class GameController {
 	private final ApplicationContext context;
@@ -78,6 +91,7 @@ public class GameController {
 	private int playerTargetIndex = 0;
 	private long moveStartTime = 0;
 	private static final long MOVE_DURATION = 0;
+	private int animatedPlayerIndex;
 
 	// Combat suspendu
 	private boolean combatPausedByMalediction = false;
@@ -252,23 +266,20 @@ public class GameController {
 	}
 
 	public float getPlayerAnimationProgress() {
-		if (!isPlayerMoving)
-			return 1.0f;
-
-		long elapsed = System.currentTimeMillis() - moveStartTime;
-		if (elapsed >= MOVE_DURATION) {
-			System.out.println("✅ [getProgress] Animation terminée !");
-			completeMovement();
+		if (!isPlayerMoving) {
 			return 1.0f;
 		}
 
-		float t = (float) elapsed / MOVE_DURATION;
+		long elapsed = System.currentTimeMillis() - moveStartTime;
+		float t = Math.min(1f, (float) elapsed / MOVE_DURATION);
+
+		// easing (smooth)
 		return 1 - (float) Math.pow(1 - t, 3);
 	}
 
 	// ===================== MAIN LOOP =====================
 	public void update(int pollTimeout) {
-		updatePlayerAnimation(); // Ajoutez cette ligne
+		updatePlayerAnimation();
 
 		var event = context.pollOrWaitEvent(pollTimeout);
 		if (event == null)
@@ -296,7 +307,6 @@ public class GameController {
 		if (handleCombatEndTurn(ke))
 			return;
 
-		// ✅ Suppression du blocage global - on laisse le reste fonctionner normalement
 	}
 
 	private boolean handleRotation(KeyboardEvent ke) {
@@ -333,16 +343,15 @@ public class GameController {
 			return false;
 
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
-			// ☠️ BLOQUER LA FIN DU TOUR SI MALÉDICTION NON PLACÉE
+			// BLOQUER LA FIN DU TOUR SI MALÉDICTION NON PLACÉE
 			if (placingMalediction || currentMalediction != null) {
-				System.out.println("☠️ Place la malédiction avant de terminer ton tour !");
-				return true; // On consomme l'événement sans terminer le tour
+
+				return true;
 			}
 
 			if (fight.isPlayerTurnActive()) {
 				fight.endPlayerTurn();
 
-				// Vérifier si un ennemi déclenche une malédiction
 				for (Battle.EnemyAction action : fight.getEnemyActions()) {
 					if (action == Battle.EnemyAction.MALEDICTION) {
 						triggerMalediction();
@@ -390,12 +399,10 @@ public class GameController {
 		if (handleBackpackDragStart(mouseX, mouseY))
 			return;
 
-		// ⛔ BLOQUER la navigation si en combat
 		if (!inCombat && handleRoomNavigation(mouseX, mouseY))
 			return;
 	}
 
-//Ajouter la méthode handleHealerClick :
 	private boolean handleHealerClick(int mouseX, int mouseY) {
 		if (!inHealer)
 			return false;
@@ -420,36 +427,28 @@ public class GameController {
 		if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
 			isDragging = true;
 
-			// ⚠️ Pénalité uniquement si la malédiction est déplacée hors combat
 			if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
-				if (firstMaledictionDrag) {
-					firstMaledictionDrag = false;
-					System.out.println("☠️ Premier déplacement de la malédiction : aucune pénalité.");
-				} else {
-					int penalty = 10;
-					hero.takeDamage(penalty);
-					System.out.println("💀 Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-					System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
-				}
+				int penalty = 10;
+				hero.takeDamage(penalty);
+				System.out.println("Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
+				System.out.println("HP restants : " + hero.hp() + "/" + hero.maxHp());
 			}
+		}
 
-			// Supprimer l'item du sac ou du coffre si nécessaire
-			if (dragFromTreasure) {
-				treasureChest.getGrid().removeItem(draggedItem);
-			} else if (!dragFromMerchant) {
-				backpack.remove(draggedItem);
-			}
+		if (dragFromTreasure) {
+			treasureChest.getGrid().removeItem(draggedItem);
+		} else if (!dragFromMerchant) {
+			backpack.remove(draggedItem);
+		}
 
-			// Nettoyer les références si c'est la malédiction
-			if (draggedItem != null && draggedItem.isMalediction()) {
-				if (draggedItem == placedMalediction)
-					placedMalediction = null;
-				if (draggedItem == currentMalediction)
-					currentMalediction = null;
-				floatingItems.removeIf(f -> f.item == draggedItem);
-				placingMalediction = false;
-				combatPausedByMalediction = false;
-			}
+		if (draggedItem != null && draggedItem.isMalediction()) {
+			if (draggedItem == placedMalediction)
+				placedMalediction = null;
+			if (draggedItem == currentMalediction)
+				currentMalediction = null;
+			floatingItems.removeIf(f -> f.item == draggedItem);
+			placingMalediction = false;
+			combatPausedByMalediction = false;
 		}
 	}
 
@@ -473,20 +472,18 @@ public class GameController {
 	private boolean handleFloatingItemClick(int mouseX, int mouseY) {
 		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
 		if (fItem != null) {
-			// ⚠️ Bloquer uniquement la malédiction si elle n'est pas en mode placement
+
 			if (fItem.item == currentMalediction && !placingMalediction) {
-				System.out.println("⛔ Cliquez sur une case déverrouillée pour placer la malédiction !");
-				return true; // Consomme l'événement sans démarrer le drag
+				return true;
 			}
 
 			draggedItem = fItem.item;
 			dragOffsetX = mouseX - fItem.position.x;
 			dragOffsetY = mouseY - fItem.position.y;
-			isDragging = false; // ✅ Commence en false pour déclencher checkDragThreshold
+			isDragging = false;
 			dragMouseX = mouseX - dragOffsetX;
 			dragMouseY = mouseY - dragOffsetY;
 
-			// ✅ IMPORTANT : retirer le floating item immédiatement
 			floatingItems.remove(fItem);
 
 			dragFromTreasure = false;
@@ -567,10 +564,9 @@ public class GameController {
 
 		Item item = backpack.grid()[y][x];
 		if (item != null) {
-			// ☠️ BLOQUER le drag de la malédiction placée pendant le combat
 			if (item == placedMalediction && inCombat) {
-				System.out.println("⛔ Impossible de déplacer la malédiction pendant le combat !");
-				return true; // Consomme l'événement
+				System.out.println("Impossible de déplacer la malédiction pendant le combat !");
+				return true;
 			}
 			startBackpackDrag(x, y, item, mouseX, mouseY);
 			return true;
@@ -595,41 +591,34 @@ public class GameController {
 	}
 
 	private boolean handleRoomNavigation(int mouseX, int mouseY) {
-		if (inCombat) {
-			int room = roomAt(mouseX, mouseY);
-			if (room != -1 && room != floor.playerIndex()) {
-				System.out.println("⚔️ IMPOSSIBLE DE FUIR ! Terminez le combat d'abord !");
-			}
-			return false;
-		}
-
-		if (isFollowingPath || isPlayerMoving) {
+		if (inCombat || isFollowingPath || isPlayerMoving) {
 			return false;
 		}
 
 		int room = roomAt(mouseX, mouseY);
-
-		if (room != -1 && room != floor.playerIndex()) {
-			// ✅ Toujours utiliser findClearPath (même pour adjacents)
-			List<Integer> path = floor.findClearPath(floor.playerIndex(), room);
-
-			if (path != null && !path.isEmpty()) {
-				System.out.println("🗺️ Chemin trouvé : " + path);
-				this.currentPath = new ArrayList<>(path); // ✅ ArrayList mutable
-				this.pathIndex = 0;
-				this.isFollowingPath = true;
-				moveToNextRoomInPath();
-				return true;
-			} else {
-				System.out.println("❌ Aucun chemin disponible !");
-			}
+		if (room == -1 || room == floor.playerIndex()) {
+			return false;
 		}
-		return false;
+
+		List<Integer> path = floor.findClearPath(floor.playerIndex(), room);
+		if (path == null || path.size() < 2) {
+			System.out.println(" Aucun chemin valide");
+			return false;
+		}
+
+		System.out.println(" Chemin trouvé : " + path);
+
+		this.currentPath = new ArrayList<>(path);
+		this.pathIndex = 0;
+		this.isFollowingPath = true;
+		this.animatedPlayerIndex = floor.playerIndex();
+
+		moveToNextRoomInPath();
+		return true;
 	}
 
 	private void handlePointerMove(int mouseX, int mouseY) {
 
-		// ☠️ La malédiction suit la souris UNIQUEMENT si elle est dragguée
 		if (draggedItem == currentMalediction && placingMalediction) {
 			dragMouseX = mouseX - dragOffsetX;
 			dragMouseY = mouseY - dragOffsetY;
@@ -637,7 +626,6 @@ public class GameController {
 			return;
 		}
 
-		// 🎒 DRAG NORMAL (items du sac, coffre, etc.)
 		if (draggedItem != null && !isDragging) {
 			checkDragThreshold(mouseX, mouseY);
 		}
@@ -659,15 +647,12 @@ public class GameController {
 
 		currentMalediction = fight.chooseMalediction();
 
-		// Position d’apparition
 		Point spawn = new Point(300, 300);
 		floatingItems.add(new FloatingItem(currentMalediction, spawn));
 
-		// ✅ DRAG IMMÉDIAT
 		draggedItem = currentMalediction;
 		isDragging = true;
 
-		// Centrer la souris sur l’item
 		dragOffsetX = currentMalediction.width() * (backpackCellSize + backpackPadding) / 2;
 		dragOffsetY = currentMalediction.height() * (backpackCellSize + backpackPadding) / 2;
 
@@ -693,7 +678,6 @@ public class GameController {
 		if (!blocking.isEmpty())
 			return false;
 
-		// ✅ PLACEMENT
 		backpack.forcePlace(currentMalediction, x, y);
 		floatingItems.removeIf(f -> f.item == currentMalediction);
 
@@ -708,7 +692,6 @@ public class GameController {
 
 	private void handlePointerUp(int mouseX, int mouseY) {
 
-		// ☠️ DROP DE LA MALÉDICTION
 		if (draggedItem == currentMalediction && placingMalediction) {
 
 			boolean placed = handleMaledictionPlacement(mouseX, mouseY);
@@ -716,17 +699,15 @@ public class GameController {
 			if (placed) {
 				resetDragState();
 			} else {
-				// ❗ CORRECTION : remettre la malédiction en floating item
+
 				Point spawn = new Point(dragMouseX, dragMouseY);
 
-				// Vérifier si elle n'est pas déjà dans la liste
 				boolean alreadyFloating = floatingItems.stream().anyMatch(f -> f.item == currentMalediction);
 
 				if (!alreadyFloating) {
 					floatingItems.add(new FloatingItem(currentMalediction, spawn));
 				}
 
-				// Réinitialiser complètement le drag
 				draggedItem = null;
 				isDragging = false;
 				dragOffsetX = 0;
@@ -734,12 +715,11 @@ public class GameController {
 				dragMouseX = 0;
 				dragMouseY = 0;
 
-				System.out.println("⚠️ Placement invalide ! Essaie une autre case.");
+				System.out.println("Placement invalide");
 			}
 			return;
 		}
 
-		// 🎒 Drop normal
 		if (isDragging && draggedItem != null) {
 			handleDragAndDrop(mouseX, mouseY);
 			return;
@@ -755,7 +735,7 @@ public class GameController {
 			handleCombatClick();
 
 		} else if (inTreasure) {
-			// ✅ QUITTER LE TRÉSOR ICI
+
 			leaveTreasureRoom();
 
 		} else if (inMerchant) {
@@ -781,7 +761,6 @@ public class GameController {
 		fight.useItem(item);
 		lastAttackTime = System.currentTimeMillis();
 
-		// Vérifier si un ennemi déclenche une malédiction
 		for (Battle.EnemyAction action : fight.getEnemyActions()) {
 			if (action == Battle.EnemyAction.MALEDICTION) {
 				triggerMalediction();
@@ -821,12 +800,12 @@ public class GameController {
 			if (hero.getBackpack().autoAdd(draggedItem)) {
 				hero.removeGold(price);
 				merchant.getStock().removeItem(draggedItem);
-				System.out.println("✅ Achat : " + draggedItem.name() + " (" + price + " or)");
+				System.out.println("Achat : " + draggedItem.name() + " (" + price + " or)");
 			} else {
-				System.out.println("❌ Pas de place !");
+				System.out.println("Pas de place !");
 			}
 		} else {
-			System.out.println("❌ Pas assez d'or ! (" + price + " requis)");
+			System.out.println("Pas assez d'or ! (" + price + " requis)");
 		}
 		resetDragState();
 	}
@@ -866,18 +845,16 @@ public class GameController {
 	// ===================== ROOM HANDLING =====================
 
 	private void processRoomType(int room) {
-		System.out.println("📍 Analyse de la salle : " + room + " | Type : " + floor.rooms().get(room).type());
 
-		// ✅ Vérifier le type de la salle passée en paramètre, pas playerIndex()
 		Type roomType = floor.rooms().get(room).type();
 		this.lastChangeRoom = System.currentTimeMillis();
 
 		switch (roomType) {
 		case ENEMY -> {
 			if (clearedEnemyRooms.contains(room)) {
-				// rennemis déjà vaincus → coridor
+
 				setEmptyRoomState();
-				
+
 			} else {
 				startCombat();
 			}
@@ -889,10 +866,10 @@ public class GameController {
 			} else {
 				TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
 					TreasureChest newChest = new TreasureChest(3, 5);
-					newChest.generateTreasure(); // génère une seule fois
+					newChest.generateTreasure();
 					return newChest;
 				});
-				this.treasureChest = chest; // mettre à jour la référence pour l'affichage
+				this.treasureChest = chest;
 				setTreasureState();
 			}
 		}
@@ -931,7 +908,6 @@ public class GameController {
 		fight.initEnemies();
 		inCombat = true;
 
-		// ✅ RESET DES AUTRES ÉTATS
 		inMerchant = false;
 		inTreasure = false;
 		inHealer = false;
@@ -942,14 +918,11 @@ public class GameController {
 		if (fight == null || fight.isRunning())
 			return;
 
-		// ☠️ EMPÊCHER LA FIN DU COMBAT SEULEMENT SI UNE MALÉDICTION A ÉTÉ DÉCLENCHÉE
-		// MAIS NON PLACÉE
 		if (combatPausedByMalediction && (placingMalediction || currentMalediction != null)) {
 			System.out.println("☠️ Tu dois placer la malédiction avant de continuer !");
 			return;
 		}
 
-		// ✅ Si on arrive ici et qu'une malédiction a été placée, réinitialiser le flag
 		if (combatPausedByMalediction && placedMalediction != null) {
 			combatPausedByMalediction = false;
 			System.out.println("✅ Malédiction placée, le combat peut se terminer.");
@@ -979,42 +952,38 @@ public class GameController {
 		inMerchant = false;
 	}
 
-// Modifier setCorridorState :
 	private void setCorridorState() {
 		inCorridor = true;
 		inMerchant = false;
 		inTreasure = false;
 		inCombat = false;
-		inHealer = false; // ✅ AJOUT
+		inHealer = false;
 	}
 
-// Modifier setTreasureState :
 	private void setTreasureState() {
 		inTreasure = true;
 		inCorridor = false;
 		inCombat = false;
 		inMerchant = false;
-		inHealer = false; // ✅ AJOUT
+		inHealer = false;
 		setTreasureDisplayCoords();
 	}
 
-// Modifier setMerchantState :
 	private void setMerchantState() {
 		inMerchant = true;
 		inCorridor = false;
 		inTreasure = false;
 		inCombat = false;
-		inHealer = false; // ✅ AJOUT
+		inHealer = false;
 		setMerchantDisplayCoords();
 	}
 
-// Modifier setEmptyRoomState :
 	private void setEmptyRoomState() {
 		inTreasure = false;
 		inCorridor = false;
 		inCombat = false;
 		inMerchant = false;
-		inHealer = false; // ✅ AJOUT
+		inHealer = false;
 	}
 
 	// ===================== MERCHANT =====================
@@ -1064,16 +1033,15 @@ public class GameController {
 			if (item != null) {
 				if (item.isMalediction()) {
 					if (inCombat) {
-						System.out.println("⛔ Impossible de supprimer la malédiction en combat !");
+						System.out.println("Impossible de supprimer la malédiction en combat !");
 					} else {
 						int penalty = 10;
 						hero.takeDamage(penalty);
-						System.out.println("💀 Malédiction supprimée ! Vous perdez " + penalty + " PV !");
-						System.out.println("❤️ HP restants : " + hero.hp() + "/" + hero.maxHp());
+						System.out.println(" Malédiction supprimée ! Vous perdez " + penalty + " PV !");
+						System.out.println(" HP restants : " + hero.hp() + "/" + hero.maxHp());
 
 						backpack.remove(item);
 
-						// Nettoyer toutes les références
 						if (item == placedMalediction)
 							placedMalediction = null;
 						if (item == currentMalediction)
@@ -1209,95 +1177,93 @@ public class GameController {
 	}
 
 	public void updatePlayerAnimation() {
-		if (isPlayerMoving) {
-			long elapsed = System.currentTimeMillis() - moveStartTime;
+		if (!isPlayerMoving) {
+			return;
+		}
 
-			if (elapsed >= MOVE_DURATION) {
-				System.out.println("✅ [update] Animation terminée !");
-				completeMovement(); // ✅ Méthode commune
-			}
+		long elapsed = System.currentTimeMillis() - moveStartTime;
+
+		if (elapsed >= MOVE_DURATION) {
+			completeMovement();
 		}
 	}
 
-// ✅ Nouvelle méthode pour éviter la duplication
 	private void completeMovement() {
-		System.out.println("✅ Animation de case terminée !");
+		System.out.println(" Animation terminée");
+
 		isPlayerMoving = false;
 
-		// Si on est encore dans un chemin (trajet de plusieurs cases)
 		if (isFollowingPath && pathIndex < currentPath.size() - 1) {
 			moveToNextRoomInPath();
+			return;
 		}
-		// Si on vient d'arriver à la destination FINALE du chemin
-		else if (isFollowingPath) {
-			isFollowingPath = false;
-			int finalRoom = currentPath.get(currentPath.size() - 1);
 
-			// --- AJOUT POUR DÉCLENCHER L'ANIMATION DANS GAMEVIEW ---
-			this.lastChangeRoom = System.currentTimeMillis();
-			// On vérifie si on vient d'une salle marchand pour l'anim spéciale
-			//this.transitionFromMerchant = (floor.rooms().get(floor.playerIndex()).type() == Type.MERCHANT);
-			this.transitionFromCorridor = (floor.rooms().get(floor.playerIndex()).type() == Type.CORRIDOR);
-
-			// -------------------------------------------------------
-
-			floor.movePlayerTo(finalRoom);
-			floor.markVisited(finalRoom);
-			processRoomType(finalRoom);
-		}
+		finishPathMovement();
 	}
-	
+
 	public Room.Type getCurrentRoomType() {
 		return floor.rooms().get(floor.playerIndex()).type();
 	}
-	
+
 	public Room.Type getPreviousRoomType() {
 		return floor.rooms().get(floor.previousPlayerIndex()).type();
 	}
 
-// Vérifier que moveToNextRoomInPath est bien comme ceci :
 	private void moveToNextRoomInPath() {
-		System.out.println("🚶 moveToNextRoomInPath - pathIndex: " + pathIndex + " / " + (currentPath.size() - 1));
-
 		if (!isFollowingPath || pathIndex >= currentPath.size() - 1) {
 			finishPathMovement();
 			return;
 		}
 
 		pathIndex++;
-		int nextRoom = currentPath.get(pathIndex);
-		System.out.println("➡️ Déplacement vers case " + nextRoom);
 
-		playerStartIndex = floor.playerIndex();
-		playerTargetIndex = nextRoom;
+		playerStartIndex = animatedPlayerIndex;
+		playerTargetIndex = currentPath.get(pathIndex);
+
+		animatedPlayerIndex = playerTargetIndex;
+
 		isPlayerMoving = true;
 		moveStartTime = System.currentTimeMillis();
-
-		//floor.movePlayerTo(nextRoom);
-		floor.markVisited(nextRoom);
 	}
 
-// Vérifier que finishPathMovement est bien comme ceci :
 	private void finishPathMovement() {
-		System.out.println("🎯 Arrivée à destination !");
 
-		this.isFollowingPath = false;
-		this.isPlayerMoving = false;
+		isFollowingPath = false;
+		isPlayerMoving = false;
 
-		// 1. D'ABORD : Vérifier si on quitte un marchand (AVANT de changer l'index du
-		// joueur)
-		int currentRoomIndex = floor.playerIndex();
-		this.transitionFromMerchant = (floor.rooms().get(currentRoomIndex).type() == Type.MERCHANT);
-		this.transitionFromCorridor = !this.transitionFromMerchant;
-		// 2. Initialiser le temps pour l'animation
-		this.lastChangeRoom = System.currentTimeMillis();
-
-		// 3. Ensuite : Mettre à jour la position vers la destination finale
 		int finalRoom = currentPath.get(currentPath.size() - 1);
+
+		lastChangeRoom = System.currentTimeMillis();
+		transitionFromMerchant = floor.rooms().get(floor.playerIndex()).type() == Room.Type.MERCHANT;
+		transitionFromCorridor = !transitionFromMerchant;
+		cleanupFloatingItems();
 		floor.movePlayerTo(finalRoom);
 		floor.markVisited(finalRoom);
 
-		// 4. Traiter le type de la nouvelle salle
 		processRoomType(finalRoom);
+	}
+
+	private void cleanupFloatingItems() {
+
+		if (draggedItem != null && !backpack.contains(draggedItem)) {
+			draggedItem = null;
+			isDragging = false;
+			resetDragState();
+		}
+
+		if (currentMalediction != null && !backpack.contains(currentMalediction)) {
+			currentMalediction = null;
+			placingMalediction = false;
+			combatPausedByMalediction = false;
+		}
+
+		if (placedMalediction != null && !backpack.contains(placedMalediction)) {
+			placedMalediction = null;
+		}
+
+		if (!floatingItems.isEmpty()) {
+			floatingItems.clear();
+
+		}
 	}
 }
