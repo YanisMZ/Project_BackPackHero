@@ -1209,7 +1209,7 @@ public class GameController {
 
 
 	private void completeMovement() {
-		System.out.println("✅ Animation terminée");
+		System.out.println(" Animation terminée");
 
 		isPlayerMoving = false;
 
