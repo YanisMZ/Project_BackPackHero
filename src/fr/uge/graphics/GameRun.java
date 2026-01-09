@@ -67,7 +67,7 @@ public class GameRun {
 			backpack.autoAdd(new Gold("Gold", 65));
 			backpack.autoAdd(new Gold("Gold", 5));
 
-			var hero = new Hero(40, 0, 3, backpack);
+			var hero = new Hero(40, 0, 3, 0, backpack);
 			var fight = new Battle(hero, backpack);
 
 			var screenInfo = context.getScreenInfo();

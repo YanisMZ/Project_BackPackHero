@@ -108,7 +108,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name, String type) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames; i++) {
+		for (int i = 1; i < nbFrames/10; i++) { // a modifier le /10 !!!
 			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ")." + type));
 			System.out.println("./" + folder + "/" + name + "(" + i + ").jpg");
 		}
@@ -117,7 +117,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadAttackFrames(int nbEnemies, int nbFrames) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames; i++) {
+		for (int i = 1; i < nbFrames/10; i++) { // a modifier le /10 !!!
 			if (i % 2 == 0) {
 				frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
 				System.out.println("Frame chargé : hit_(" + i + ").png");
@@ -208,7 +208,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			int animationDuration = 3000;
 
 			if (isAnimationPlaying(lastChangeRoom, animationDuration)) {
-				List<BufferedImage> animToPlay = (controller.getPreviousRoomType() == Room.Type.MERCHANT) ? merchantToCorridorAnimation : corridorToCorridorAnimation;
+				List<BufferedImage> animToPlay = (controller.getPreviousRoomType() == Room.Type.MERCHANT)
+						? merchantToCorridorAnimation
+						: corridorToCorridorAnimation;
 				if (animToPlay != null && !animToPlay.isEmpty()) {
 					drawAnimation(g, lastChangeRoom, animationDuration, animToPlay);
 				}
@@ -307,16 +309,12 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	private void drawAllBars(Graphics2D g, Hero hero, List<Enemy> enemies) {
-		drawHeroHealthBar(g, hero);
-		drawHeroManaBar(g, hero);
-		drawHeroStaminaBar(g, hero);
+		drawHeroStats(g, hero);
 		drawEnemyHealthBars(g, enemies);
 	}
 
 	private void drawAllHeroBars(Graphics2D g, Hero hero) {
-		drawHeroHealthBar(g, hero);
-		drawHeroManaBar(g, hero);
-		drawHeroStaminaBar(g, hero);
+		drawHeroStats(g, hero);
 	}
 
 	// ===================== ANIMATIONS =====================
@@ -978,70 +976,67 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	}
 
 	// ===================== HEALTH BARS =====================
-	private void drawHeroHealthBar(Graphics2D g, Hero hero) {
+	private void drawHeroStats(Graphics2D g, Hero hero) {
 		var info = context.getScreenInfo();
-		int startX = info.width() - 250;
-		int startY = 10;
-		int barWidth = 200;
 
-		double hpPercent = hero.hp() / (double) hero.HeroMaxHp();
-		int hpBarWidth = (int) (hpPercent * barWidth);
+		
+		int barHeight = 15;
+		int sideBarWidth = 300;
+		int startX = info.width() - sideBarWidth - 25;
+		int currentY = 30;
 
-		g.setColor(Color.WHITE);
-		g.drawString("HERO", startX, startY + 15);
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
+				hero.hp() + " HP");
 
-		g.setColor(Color.RED);
-		g.fillRect(startX, startY + 20, barWidth, 15);
+		currentY += 40;
 
-		g.setColor(Color.GREEN);
-		g.fillRect(startX, startY + 20, Math.max(0, hpBarWidth), 15);
+//		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.mana(), 100, Color.DARK_GRAY, Color.BLUE, "MANA",
+//				hero.mana() + " MANA");
 
-		g.setColor(Color.BLACK);
-		g.drawRect(startX, startY + 20, barWidth, 15);
-		g.drawString(hero.hp() + " HP", startX + barWidth / 2 - 20, startY + 32);
+		currentY += 40;
+
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
+				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
+
+		int expBarHeight = 10;
+		int expY = info.height() - expBarHeight - 10;
+
+		drawBar(g, 0, expY, info.width(), expBarHeight + 400, hero.exp(), hero.maxExp(), Color.BLACK, new Color(148, 0, 211),
+				null, "XP: " + hero.exp() + " / " + hero.maxExp());
 	}
 
-	private void drawHeroManaBar(Graphics2D g, Hero hero) {
-		var info = context.getScreenInfo();
-		int startX = info.width() - 250;
-		int startY = 50;
-		int barWidth = 200;
+	private void drawBar(Graphics2D g, int x, int y, int width, int height, double current, double max, Color bgColor,
+			Color fillColor, String label, String valueText) {
 
-		g.setColor(Color.WHITE);
-		g.drawString("MANA", startX, startY - 5);
+		double percent = Math.max(0, Math.min(1.0, current / max));
+		int fillWidth = (int) (percent * width);
 
-		g.setColor(Color.DARK_GRAY);
-		g.fillRect(startX, startY, barWidth, 15);
+		if (label != null) {
+			g.setColor(Color.WHITE);
+			g.drawString(label, x, y - 5);
+		}
 
-		g.setColor(Color.BLUE);
-		g.fillRect(startX, startY, barWidth, 15);
+		g.setColor(bgColor);
+		g.fillRect(x, y, width, height);
 
-		g.setColor(Color.BLACK);
-		g.drawRect(startX, startY, barWidth, 15);
-		g.drawString(hero.mana() + " MANA", startX + barWidth / 2 - 20, startY + 12);
-	}
-
-	private void drawHeroStaminaBar(Graphics2D g, Hero hero) {
-		var info = context.getScreenInfo();
-		int startX = info.width() - 250;
-		int startY = 50;
-		int barWidth = 200;
-
-		double staminaPercent = hero.currentStamina() / (double) hero.maxStamina();
-		int staminaWidth = (int) (staminaPercent * barWidth);
-
-		g.setColor(Color.WHITE);
-		g.drawString("STAMINA", startX, startY - 5);
-
-		g.setColor(Color.DARK_GRAY);
-		g.fillRect(startX, startY, barWidth, 15);
-
-		g.setColor(Color.ORANGE);
-		g.fillRect(startX, startY, staminaWidth, 15);
+		g.setColor(fillColor);
+		g.fillRect(x, y, fillWidth, height);
 
 		g.setColor(Color.BLACK);
-		g.drawRect(startX, startY, barWidth, 15);
-		g.drawString(hero.currentStamina() + " / " + hero.maxStamina(), startX + barWidth / 2 - 15, startY + 12);
+		g.drawRect(x, y, width, height);
+
+		if (valueText != null) {
+			g.setColor(Color.WHITE);
+			int textWidth = g.getFontMetrics().stringWidth(valueText);
+			int textX = x + (width - textWidth) / 2;
+			int textY = y + height - 2;
+
+			g.setColor(Color.BLACK);
+			g.drawString(valueText, textX + 1, textY + 1);
+
+			g.setColor(Color.WHITE);
+			g.drawString(valueText, textX, textY);
+		}
 	}
 
 	private void drawEnemyHealthBars(Graphics2D g, List<Enemy> enemies) {
@@ -1050,7 +1045,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 		var info = context.getScreenInfo();
 		int startX = info.width() - 250;
-		int startY = 90;
+		int startY = 200;
 		int barWidth = 200;
 		int spacing = 40;
 
@@ -1088,10 +1083,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 
 		var info = context.getScreenInfo();
-		int bubbleWidth = 100; // Augmenté pour les dégâts
-		int bubbleHeight = 70; // Augmenté pour les dégâts
+		int bubbleWidth = 100;
+		int bubbleHeight = 70;
 		int startY = 100;
-		int padding = 10; // Espacement interne pour le texte
+		int padding = 10;
 
 		// Calculer l'espacement horizontal
 		int totalWidth = Math.min(actions.size(), 3) * (bubbleWidth + 20);
@@ -1150,39 +1145,31 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private void drawMaledictionShape(Graphics2D g, Item item, int x, int y, int w, int h, boolean isFloating) {
 		if (!item.isMalediction()) {
-			// Fallback pour les items normaux
 			drawItemImage(g, item, x, y, w, h);
 			return;
 		}
 
 		Malediction malediction = (Malediction) item;
 
-		// Pour le sac/trésor : pas de padding entre les cellules
-		// Pour les items flottants : utiliser le padding pour bien voir la forme
 		int cellSize = isFloating ? CELL_SIZE : CELL_SIZE;
 		int spacing = isFloating ? PADDING : 0;
 
-		// Couleur de la malédiction
 		Color maledictionColor = isFloating ? new Color(150, 50, 200, 180) : new Color(120, 30, 180);
 
-		// Dessiner chaque cellule de la forme
 		for (int dy = 0; dy < item.height(); dy++) {
 			for (int dx = 0; dx < item.width(); dx++) {
 				if (malediction.occupies(dx, dy)) {
 					int cellX = x + dx * (cellSize + spacing);
 					int cellY = y + dy * (cellSize + spacing);
 
-					// Remplissage de la cellule
 					g.setColor(maledictionColor);
 					g.fillRect(cellX, cellY, cellSize, cellSize);
 
-					// Bordure de la cellule
 					g.setColor(new Color(200, 100, 255));
 					g.setStroke(new java.awt.BasicStroke(2));
 					g.drawRect(cellX, cellY, cellSize, cellSize);
 					g.setStroke(new java.awt.BasicStroke(1));
 
-					// Icône de crâne sur la première cellule occupée
 					if (dx == 1 && dy == 0) {
 						g.setColor(Color.WHITE);
 						g.setFont(g.getFont().deriveFont(28f));

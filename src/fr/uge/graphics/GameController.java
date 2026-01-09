@@ -75,14 +75,13 @@ public class GameController {
 	private static final int DRAG_THRESHOLD = 5;
 	private boolean placingMalediction = false;
 	private Item currentMalediction = null;
-	private Item placedMalediction = null; // nouvelle variable
+	private Item placedMalediction = null;
 	private boolean firstMaledictionDrag = true;
 
 	private final Set<Integer> clearedTreasureRooms = new HashSet<>();
 	private final Set<Integer> clearedEnemyRooms = new HashSet<>();
 	private final Map<Integer, TreasureChest> treasureChests = new HashMap<>();
 
-	// deplacment joueur
 	private List<Integer> currentPath = new ArrayList<>();
 	private int pathIndex = 0;
 	private boolean isFollowingPath = false;
@@ -93,7 +92,6 @@ public class GameController {
 	private static final long MOVE_DURATION = 0;
 	private int animatedPlayerIndex;
 
-	// Combat suspendu
 	private boolean combatPausedByMalediction = false;
 
 	public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight,
@@ -757,10 +755,23 @@ public class GameController {
 			return;
 		if (!fight.isPlayerTurnActive())
 			return;
-
+		int totalHpBefore = fight.getEnemy().stream()
+				.mapToInt(e -> Math.max(0, e.hp()))
+				.sum();
+		
 		fight.useItem(item);
 		lastAttackTime = System.currentTimeMillis();
-
+		
+		int totalHpAfter = fight.getEnemy().stream()
+				.mapToInt(e -> Math.max(0, e.hp()))
+				.sum();
+		
+		int damageDealt = totalHpBefore - totalHpAfter;
+		System.out.println("DAMAGE " + damageDealt);
+		if (damageDealt > 0) {
+			System.out.println("J'ai ajouté lexp" + 0.8*damageDealt);
+			hero.addExp(0.8*damageDealt);
+		}
 		for (Battle.EnemyAction action : fight.getEnemyActions()) {
 			if (action == Battle.EnemyAction.MALEDICTION) {
 				triggerMalediction();

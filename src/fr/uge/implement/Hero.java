@@ -6,20 +6,27 @@ public class Hero {
 	private int hp;
 	private int currentStamina;
 	private int protection;
+	private int experience;
+	private int maxExperience = 100;
 	private final BackPack backpack;
 
-	public Hero(int maxHp, int protection, int maxStamina, BackPack backpack) {
+	public Hero(int maxHp, int protection, int maxStamina, int exp, BackPack backpack) {
 		this.maxHp = maxHp;
 		this.maxStamina = maxStamina;
 		this.hp = maxHp;
 		this.currentStamina = maxStamina;
 		this.protection = protection;
+		this.experience = exp;
 		this.backpack = backpack;
 	}
 
 	/* ===================== GETTERS ===================== */
 	public int maxHp() {
 		return maxHp;
+	}
+
+	public int exp() {
+		return experience;
 	}
 
 	public int hp() {
@@ -96,6 +103,36 @@ public class Hero {
 		return hp > 0;
 	}
 
+	/* ===================== EXP ===================== */
+	public int maxExp() {
+		return maxExperience;
+	}
+
+	public int lvl(int exp) {
+		if (exp < (1 / 10) * maxExp()) {
+			return 1;
+		} else if (exp < (3 / 10) * maxExp()) {
+			return 2;
+		} else if (exp < (3 / 5) * maxExp()) {
+			return 3;
+		} else if (exp < (9 / 10) * maxExp()) {
+			return 4;
+		} else {
+			return 5;
+		}
+	}
+
+	public void addExp(double amount) {
+		this.experience += amount;
+		if (this.experience > this.maxExp()) {
+			this.experience = this.maxExp();
+		}
+	}
+
+	public int increaseExp(int exp, int enemyHp) {
+		return exp + (8 / 10) * enemyHp;
+	}
+
 	/* ===================== STUBS ===================== */
 	public int HeroMaxHp() {
 		return 40;
@@ -110,14 +147,14 @@ public class Hero {
 	}
 
 	public void heal(int amount) {
-    if (amount < 0) {
-        return; // On ne soigne pas des montants négatifs
-    }
-    
-    // On ajoute le soin tout en s'assurant de ne pas dépasser maxHp
-    this.hp = Math.min(this.hp + amount, this.maxHp);
-    
-    System.out.println("Héros soigné ! HP actuels : " + this.hp + "/" + this.maxHp);
-}
+		if (amount < 0) {
+			return; // On ne soigne pas des montants négatifs
+		}
+
+		// On ajoute le soin tout en s'assurant de ne pas dépasser maxHp
+		this.hp = Math.min(this.hp + amount, this.maxHp);
+
+		System.out.println("Héros soigné ! HP actuels : " + this.hp + "/" + this.maxHp);
+	}
 
 }

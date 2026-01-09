@@ -71,6 +71,7 @@ public class Battle {
         if (!enemies.isEmpty() && item.attackValue() > 0) {
             Enemy target = enemies.get(0);
             target = target.takeDamage(item.attackValue());
+            
             if (!target.isAlive()) {
                 defeatedEnemiesThisCombat++;
                 enemies.remove(0);
