@@ -988,7 +988,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
 				hero.hp() + " HP");
 
-		currentY += 40;
+//		currentY += 40;
 
 //		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.mana(), 100, Color.DARK_GRAY, Color.BLUE, "MANA",
 //				hero.mana() + " MANA");
@@ -998,10 +998,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
 				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
 
-		int expBarHeight = 10;
+		int expBarHeight = 20;
 		int expY = info.height() - expBarHeight - 10;
 
-		drawBar(g, 0, expY, info.width(), expBarHeight + 400, hero.exp(), hero.maxExp(), Color.BLACK, new Color(148, 0, 211),
+		drawBar(g, 0, expY, info.width(), expBarHeight, hero.exp(), hero.maxExp(), Color.BLACK, new Color(255, 215, 0),
 				null, "XP: " + hero.exp() + " / " + hero.maxExp());
 	}
 
