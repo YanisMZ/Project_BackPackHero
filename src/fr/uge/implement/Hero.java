@@ -6,11 +6,11 @@ public class Hero {
 	private int hp;
 	private int currentStamina;
 	private int protection;
-	private int experience;
-	private int maxExperience = 100;
+	private float experience;
+	private float maxExperience = 100;
 	private final BackPack backpack;
 
-	public Hero(int maxHp, int protection, int maxStamina, int exp, BackPack backpack) {
+	public Hero(int maxHp, int protection, int maxStamina, float exp, BackPack backpack) {
 		this.maxHp = maxHp;
 		this.maxStamina = maxStamina;
 		this.hp = maxHp;
@@ -25,7 +25,7 @@ public class Hero {
 		return maxHp;
 	}
 
-	public int exp() {
+	public float exp() {
 		return experience;
 	}
 
@@ -104,18 +104,18 @@ public class Hero {
 	}
 
 	/* ===================== EXP ===================== */
-	public int maxExp() {
+	public float maxExp() {
 		return maxExperience;
 	}
 
-	public int lvl(int exp) {
-		if (exp < (1 / 10) * maxExp()) {
+	public int lvl(float exp) {
+		if (exp < (1.0f / 10f) * maxExp()) {
 			return 1;
-		} else if (exp < (3 / 10) * maxExp()) {
+		} else if (exp < (3.0f / 10.0f) * maxExp()) {
 			return 2;
-		} else if (exp < (3 / 5) * maxExp()) {
+		} else if (exp < (3.0f / 5.0f) * maxExp()) {
 			return 3;
-		} else if (exp < (9 / 10) * maxExp()) {
+		} else if (exp < (9.0f / 10.0f) * maxExp()) {
 			return 4;
 		} else {
 			return 5;
