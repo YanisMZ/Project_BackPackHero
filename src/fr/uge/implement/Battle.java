@@ -8,10 +8,10 @@ public class Battle {
 
     private final Hero hero;
     private final BackPack backpack;
+    private final CombatEffects combatEffects;
     private final List<Enemy> enemies = new ArrayList<>();
     private final Random random = new Random();
 
-    /** Actions possibles des ennemis */
     public enum EnemyAction {
         ATTACK, DEFEND, MALEDICTION
     }
@@ -23,6 +23,7 @@ public class Battle {
     public Battle(Hero hero, BackPack backpack) {
         this.hero = hero;
         this.backpack = backpack;
+        this.combatEffects = new CombatEffects(backpack, hero);
     }
 
     /* ===================== INIT ===================== */
@@ -54,23 +55,40 @@ public class Battle {
 
         hero.useStamina(item.staminaCost());
 
+        // Régénération de stamina
         if (item.staminaRegen() > 0) {
             hero.addStamina(item.staminaRegen());
             System.out.println("Energie + " + item.staminaRegen());
         }
 
+        // Soins
         if (item.healthRegen() > 0) {
             hero.heal(item.healthRegen());
             System.out.println("Soins : +" + item.healthRegen() + " HP");
         }
 
+        // Défense
         if (item.defendValue() > 0) {
             hero.addProtection(item.defendValue());
         }
 
+        // *** NOUVEAU : Attaque avec effets de combat ***
         if (!enemies.isEmpty() && item.attackValue() > 0) {
+            // Trouver la position de l'item dans le sac
+            int[] position = findItemPosition(item);
+            
+            // Calculer les effets de combat
+            CombatResult result = combatEffects.applyItemEffects(
+                item, position[0], position[1], hero
+            );
+            
+            int finalDamage = result.damage();
+            
+            // Appliquer les dégâts à l'ennemi
             Enemy target = enemies.get(0);
-            target = target.takeDamage(item.attackValue());
+            target = target.takeDamage(finalDamage);
+            
+            System.out.println("⚔️ Dégâts infligés : " + finalDamage);
             
             if (!target.isAlive()) {
                 defeatedEnemiesThisCombat++;
@@ -80,6 +98,7 @@ public class Battle {
             }
         }
 
+        // Mise à jour de la durabilité
         Item updatedItem = item.decreaseDurability();
         if (updatedItem.isBroken()) {
             backpack.updateItem(item, null);
@@ -89,6 +108,21 @@ public class Battle {
         }
 
         return true;
+    }
+
+    /**
+     * Trouve la position d'un item dans le backpack
+     */
+    private int[] findItemPosition(Item item) {
+        Item[][] grid = backpack.grid();
+        for (int y = 0; y < backpack.height(); y++) {
+            for (int x = 0; x < backpack.width(); x++) {
+                if (grid[y][x] == item) {
+                    return new int[]{x, y};
+                }
+            }
+        }
+        return new int[]{0, 0}; // Par défaut
     }
 
     public void endPlayerTurn() {
@@ -106,20 +140,19 @@ public class Battle {
 
     /* ===================== ENEMIES ===================== */
 
-    /** Annonce les actions ennemies pour le tour suivant */
     public void announceEnemyTurn() {
         enemyActions.clear();
         System.out.println("\n========== ANNONCE DES ENNEMIS ==========");
 
         for (Enemy e : enemies) {
-            int roll = random.nextInt(100); // 0 à 99
+            int roll = random.nextInt(100);
             EnemyAction action;
 
-            if (roll < 45) {            // 45% ATTACK
+            if (roll < 45) {
                 action = EnemyAction.ATTACK;
-            } else if (roll < 90) {     // 45% DEFEND
+            } else if (roll < 90) {
                 action = EnemyAction.DEFEND;
-            } else {                     // 10% MALEDICTION
+            } else {
                 action = EnemyAction.MALEDICTION;
             }
 
@@ -135,17 +168,14 @@ public class Battle {
         System.out.println("=========================================\n");
     }
     
-    
     public Malediction chooseMalediction() {
-      if (random.nextBoolean()) {
-          return Malediction.formeS();
-      } else {
-          return Malediction.carre();
-      }
-  }
+        if (random.nextBoolean()) {
+            return Malediction.formeS();
+        } else {
+            return Malediction.carre();
+        }
+    }
 
-
-    /** Exécute le tour ennemi pour ATTACK et DEFEND. MALEDICTION est gérée par GameController */
     public void executeEnemyTurn() {
         if (enemyActions.isEmpty()) {
             System.out.println("Les ennemis n'ont pas encore annoncé leurs actions !");
