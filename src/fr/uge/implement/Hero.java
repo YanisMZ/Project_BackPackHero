@@ -121,6 +121,18 @@ public class Hero {
 			return 5;
 		}
 	}
+	
+	public float getXpForLevel(int level) {
+    float max = maxExp();
+    
+    if (level <= 1) return 0;
+    if (level == 2) return (1.0f / 10.0f) * max;
+    if (level == 3) return (3.0f / 10.0f) * max;
+    if (level == 4) return (3.0f / 5.0f) * max;
+    if (level == 5) return (9.0f / 10.0f) * max;
+    
+    return max;
+}
 
 	public void addExp(double amount) {
 		this.experience += amount;

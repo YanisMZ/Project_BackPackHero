@@ -108,7 +108,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name, String type) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames/10; i++) { // a modifier le /10 !!!
+		for (int i = 1; i < nbFrames / 10; i++) { // a modifier le /10 !!!
 			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ")." + type));
 			System.out.println("./" + folder + "/" + name + "(" + i + ").jpg");
 		}
@@ -117,7 +117,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadAttackFrames(int nbEnemies, int nbFrames) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames/10; i++) { // a modifier le /10 !!!
+		for (int i = 1; i < nbFrames / 10; i++) { // a modifier le /10 !!!
 			if (i % 2 == 0) {
 				frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
 				System.out.println("Frame chargé : hit_(" + i + ").png");
@@ -975,11 +975,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		}
 	}
 
-	// ===================== HEALTH BARS =====================
+	// ===================== STATS BARS =====================
 	private void drawHeroStats(Graphics2D g, Hero hero) {
 		var info = context.getScreenInfo();
 
-		
 		int barHeight = 15;
 		int sideBarWidth = 300;
 		int startX = info.width() - sideBarWidth - 25;
@@ -988,21 +987,43 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
 				hero.hp() + " HP");
 
+		int expBarHeight = 20;
+		int expY = info.height() - expBarHeight - 10;
+		
+		
+
 //		currentY += 40;
 
 //		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.mana(), 100, Color.DARK_GRAY, Color.BLUE, "MANA",
 //				hero.mana() + " MANA");
 
 		currentY += 40;
-
+		
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
 				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
+		int currentLevel = hero.lvl(hero.exp());
 
-		int expBarHeight = 20;
-		int expY = info.height() - expBarHeight - 10;
+		float startExp = hero.getXpForLevel(currentLevel);
 
-		drawBar(g, 0, expY, info.width(), expBarHeight, hero.exp(), hero.maxExp(), Color.BLACK, new Color(255, 215, 0),
-				null, "Level : " + hero.lvl(hero.exp()) + " | XP: " + (int)hero.exp() + " / " + (int)hero.maxExp());
+		float endExp;
+		if (currentLevel >= 5) {
+			endExp = hero.maxExp();
+		} else {
+			endExp = hero.getXpForLevel(currentLevel + 1);
+		}
+
+		float currentExpInLevel = hero.exp() - startExp;
+		float totalExpNeededForLevel = endExp - startExp;
+
+		if (totalExpNeededForLevel <= 0)
+			totalExpNeededForLevel = 1;
+
+		drawBar(g, 0, expY, info.width(), expBarHeight, currentExpInLevel, // 5
+				totalExpNeededForLevel, // 20
+				Color.BLACK, new Color(255, 215, 0), null,
+				"Level : " + currentLevel + " | XP: " + (int) currentExpInLevel + " / " + (int) totalExpNeededForLevel);
+
+		
 	}
 
 	private void drawBar(Graphics2D g, int x, int y, int width, int height, double current, double max, Color bgColor,

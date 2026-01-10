@@ -35,12 +35,12 @@ public class MapDungeon {
 	public int playerIndex() {
 		return playerIndex;
 	}
-	
+
 	public int previousPlayerIndex() {
 		return previousPlayerIndex;
 	}
 
-	public void movePlayerTo(int newIndex) {		
+	public void movePlayerTo(int newIndex) {
 		if (newIndex >= 0 && newIndex < rooms.size()) {
 			previousPlayerIndex = playerIndex;
 			playerIndex = newIndex;
@@ -48,8 +48,8 @@ public class MapDungeon {
 	}
 
 	public List<Integer> adjacentRooms() {
-    return getAdjacentRooms(this.playerIndex);
-}
+		return getAdjacentRooms(this.playerIndex);
+	}
 
 	public void show() {
 		System.out.println("=== Floor ===");
@@ -132,10 +132,9 @@ public class MapDungeon {
 			}
 		}
 
-		return null; 
+		return null;
 	}
 
-	
 	private List<Integer> reconstructPath(Map<Integer, Integer> parent, int start, int end) {
 		List<Integer> path = new ArrayList<>();
 		Integer current = end;
@@ -149,7 +148,6 @@ public class MapDungeon {
 		return path;
 	}
 
-	
 	private List<Integer> getAdjacentRooms(int index) {
 		int cols = 4;
 		List<Integer> adj = new ArrayList<>();
@@ -170,14 +168,12 @@ public class MapDungeon {
 		return adj;
 	}
 
-
 	public boolean isRoomAccessible(int roomIndex) {
-		
+
 		if (adjacentRooms().contains(roomIndex)) {
 			return true;
 		}
 
-		
 		List<Integer> path = findPath(playerIndex, roomIndex);
 		return path != null && !path.isEmpty();
 	}
@@ -187,19 +183,16 @@ public class MapDungeon {
 			return false;
 		}
 
-	
 		for (int i = 1; i < path.size() - 1; i++) {
 			int roomIndex = path.get(i);
 			Room room = rooms.get(roomIndex);
 
-			
 			if (room.type() == Type.CORRIDOR) {
 				continue;
 			}
 
-		
 			if (!isVisited(roomIndex)) {
-			
+
 				return false;
 			}
 		}
@@ -207,47 +200,46 @@ public class MapDungeon {
 		return true;
 	}
 
-
 	public List<Integer> findClearPath(int start, int end) {
-    if (start == end) {
-        return List.of(start);
-    }
+		if (start == end) {
+			return List.of(start);
+		}
 
-    Queue<Integer> queue = new LinkedList<>();
-    Map<Integer, Integer> parent = new HashMap<>();
-    Set<Integer> visited = new HashSet<>();
+		Queue<Integer> queue = new LinkedList<>();
+		Map<Integer, Integer> parent = new HashMap<>();
+		Set<Integer> visited = new HashSet<>();
 
-    queue.add(start);
-    visited.add(start);
-    parent.put(start, null);
+		queue.add(start);
+		visited.add(start);
+		parent.put(start, null);
 
-    while (!queue.isEmpty()) {
-        int current = queue.poll();
+		while (!queue.isEmpty()) {
+			int current = queue.poll();
 
-        if (current == end) {
-            return reconstructPath(parent, start, end);
-        }
+			if (current == end) {
+				return reconstructPath(parent, start, end);
+			}
 
-        for (int neighbor : getAdjacentRooms(current)) {
+			for (int neighbor : getAdjacentRooms(current)) {
 
-            if (!visited.contains(neighbor) && canPassThrough(neighbor, end)) {
-                visited.add(neighbor);
-                parent.put(neighbor, current);
-                queue.add(neighbor);
-            }
-        }
-    }
-    return null; 
-}
+				if (!visited.contains(neighbor) && canPassThrough(neighbor, end)) {
+					visited.add(neighbor);
+					parent.put(neighbor, current);
+					queue.add(neighbor);
+				}
+			}
+		}
+		return null;
+	}
 
+	private boolean canPassThrough(int roomIndex, int destinationIndex) {
 
-private boolean canPassThrough(int roomIndex, int destinationIndex) {
-    
-    if (roomIndex == destinationIndex) return true;
-    
-    Room room = rooms.get(roomIndex);
-   
-    return room.type() == Type.CORRIDOR || isVisited(roomIndex);
-}
+		if (roomIndex == destinationIndex)
+			return true;
+
+		Room room = rooms.get(roomIndex);
+
+		return room.type() == Type.CORRIDOR || isVisited(roomIndex);
+	}
 
 }
