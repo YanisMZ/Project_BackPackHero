@@ -109,13 +109,13 @@ public class Hero {
 	}
 
 	public int lvl(float exp) {
-		if (exp < (1.0f / 10f) * maxExp()) {
+		if (exp < (1 / 10.0f) * maxExp()) {
 			return 1;
-		} else if (exp < (3.0f / 10.0f) * maxExp()) {
+		} else if (exp < (3 / 10.0f) * maxExp()) {
 			return 2;
-		} else if (exp < (3.0f / 5.0f) * maxExp()) {
+		} else if (exp < (3 / 5.0f) * maxExp()) {
 			return 3;
-		} else if (exp < (9.0f / 10.0f) * maxExp()) {
+		} else if (exp < (9 / 10.0f) * maxExp()) {
 			return 4;
 		} else {
 			return 5;

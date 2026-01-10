@@ -40,12 +40,7 @@ public class MapDungeon {
 		return previousPlayerIndex;
 	}
 
-	public void movePlayerTo(int newIndex) {
-		System.err.println("set move to");
-		StackTraceElement[] elem = Thread.currentThread().getStackTrace();
-		for (var i: elem) {
-			System.err.println("\tat " + i.getClassName() + "." + i.getMethodName());
-		}
+	public void movePlayerTo(int newIndex) {		
 		if (newIndex >= 0 && newIndex < rooms.size()) {
 			previousPlayerIndex = playerIndex;
 			playerIndex = newIndex;

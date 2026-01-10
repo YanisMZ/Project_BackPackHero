@@ -1002,7 +1002,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int expY = info.height() - expBarHeight - 10;
 
 		drawBar(g, 0, expY, info.width(), expBarHeight, hero.exp(), hero.maxExp(), Color.BLACK, new Color(255, 215, 0),
-				null, "Level : " + hero.lvl(0) + " | XP: " + hero.exp() + " / " + hero.maxExp());
+				null, "Level : " + hero.lvl(hero.exp()) + " | XP: " + (int)hero.exp() + " / " + (int)hero.maxExp());
 	}
 
 	private void drawBar(Graphics2D g, int x, int y, int width, int height, double current, double max, Color bgColor,
