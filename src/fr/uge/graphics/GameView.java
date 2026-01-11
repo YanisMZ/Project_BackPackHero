@@ -17,17 +17,17 @@ import javax.imageio.ImageIO;
 
 import com.github.forax.zen.ApplicationContext;
 
-import fr.uge.implement.BackPack;
-import fr.uge.implement.BackpackExpansionSystem;
-import fr.uge.implement.Battle;
-import fr.uge.implement.Enemy;
-import fr.uge.implement.FloatingItem;
-import fr.uge.implement.HealerRoom;
-import fr.uge.implement.Hero;
-import fr.uge.implement.Item;
-import fr.uge.implement.Malediction;
-import fr.uge.implement.MapDungeon;
-import fr.uge.implement.Room;
+import fr.uge.backpack.BackPack;
+import fr.uge.backpack.BackpackExpansionSystem;
+import fr.uge.combat.Battle;
+import fr.uge.enemy.Enemy;
+import fr.uge.enemy.Hero;
+import fr.uge.items.FloatingItem;
+import fr.uge.items.Item;
+import fr.uge.items.Malediction;
+import fr.uge.map.MapDungeon;
+import fr.uge.room.HealerRoom;
+import fr.uge.room.Room;
 
 public record GameView(ApplicationContext context, MapDungeon floor, BackPack backpack) {
 

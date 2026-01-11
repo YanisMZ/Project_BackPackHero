@@ -13,22 +13,22 @@ import com.github.forax.zen.ApplicationContext;
 import com.github.forax.zen.KeyboardEvent;
 import com.github.forax.zen.PointerEvent;
 
-import fr.uge.implement.BackPack;
-import fr.uge.implement.BackpackExpansionSystem;
-import fr.uge.implement.Battle;
-import fr.uge.implement.Battle.EnemyAction;
-import fr.uge.implement.Dungeon;
-import fr.uge.implement.Enemy;
-import fr.uge.implement.FloatingItem;
-import fr.uge.implement.Grid;
-import fr.uge.implement.HealerRoom;
-import fr.uge.implement.Hero;
-import fr.uge.implement.Item;
-import fr.uge.implement.MapDungeon;
-import fr.uge.implement.Merchant;
-import fr.uge.implement.Room;
-import fr.uge.implement.Room.Type;
-import fr.uge.implement.TreasureChest;
+import fr.uge.backpack.BackPack;
+import fr.uge.backpack.BackpackExpansionSystem;
+import fr.uge.combat.Battle;
+import fr.uge.combat.Battle.EnemyAction;
+import fr.uge.enemy.Enemy;
+import fr.uge.enemy.Hero;
+import fr.uge.items.FloatingItem;
+import fr.uge.items.Item;
+import fr.uge.map.Dungeon;
+import fr.uge.map.MapDungeon;
+import fr.uge.room.Grid;
+import fr.uge.room.HealerRoom;
+import fr.uge.room.Merchant;
+import fr.uge.room.Room;
+import fr.uge.room.TreasureChest;
+import fr.uge.room.Room.Type;
 
 public class GameController {
 	private final ApplicationContext context;

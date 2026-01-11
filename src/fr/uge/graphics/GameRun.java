@@ -6,17 +6,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.forax.zen.Application;
 
-import fr.uge.implement.BackPack;
-import fr.uge.implement.Battle;
-import fr.uge.implement.Dungeon;
-import fr.uge.implement.Gold;
-import fr.uge.implement.HealingItem;
-import fr.uge.implement.Hero;
-import fr.uge.implement.Item;
-import fr.uge.implement.ItemType;
-import fr.uge.implement.Ration;
-import fr.uge.implement.Shield;
-import fr.uge.implement.Sword;
+import fr.uge.backpack.BackPack;
+import fr.uge.combat.Battle;
+import fr.uge.enemy.Hero;
+import fr.uge.items.Gold;
+import fr.uge.items.HealingItem;
+import fr.uge.items.Item;
+import fr.uge.items.ItemType;
+import fr.uge.items.Ration;
+import fr.uge.items.Shield;
+import fr.uge.items.Sword;
+import fr.uge.map.Dungeon;
 
 public class GameRun {
 
@@ -29,18 +29,12 @@ public class GameRun {
 			Dungeon dungeon = new Dungeon();
 
 			BackPack backpack = new BackPack(5, 7);
+			 int[][] sCells = { {1,2}, {1,3}, {1,4}, {2,2}, {2,3}, {2,4},{3,2}, {3,3}, {3,4} };
+			 backpack.unlockCells(sCells);
 
-			// Déblocage des cellules nécessaires pour la forme S (3x2)
-//			 int[][] sCells = { {1,1}, {2,1}, {0,2}, {1,2}, {2,2} };
-//			 backpack.unlockCells(sCells);
 
-//			// Placement
 
-			for (int y = 0; y < 7; y++) {
-				for (int x = 0; x < 5; x++) {
-					backpack.unlockCell(x, y);
-				}
-			}
+		
 
 			var floor0 = dungeon.getFloor(0);
 			GameView view = new GameView(context, floor0, backpack);
@@ -61,11 +55,9 @@ public class GameRun {
 //			+ affichage en continue
 
 			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2, 3), 2, 2);
-			backpack.place(new Shield("Shield", 5, 1, 1, 3), 2, 6);
-			backpack.place(new Ration("ration", 1, 1, 1), 3, 1);
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
-			backpack.autoAdd(new Gold("Gold", 65));
-			backpack.autoAdd(new Gold("Gold", 5));
+			backpack.autoAdd(new Gold("Gold", 10));
+
 
 			var hero = new Hero(40, 0, 3, 0, backpack);
 			var fight = new Battle(hero, backpack);
