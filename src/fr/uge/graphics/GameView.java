@@ -903,18 +903,19 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			key = "gold";
 		} else if (name.contains("heal")) {
 			key = "heal";
+		} else if (name.contains("ration")) {
+			key = "ration";
 		}
 
-		if (key != null && !key.equals("shield") && !key.equals("gold") && !key.equals("heal")) {
+		if (key != null && !key.equals("shield") && !key.equals("gold") && !key.equals("heal") && !key.equals("ration")) {
 			if (damage >= 20) {
 				key += "o";
 			} else if (damage >= 10) {
 				key += "v";
 			}
 		}
-
+		
 		BufferedImage img = (key != null) ? weaponAssets.get(key) : null;
-
 		if (img != null) {
 			g.drawImage(img, x, y, w, h, null);
 		} else {
@@ -977,55 +978,50 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	// ===================== STATS BARS =====================
 	private void drawHeroStats(Graphics2D g, Hero hero) {
-	   var info = context.getScreenInfo();
-	   
-	   int barHeight = 15;
-	   int sideBarWidth = 300;
-	   int startX = info.width() - sideBarWidth - 25;
-	   int currentY = 30;
+		var info = context.getScreenInfo();
 
-	
-	   drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), 
-	           Color.RED, Color.GREEN, "HERO", hero.hp() + " HP");
+		int barHeight = 15;
+		int sideBarWidth = 300;
+		int startX = info.width() - sideBarWidth - 25;
+		int currentY = 30;
 
-	   currentY += 40;
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
+				hero.hp() + " HP");
 
-	 
-	   drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), 
-	           Color.DARK_GRAY, Color.ORANGE, "STAMINA", 
-	           hero.currentStamina() + " / " + hero.maxStamina());
+		int expBarHeight = 20;
+		int expY = info.height() - expBarHeight - 10;
 
-	   currentY += 40;
+//		currentY += 40;
 
-	 
-	   g.setColor(Color.WHITE);
-	   g.drawString("PROTECTION", startX, currentY - 5);
-	   
-	 
-	   Color protectionBg = hero.protection() > 0 ? new Color(100, 150, 255) : new Color(60, 60, 60);
-	   g.setColor(protectionBg);
-	   g.fillRect(startX, currentY, sideBarWidth, barHeight);
-	   
-	   g.setColor(Color.BLACK);
-	   g.drawRect(startX, currentY, sideBarWidth, barHeight);
-	   
-	  
-	   String protectionText = hero.protection() + " 🛡️";
-	   g.setColor(Color.WHITE);
-	   int textWidth = g.getFontMetrics().stringWidth(protectionText);
-	   int textX = startX + (sideBarWidth - textWidth) / 2;
-	   
-	   g.setColor(Color.BLACK);
-	   g.drawString(protectionText, textX + 1, currentY + barHeight - 2);
-	   g.setColor(Color.WHITE);
-	   g.drawString(protectionText, textX, currentY + barHeight - 3);
+//		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.mana(), 100, Color.DARK_GRAY, Color.BLUE, "MANA",
+//				hero.mana() + " MANA");
 
-	   int expBarHeight = 20;
-	   int expY = info.height() - expBarHeight - 10;
+		currentY += 40;
 
-	   drawBar(g, 0, expY, info.width(), expBarHeight, hero.exp(), hero.maxExp(), 
-	           Color.BLACK, new Color(255, 215, 0), null, 
-	           "Level : " + hero.lvl(hero.exp()) + " | XP: " + (int)hero.exp() + " / " + (int)hero.maxExp());
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
+				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
+		int currentLevel = hero.lvl(hero.exp());
+
+		float startExp = hero.getXpForLevel(currentLevel);
+
+		float endExp;
+		if (currentLevel >= 5) {
+			endExp = hero.maxExp();
+		} else {
+			endExp = hero.getXpForLevel(currentLevel + 1);
+		}
+
+		float currentExpInLevel = hero.exp() - startExp;
+		float totalExpNeededForLevel = endExp - startExp;
+
+		if (totalExpNeededForLevel <= 0)
+			totalExpNeededForLevel = 1;
+
+		drawBar(g, 0, expY, info.width(), expBarHeight, currentExpInLevel, // 5
+				totalExpNeededForLevel, // 20
+				Color.BLACK, new Color(255, 215, 0), null,
+				"Level : " + currentLevel + " | XP: " + (int) currentExpInLevel + " / " + (int) totalExpNeededForLevel);
+
 	}
 
 	private void drawBar(Graphics2D g, int x, int y, int width, int height, double current, double max, Color bgColor,

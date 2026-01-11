@@ -62,7 +62,7 @@ public class GameRun {
 
 			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2, 3), 2, 2);
 			backpack.place(new Shield("Shield", 5, 1, 1, 3), 2, 6);
-			backpack.place(new Ration("Ration", 1, 1, 1), 3, 1);
+			backpack.place(new Ration("ration", 1, 1, 1), 3, 1);
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
 			backpack.autoAdd(new Gold("Gold", 65));
 			backpack.autoAdd(new Gold("Gold", 5));
