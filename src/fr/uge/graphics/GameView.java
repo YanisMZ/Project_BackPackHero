@@ -820,7 +820,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.setColor(Color.BLACK);
 		g.fillRect(x, y + h - 18, w, 18);
 		g.setColor(Color.YELLOW);
-		g.drawString(item.price() + " 💰", x + 5, y + h - 5);
+		g.drawString(item.price() + " $", x + 5, y + h - 5);
 	}
 
 //===================== HEALERROOM=====================
@@ -857,11 +857,11 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		// Texte
 		g.setColor(Color.WHITE);
 		g.setFont(g.getFont().deriveFont(20f));
-		String text = "❤️ SE SOIGNER";
+		String text = "SE SOIGNER";
 		g.drawString(text, buttonX + 30, buttonY + 35);
 
 		g.setFont(g.getFont().deriveFont(14f));
-		String cost = healerRoom.getHealCost() + " 💰 → +" + healerRoom.getHealAmount() + " HP";
+		String cost = healerRoom.getHealCost() + "$ → +" + healerRoom.getHealAmount() + " HP";
 		g.drawString(cost, buttonX + 40, buttonY + 60);
 
 		// Message si impossible

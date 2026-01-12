@@ -93,6 +93,10 @@ public class GameController {
 	private int animatedPlayerIndex;
 
 	private boolean combatPausedByMalediction = false;
+	private boolean exitGuardDefeated = false;
+	private boolean exitCombatActive = false;
+
+
 
 	public GameController(ApplicationContext context, GameView view, MapDungeon floor, BackPack backpack, Battle fight,
 			Dungeon dungeon, Hero hero) {
@@ -684,7 +688,7 @@ public class GameController {
 		placingMalediction = false;
 		combatPausedByMalediction = false;
 
-		System.out.println("☠️ Malédiction placée !");
+		System.out.println(" Malédiction placée !");
 		return true;
 	}
 
@@ -857,49 +861,56 @@ public class GameController {
 
 	private void processRoomType(int room) {
 
-		Type roomType = floor.rooms().get(room).type();
-		this.lastChangeRoom = System.currentTimeMillis();
+    Type roomType = floor.rooms().get(room).type();
+    this.lastChangeRoom = System.currentTimeMillis();
 
-		switch (roomType) {
-		case ENEMY -> {
-			if (clearedEnemyRooms.contains(room)) {
+    switch (roomType) {
 
-				setEmptyRoomState();
+    case ENEMY -> {
+        if (clearedEnemyRooms.contains(room)) {
+            setEmptyRoomState();
+        } else {
+            startCombat();
+        }
+    }
 
-			} else {
-				startCombat();
-			}
-		}
+    case TREASURE -> {
+        if (clearedTreasureRooms.contains(room)) {
+            setCorridorState();
+        } else {
+            TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
+                TreasureChest newChest = new TreasureChest(3, 5);
+                newChest.generateTreasure();
+                return newChest;
+            });
+            this.treasureChest = chest;
+            setTreasureState();
+        }
+    }
 
-		case TREASURE -> {
-			if (clearedTreasureRooms.contains(room)) {
-				setCorridorState();
-			} else {
-				TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
-					TreasureChest newChest = new TreasureChest(3, 5);
-					newChest.generateTreasure();
-					return newChest;
-				});
-				this.treasureChest = chest;
-				setTreasureState();
-			}
-		}
+    case MERCHANT -> {
+        merchant.generateStock();
+        setMerchantState();
+    }
 
-		case MERCHANT -> {
-			merchant.generateStock();
-			setMerchantState();
-		}
-		case HEALER -> {
-			setHealerState();
-		}
-		case EXIT -> {
-			goToNextFloor();
-		}
-		default -> {
-			setCorridorState();
-		}
-		}
-	}
+    case HEALER -> {
+        setHealerState();
+    }
+
+    case EXIT -> {
+        if (!exitGuardDefeated) {
+            startExitCombat();
+        } else {
+            goToNextFloor();
+        }
+    }
+
+    default -> {
+        setCorridorState();
+    }
+    }
+}
+
 
 	private void leaveTreasureRoom() {
 		int room = floor.playerIndex();
@@ -926,33 +937,45 @@ public class GameController {
 	}
 
 	private void checkCombatEnd() {
-		if (fight == null || fight.isRunning())
-			return;
+    if (fight == null || fight.isRunning())
+        return;
 
-		if (combatPausedByMalediction && (placingMalediction || currentMalediction != null)) {
-			System.out.println("☠️ Tu dois placer la malédiction avant de continuer !");
-			return;
-		}
+    if (combatPausedByMalediction && (placingMalediction || currentMalediction != null)) {
+        System.out.println("☠️ Tu dois placer la malédiction avant de continuer !");
+        return;
+    }
 
-		if (combatPausedByMalediction && placedMalediction != null) {
-			combatPausedByMalediction = false;
-			System.out.println("✅ Malédiction placée, le combat peut se terminer.");
-		}
+    if (combatPausedByMalediction && placedMalediction != null) {
+        combatPausedByMalediction = false;
+    }
 
-		inCombat = false;
-		clearedEnemyRooms.add(floor.playerIndex());
-		int defeated = fight.getDefeatedEnemiesCount();
-		expansionSystem.addPendingUnlocks(defeated);
+    inCombat = false;
 
-		if (expansionSystem.hasPendingUnlocks()) {
-			inExpansionMode = true;
-		}
+   
+    if (exitCombatActive) {
+      exitCombatActive = false;
+      exitGuardDefeated = true;
+      goToNextFloor();   
+      return;
+  }
 
-		treasureChest.generateTreasure();
-		if (!treasureChest.getGrid().isEmpty() && !inExpansionMode) {
-			setTreasureState();
-		}
-	}
+
+    
+    clearedEnemyRooms.add(floor.playerIndex());
+
+    int defeated = fight.getDefeatedEnemiesCount();
+    expansionSystem.addPendingUnlocks(defeated);
+
+    if (expansionSystem.hasPendingUnlocks()) {
+        inExpansionMode = true;
+    }
+
+    treasureChest.generateTreasure();
+    if (!treasureChest.getGrid().isEmpty() && !inExpansionMode) {
+        setTreasureState();
+    }
+}
+
 
 	// ===================== STATE MANAGEMENT =====================
 	private void setHealerState() {
@@ -996,6 +1019,15 @@ public class GameController {
 		inMerchant = false;
 		inHealer = false;
 	}
+	
+	
+	private void startExitCombat() {
+    exitCombatActive = true;
+
+    startCombat();
+}
+
+
 
 	// ===================== MERCHANT =====================
 	private void handleMerchantClick(int mouseX, int mouseY) {
@@ -1098,6 +1130,9 @@ public class GameController {
 		floor.movePlayerTo(0);
 		floor.clearVisited();
 		setCorridorState();
+		exitGuardDefeated = false;
+		exitCombatActive = false;
+
 	}
 
 	// ===================== COORDINATES =====================

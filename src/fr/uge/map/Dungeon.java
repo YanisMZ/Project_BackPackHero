@@ -1,93 +1,86 @@
 package fr.uge.map;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import fr.uge.room.Room;
-import fr.uge.room.Room.Type;
 
 public class Dungeon {
 
   private final List<MapDungeon> floors = new ArrayList<>();
- 
+  private final Random random = new Random();
+
+  private static final int MIN_ROOMS = 16;
 
   public Dungeon() {
-    floors.add(createFirstFloor());
-    floors.add(createSecondFloor());
-    floors.add(createThirdFloor());
+    floors.add(createRandomFloor("Floor 1 -"));
+    floors.add(createRandomFloor("Floor 2 -"));
+    floors.add(createRandomFloor("Floor 3 -"));
   }
 
   public MapDungeon getFloor(int index) {
     return floors.get(index);
   }
 
-  private MapDungeon createFloor(String prefix) {
+  private MapDungeon createRandomFloor(String prefix) {
     MapDungeon floor = new MapDungeon();
+    List<Room> rooms = new ArrayList<>();
 
-    floor.add(new Room(prefix + " Corridor 1", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 2", Room.Type.CORRIDOR));
+  
+    addRooms(rooms, prefix, Room.Type.ENEMY, 3);
+    addRooms(rooms, prefix, Room.Type.TREASURE, 2);
+    addRooms(rooms, prefix, Room.Type.MERCHANT, 1);
+    addRooms(rooms, prefix, Room.Type.HEALER, 1);
 
-    floor.add(new Room(prefix + " Enemy Room A", Room.Type.ENEMY));
-    floor.add(new Room(prefix + " Enemy Room B", Room.Type.ENEMY));
-    floor.add(new Room(prefix + " Enemy Room C", Room.Type.ENEMY));
+  
+    int currentCount = rooms.size() + 1; // +1 pour EXIT
+    int corridorsToAdd = Math.max(0, MIN_ROOMS - currentCount);
 
-    floor.add(new Room(prefix + " Merchant Room", Room.Type.MERCHANT));
+    addRooms(rooms, prefix, Room.Type.CORRIDOR, corridorsToAdd);
 
-    floor.add(new Room(prefix + " Healer Room", Room.Type.HEALER));
 
-    floor.add(new Room(prefix + " Treasure Room 1", Room.Type.TREASURE));
-    floor.add(new Room(prefix + " Treasure Room 2", Room.Type.TREASURE));
+    Collections.shuffle(rooms, random);
 
-    floor.add(new Room(prefix + " Corridor 3", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 4", Room.Type.CORRIDOR));
+ 
+    forceFirstCorridor(rooms, prefix);
 
-    floor.add(new Room(prefix + " Exit Door", Room.Type.EXIT));
+ 
+    rooms.add(new Room(prefix + " Exit Door", Room.Type.EXIT));
 
-    floor.add(new Room(prefix + " Corridor 5", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 6", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 7", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 8", Room.Type.CORRIDOR));
+
+    for (Room room : rooms) {
+      floor.add(room);
+    }
 
     return floor;
   }
-  
-  
-  
-  
-  private MapDungeon createFloor2(String prefix) {
-    MapDungeon floor = new MapDungeon();
 
-    floor.add(new Room(prefix + " Corridor 1", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 2", Room.Type.CORRIDOR));
 
-    floor.add(new Room(prefix + " Enemy Room A", Room.Type.ENEMY));
+
+  private void addRooms(List<Room> rooms, String prefix, Room.Type type, int count) {
+    for (int i = 1; i <= count; i++) {
+      rooms.add(new Room(prefix + " " + type.name() + " Room " + i, type));
+    }
+  }
+
+  private void forceFirstCorridor(List<Room> rooms, String prefix) {
+    if (rooms.isEmpty())
+      return;
+
+    if (rooms.get(0).type() == Room.Type.CORRIDOR)
+      return;
+
+
+    for (int i = 1; i < rooms.size(); i++) {
+      if (rooms.get(i).type() == Room.Type.CORRIDOR) {
+        Collections.swap(rooms, 0, i);
+        return;
+      }
+    }
+
     
-    floor.add(new Room(prefix + " Corridor 3", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 4", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Enemy Room B", Room.Type.ENEMY));
-    floor.add(new Room(prefix + " Merchant Room", Room.Type.MERCHANT));
-    floor.add(new Room(prefix + " Healer Room", Room.Type.HEALER));
-    floor.add(new Room(prefix + " Treasure Room 1", Room.Type.TREASURE));
-    floor.add(new Room(prefix + " Treasure Room 2", Room.Type.TREASURE)); 
-    floor.add(new Room(prefix + " Exit Door", Room.Type.EXIT));
-    floor.add(new Room(prefix + " Corridor 5", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 6", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 7", Room.Type.CORRIDOR));
-    floor.add(new Room(prefix + " Corridor 8", Room.Type.CORRIDOR));  
-    floor.add(new Room(prefix + " Enemy Room C", Room.Type.ENEMY));
-
-    return floor;
-  }
-
-  private MapDungeon createFirstFloor() {
-    return createFloor("Floor 1 -");
-  }
-
-  private MapDungeon createSecondFloor() {
-    return createFloor2("Floor 2 -");
-  }
-
-  private MapDungeon createThirdFloor() {
-    return createFloor("Floor 3 -");
+    rooms.add(0, new Room(prefix + " Corridor Start", Room.Type.CORRIDOR));
   }
 }

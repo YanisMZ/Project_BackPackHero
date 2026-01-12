@@ -54,7 +54,7 @@ public class GameRun {
 //			Jusqu'ici car Boolean classique marchait pas 
 //			+ affichage en continue
 
-			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2, 3), 2, 2);
+			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2, 5), 2, 2);
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
 			backpack.autoAdd(new Gold("Gold", 10));
 

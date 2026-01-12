@@ -221,7 +221,7 @@ public class Battle {
         System.out.println("==============================================\n");
     }
 
-    private void startNewPlayerTurn() {
+    public void startNewPlayerTurn() {
         playerTurnActive = true;
         hero.resetStaminaForNewTurn();
         System.out.println("\n========== NOUVEAU TOUR JOUEUR ==========");
