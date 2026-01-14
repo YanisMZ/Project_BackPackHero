@@ -5,7 +5,7 @@ import java.util.Random;
 public class ItemFactory {
 
     public static Item randomItem() {
-        // Création d'une instance locale pour éviter la variable statique
+        
         Random random = new Random();
         
         int choice = random.nextInt(4); 
@@ -13,7 +13,7 @@ public class ItemFactory {
 
         return switch (choice) {
             case 0 -> {
-                // On récupère le tableau des types localement
+               
                 ItemType[] weaponTypes = ItemType.values();
                 ItemType randomWeapon = weaponTypes[random.nextInt(weaponTypes.length)];
                 yield new Sword(randomWeapon, power, 1, 1, 2,5);
@@ -33,7 +33,7 @@ public class ItemFactory {
 
         return switch (type) {
             case 0 -> {
-              // On récupère le tableau des types localement
+              
               ItemType[] weaponTypes = ItemType.values();
               ItemType randomWeapon = weaponTypes[random.nextInt(weaponTypes.length)];
               yield new Sword(randomWeapon, power, 1, 1, 2,5);

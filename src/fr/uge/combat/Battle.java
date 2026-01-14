@@ -63,13 +63,13 @@ public class Battle {
 
         hero.useStamina(item.staminaCost());
 
-        // Régénération de stamina
+        //  stamina
         if (item.staminaRegen() > 0) {
             hero.addStamina(item.staminaRegen());
             System.out.println("Energie + " + item.staminaRegen());
         }
 
-        // Soins
+        // heal
         if (item.healthRegen() > 0) {
             hero.heal(item.healthRegen());
             System.out.println("Soins : +" + item.healthRegen() + " HP");
@@ -80,19 +80,19 @@ public class Battle {
             hero.addProtection(item.defendValue());
         }
 
-        // *** NOUVEAU : Attaque avec effets de combat ***
+        
         if (!enemies.isEmpty() && item.attackValue() > 0) {
-            // Trouver la position de l'item dans le sac
+            
             int[] position = findItemPosition(item);
             
-            // Calculer les effets de combat
+           
             CombatResult result = combatEffects.applyItemEffects(
                 item, position[0], position[1], hero
             );
             
             int finalDamage = result.damage();
             
-            // Appliquer les dégâts à l'ennemi
+         
             Enemy target = enemies.get(0);
             target = target.takeDamage(finalDamage);
             
@@ -106,7 +106,7 @@ public class Battle {
             }
         }
 
-        // Mise à jour de la durabilité
+   
         Item updatedItem = item.decreaseDurability();
         if (updatedItem.isBroken()) {
             backpack.updateItem(item, null);
@@ -130,7 +130,7 @@ public class Battle {
                 }
             }
         }
-        return new int[]{0, 0}; // Par défaut
+        return new int[]{0, 0}; 
     }
 
     public void endPlayerTurn() {

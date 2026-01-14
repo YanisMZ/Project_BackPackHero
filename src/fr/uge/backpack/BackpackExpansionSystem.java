@@ -75,12 +75,10 @@ public class BackpackExpansionSystem {
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Skip si déjà débloquée
+  
                 if (backpack.isUnlocked(x, y)) continue;
                 
-                // Pour être disponible, la case doit être :
-                // 1. Adjacente à au moins une case débloquée
-                // 2. Sur le bord extérieur de la zone débloquée (pas entourée de cases débloquées)
+           
                 if (isAdjacentToUnlocked(x, y) && isOnUnlockedPerimeter(x, y)) {
                     availableExpansions.add(new Point(x, y));
                 }
@@ -115,26 +113,24 @@ public class BackpackExpansionSystem {
     private boolean isOnUnlockedPerimeter(int x, int y) {
         int[][] directions = {{-1,0}, {1,0}, {0,-1}, {0,1}};
         
-        // La case doit avoir au moins un côté qui "donne sur l'extérieur"
-        // (soit hors grille, soit vers une autre case verrouillée)
+
         for (int[] dir : directions) {
             int nx = x + dir[0];
             int ny = y + dir[1];
             
-            // Si on sort de la grille, c'est un bord extérieur
+            
             if (nx < 0 || nx >= backpack.width() || 
                 ny < 0 || ny >= backpack.height()) {
                 return true;
             }
             
-            // Si la case voisine est verrouillée, on est sur un bord
+            
             if (!backpack.isUnlocked(nx, ny)) {
                 return true;
             }
         }
         
-        // Si toutes les directions mènent vers des cases débloquées,
-        // on est entouré = pas sur le périmètre
+       
         return false;
     }
 }

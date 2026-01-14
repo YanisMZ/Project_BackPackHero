@@ -23,17 +23,12 @@ public class HealerRoom {
     
     public boolean healHero(Hero hero) {
         if (!canHeal(hero)) {
-            if (!hero.hasEnoughGold(HEAL_COST)) {
-                System.out.println("❌ Pas assez d'or ! (" + HEAL_COST + " requis)");
-            } else {
-                System.out.println("❤️ Vous êtes déjà à HP max !");
-            }
             return false;
         }
         
         hero.removeGold(HEAL_COST);
         hero.heal(HEAL_AMOUNT);
-        System.out.println("✅ Soigné de " + HEAL_AMOUNT + " HP pour " + HEAL_COST + " or !");
+        
         return true;
     }
 }

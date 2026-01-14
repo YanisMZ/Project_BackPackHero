@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.github.forax.zen.Application;
 
 import fr.uge.backpack.BackPack;
+import fr.uge.backpack.BackpackExpansionSystem;
 import fr.uge.combat.Battle;
 import fr.uge.enemy.Hero;
 import fr.uge.items.Gold;
@@ -17,6 +18,9 @@ import fr.uge.items.Ration;
 import fr.uge.items.Shield;
 import fr.uge.items.Sword;
 import fr.uge.map.Dungeon;
+import fr.uge.room.HealerRoom;
+import fr.uge.room.Merchant;
+import fr.uge.room.TreasureChest;
 
 public class GameRun {
 
@@ -65,8 +69,13 @@ public class GameRun {
 			var screenInfo = context.getScreenInfo();
 			var width = screenInfo.width();
 			var height = screenInfo.height();
+			
+			var treasureChest = new TreasureChest(3, 5);
+			var merchant = new Merchant(3, 5);
+			var expansionSystem = new BackpackExpansionSystem(backpack);
+			var healerRoom = new HealerRoom();
 
-			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero);
+			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero,treasureChest,merchant,expansionSystem,healerRoom);
 
 			while (true) {
 				boolean needsFastUpdate = controller.isDragging() || controller.isPlayerMoving()

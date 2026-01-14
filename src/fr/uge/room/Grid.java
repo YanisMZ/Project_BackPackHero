@@ -37,7 +37,7 @@ public class Grid {
 
     public boolean placeItem(Item item) {
 
-        // 🔥 Stackable (ex: Gold)
+        
         if (item.isStackable()) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < cols; x++) {
@@ -50,7 +50,7 @@ public class Grid {
             }
         }
 
-        // 🔁 Placement classique
+      
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 if (canPlace(item, x, y)) {

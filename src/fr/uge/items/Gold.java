@@ -61,7 +61,7 @@ public record Gold(String name, int quantity) implements Item {
 	
 	@Override
   public boolean isSellable() {
-      return false; // L'or n'est pas vendable au marchand
+      return false; 
   }
 	public int price() {
 		return 0;

@@ -26,7 +26,7 @@ public class CombatEffects {
     public int calculateDamage(Item weapon, int x, int y) {
         int baseDamage = weapon.attackValue();
         
-        // Cas spécial : Hachette
+        
         if (weapon.name().equalsIgnoreCase("Hachette")) {
             if (hero.protection() > 0) {
                 return 1;
@@ -44,7 +44,7 @@ public class CombatEffects {
     public int calculateLifeBonus(Item weapon, int x, int y) {
         int lifeBonus = 0;
         
-        // Vérifier si l'arme est adjacente à une gemme de cœur
+       
         if (isAdjacentToHeartGem(x, y)) {
             lifeBonus += 1;
         }
@@ -61,7 +61,7 @@ public class CombatEffects {
         
         Set<int[]> itemPositions = getItemPositions(item);
         
-        // Pour chaque position de l'item, vérifier les 8 cases adjacentes
+        
         for (int[] pos : itemPositions) {
             if (hasHeartGemAround(pos[0], pos[1])) {
                 return true;
@@ -76,9 +76,9 @@ public class CombatEffects {
      */
     private boolean hasHeartGemAround(int x, int y) {
         int[][] directions = {
-            {-1, -1}, {0, -1}, {1, -1},  // haut-gauche, haut, haut-droite
-            {-1, 0},           {1, 0},    // gauche, droite
-            {-1, 1},  {0, 1},  {1, 1}     // bas-gauche, bas, bas-droite
+            {-1, -1}, {0, -1}, {1, -1}, 
+            {-1, 0},           {1, 0},    
+            {-1, 1},  {0, 1},  {1, 1}    
         };
         
         for (int[] dir : directions) {
@@ -130,10 +130,10 @@ public class CombatEffects {
         int damage = calculateDamage(item, x, y);
         int lifeBonus = calculateLifeBonus(item, x, y);
         
-        // Appliquer le bonus de vie si applicable
+       
         if (lifeBonus > 0) {
             hero.heal(lifeBonus);
-            System.out.println("💚 Gemme de cœur activée ! +" + lifeBonus + " HP");
+            System.out.println("Gemme de cœur activée ! +" + lifeBonus + " HP");
         }
         
         return new CombatResult(damage, lifeBonus);

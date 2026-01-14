@@ -162,10 +162,10 @@ public class Hero {
 
 	public void heal(int amount) {
 		if (amount < 0) {
-			return; // On ne soigne pas des montants négatifs
+			return; 
 		}
 
-		// On ajoute le soin tout en s'assurant de ne pas dépasser maxHp
+
 		this.hp = Math.min(this.hp + amount, this.maxHp);
 
 		System.out.println("Héros soigné ! HP actuels : " + this.hp + "/" + this.maxHp);
