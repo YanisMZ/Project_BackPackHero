@@ -344,7 +344,7 @@ public class GameController {
 			return false;
 
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
-			// BLOQUER LA FIN DU TOUR SI MALÉDICTION NON PLACÉE
+		
 			if (placingMalediction || currentMalediction != null) {
 
 				return true;
@@ -852,69 +852,73 @@ public class GameController {
 	// ===================== ROOM HANDLING =====================
 
 	private void processRoomType(int room) {
+    Type roomType = floor.rooms().get(room).type();
+    this.lastChangeRoom = System.currentTimeMillis();
 
-		Type roomType = floor.rooms().get(room).type();
-		this.lastChangeRoom = System.currentTimeMillis();
+    switch (roomType) {
 
-		switch (roomType) {
+    case ENEMY -> {
+        if (clearedEnemyRooms.contains(room)) {
+            setEmptyRoomState();
+        } else {
+            startCombat();
+        }
+    }
 
-		case ENEMY -> {
-			if (clearedEnemyRooms.contains(room)) {
-				setEmptyRoomState();
-			} else {
-				startCombat();
-			}
-		}
+    case TREASURE -> {
+       
+        TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
+            TreasureChest newChest = new TreasureChest(3, 5);
+            newChest.generateTreasure();
+            return newChest;
+        });
+        this.treasureChest = chest;
+        
+      
+        if (chest.getGrid().isEmpty()) {
+            clearedTreasureRooms.add(room);
+            setCorridorState();
+        } else {
+            setTreasureState();
+        }
+    }
 
-		case TREASURE -> {
-			if (clearedTreasureRooms.contains(room)) {
-				setCorridorState();
-			} else {
-				TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
-					TreasureChest newChest = new TreasureChest(3, 5);
-					newChest.generateTreasure();
-					return newChest;
-				});
-				this.treasureChest = chest;
-				setTreasureState();
-			}
-		}
+    case MERCHANT -> {
+        merchant.generateStock();
+        setMerchantState();
+    }
 
-		case MERCHANT -> {
-			merchant.generateStock();
-			setMerchantState();
-		}
+    case HEALER -> {
+        setHealerState();
+    }
 
-		case HEALER -> {
-			setHealerState();
-		}
+    case EXIT -> {
+        if (!exitGuardDefeated) {
+            startExitCombat();
+        } else {
+            goToNextFloor();
+        }
+    }
 
-		case EXIT -> {
-			if (!exitGuardDefeated) {
-				startExitCombat();
-			} else {
-				goToNextFloor();
-			}
-		}
-
-		default -> {
-			setCorridorState();
-		}
-		}
-	}
+    default -> {
+        setCorridorState();
+    }
+    }
+}
 
 	private void leaveTreasureRoom() {
-		int room = floor.playerIndex();
-		clearedTreasureRooms.add(room);
-
-		TreasureChest chest = treasureChests.get(room);
-		if (chest != null) {
-			chest.getGrid().clear();
-		}
-		floatingItems.clear();
-
-		setCorridorState();
-	}
+    int room = floor.playerIndex();
+    TreasureChest chest = treasureChests.get(room);
+    if (chest != null && chest.getGrid().isEmpty()) {
+       
+        clearedTreasureRooms.add(room);
+    }
+    
+    
+    floatingItems.clear();
+    
+    setCorridorState();
+}
 
 	// ===================== COMBAT =====================
 	private void startCombat() {

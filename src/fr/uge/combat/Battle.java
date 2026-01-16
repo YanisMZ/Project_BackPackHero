@@ -18,7 +18,7 @@ public class Battle {
     private final BackPack backpack;
     private final CombatEffects combatEffects;
     private final List<Enemy> enemies = new ArrayList<>();
-    private final Random random = new Random();
+    private final Random random;
 
     public enum EnemyAction {
         ATTACK, DEFEND, MALEDICTION
@@ -28,7 +28,8 @@ public class Battle {
     private boolean playerTurnActive = true;
     private int defeatedEnemiesThisCombat = 0;
 
-    public Battle(Hero hero, BackPack backpack) {
+    public Battle(Hero hero, BackPack backpack,Random random) {
+    	 	this.random = random;
         this.hero = hero;
         this.backpack = backpack;
         this.combatEffects = new CombatEffects(backpack, hero);

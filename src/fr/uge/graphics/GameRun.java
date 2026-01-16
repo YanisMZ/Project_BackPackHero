@@ -2,6 +2,7 @@ package fr.uge.graphics;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.forax.zen.Application;
@@ -64,7 +65,7 @@ public class GameRun {
 
 
 			var hero = new Hero(40, 0, 3, 0, backpack);
-			var fight = new Battle(hero, backpack);
+			var fight = new Battle(hero, backpack,new Random());
 
 			var screenInfo = context.getScreenInfo();
 			var width = screenInfo.width();
