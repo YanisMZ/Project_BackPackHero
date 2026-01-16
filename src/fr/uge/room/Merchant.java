@@ -18,7 +18,7 @@ public class Merchant {
         stock.generateRandomItemsMarchant(3, 7);
     }
 
-    // ACHAT (joueur achète au marchand)
+   
     public boolean buyItem(Item item, Hero hero) {
         int price = item.price();
 

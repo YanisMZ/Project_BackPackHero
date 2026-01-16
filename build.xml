@@ -1,0 +1,89 @@
+<project name="FrUgeProject" default="dist" basedir=".">
+  <description>Build file for Fr.Uge project</description>
+
+  <!-- Properties -->
+  <property name="src" location="src"/>
+  <property name="bin" location="bin"/>
+  <property name="docs" location="docs"/>
+  <property name="data" location="data"/>
+  <property name="include" location="include"/>
+
+  <!-- Initialize the build environment -->
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${bin}"/>
+  </target>
+
+  <!-- Compile the source code -->
+  <target name="compile" depends="init" description="Compile the Java source">
+    <mkdir dir="${bin}"/>
+    <javac srcdir="${src}" destdir="${bin}" includeantruntime="false" debug="true">
+      <classpath>
+        <fileset dir="${include}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+    <!-- Copy the data folder to the bin directory -->
+    <copy todir="${bin}/data" failonerror="false">
+      <fileset dir="${data}"/>
+    </copy>
+  </target>
+
+  <!-- Generate the distribution with the JAR file -->
+  <target name="dist" depends="compile" description="Generate the distribution">
+    <!-- Create distribution directory structure -->
+    <mkdir dir="${docs}/lib"/>
+    <mkdir dir="${docs}/doc"/>
+
+    <!-- Create the fat JAR file -->
+    <jar jarfile="${docs}/lib/FrUgeProject.jar">
+      <!-- Add the manifest with the main class -->
+      <manifest>
+        <attribute name="Main-Class" value="fr.uge.main.Main"/>
+      </manifest>
+      <!-- Include compiled classes -->
+      <fileset dir="${bin}"/>
+      <!-- Include all JAR dependencies -->
+      <zipgroupfileset dir="${include}" includes="**/*.jar" erroronmissingdir="false">
+        <exclude name="**/*-sources.jar"/>
+        <exclude name="**/*-javadoc.jar"/>
+      </zipgroupfileset>
+      <!-- Exclude signature files to avoid conflicts -->
+      <exclude name="META-INF/*.SF"/>
+      <exclude name="META-INF/*.DSA"/>
+      <exclude name="META-INF/*.RSA"/>
+    </jar>
+
+    <!-- Generate Javadoc -->
+    <javadoc destdir="${docs}/doc" sourcepath="${src}" failonerror="false">
+      <classpath>
+        <fileset dir="${include}" erroronmissingdir="false">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+      <doctitle>Documentation Fr.Uge Project</doctitle>
+      <packageset dir="${src}">
+        <include name="fr/uge/**"/>
+      </packageset>
+    </javadoc>
+  </target>
+
+  <!-- Run the application -->
+  <target name="run" depends="compile" description="Run the application">
+    <java classname="fr.uge.main.Main" fork="true">
+      <classpath>
+        <pathelement location="${bin}"/>
+        <fileset dir="${include}" erroronmissingdir="false">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </java>
+  </target>
+
+  <!-- Clean up the build and distribution directories -->
+  <target name="clean" description="Clean up the build and dist directories">
+    <delete dir="${bin}"/>
+    <delete dir="${docs}/doc"/>
+  </target>
+</project>
