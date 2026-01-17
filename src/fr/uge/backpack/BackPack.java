@@ -170,7 +170,7 @@ public class BackPack {
 			}
 		}
 
-		// Placer dans un emplacement libre
+
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				if (canPlace(item, x, y))
@@ -215,7 +215,7 @@ public class BackPack {
 				}
 			}
 		}
-		// Si aucun stack existant, créer un nouveau stack
+
 		autoAdd(new Gold(itemName, amount));
 	}
 

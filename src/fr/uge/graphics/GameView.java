@@ -853,19 +853,19 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		g.drawRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 20, 20);
 		g.setStroke(new java.awt.BasicStroke(1));
 
-		// Texte
+	
 		g.setColor(Color.WHITE);
-		g.setFont(g.getFont().deriveFont(20f));
+	
 		String text = "SE SOIGNER";
 		g.drawString(text, buttonX + 30, buttonY + 35);
 
-		g.setFont(g.getFont().deriveFont(14f));
+
 		String cost = healerRoom.getHealCost() + "$ → +" + healerRoom.getHealAmount() + " HP";
 		g.drawString(cost, buttonX + 40, buttonY + 60);
 
-		// Message si impossible
+
 		if (!canHeal) {
-			g.setFont(g.getFont().deriveFont(16f));
+			
 			g.setColor(Color.YELLOW);
 			String msg = !hero.hasEnoughGold(healerRoom.getHealCost()) ? "Pas assez d'or" : "HP au maximum";
 			g.drawString(msg, buttonX + 40, buttonY + buttonHeight + 30);
@@ -1129,7 +1129,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				g.drawRoundRect(bubbleX, startY, bubbleWidth, bubbleHeight, 15, 15);
 				g.setStroke(new java.awt.BasicStroke(1));
 
-				g.setFont(g.getFont().deriveFont(14f));
+
 				g.setColor(Color.BLACK);
 				String text = switch (action) {
 				case ATTACK -> "ATK";
@@ -1140,7 +1140,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 				if (action == Battle.EnemyAction.ATTACK) {
 					String dmgText = enemy.attackDamage() + " DMG";
-					g.setFont(g.getFont().deriveFont(12f));
+				
 					g.setColor(Color.DARK_GRAY);
 					g.drawString(dmgText, bubbleX + 50, startY + 45);
 				}
@@ -1177,9 +1177,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 					if (dx == 1 && dy == 0) {
 						g.setColor(Color.WHITE);
-						g.setFont(g.getFont().deriveFont(28f));
-						g.drawString("☠️", cellX + 8, cellY + 38);
-						g.setFont(g.getFont().deriveFont(12f));
+					
+						g.drawString("*-*", cellX + 8, cellY + 38);
+			
 					}
 				}
 			}

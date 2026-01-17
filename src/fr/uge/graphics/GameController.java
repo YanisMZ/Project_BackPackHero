@@ -298,6 +298,12 @@ public class GameController {
 	}
 
 	// ===================== KEYBOARD HANDLING =====================
+	/**
+	 * Handles all keyboard inputs.
+	 * Calls specific methods depending on the pressed key.
+	 *
+	 * @param ke the keyboard event
+	 */
 	private void handleKeyboard(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.Q)
 			System.exit(0);
@@ -310,12 +316,20 @@ public class GameController {
 			return;
 		if (handleCombatEndTurn(ke))
 			return;
-
 	}
 
+	/**
+	 * Handles item rotation when the player presses R.
+	 *
+	 * @param ke the keyboard event
+	 * @return true if the rotation was handled
+	 */
 	private boolean handleRotation(KeyboardEvent ke) {
-		if (ke.key() == KeyboardEvent.Key.R && ke.action() == KeyboardEvent.Action.KEY_PRESSED && isDragging
+		if (ke.key() == KeyboardEvent.Key.R
+				&& ke.action() == KeyboardEvent.Action.KEY_PRESSED
+				&& isDragging
 				&& draggedItem != null) {
+
 			draggedItem = draggedItem.rotate();
 			dragOriginalItem = draggedItem;
 			return true;
@@ -323,6 +337,12 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Exits backpack expansion mode when SPACE is pressed.
+	 *
+	 * @param ke the keyboard event
+	 * @return true if expansion mode was exited
+	 */
 	private boolean handleExpansionExit(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.SPACE && inExpansionMode) {
 			inExpansionMode = false;
@@ -334,6 +354,13 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Deletes selected items when X is pressed.
+	 * Disabled during combat.
+	 *
+	 * @param ke the keyboard event
+	 * @return true if items were deleted
+	 */
 	private boolean handleDelete(KeyboardEvent ke) {
 		if (ke.key() == KeyboardEvent.Key.X && !inCombat) {
 			handleDeleteSelectedItems();
@@ -342,6 +369,13 @@ public class GameController {
 		return false;
 	}
 
+	/**
+	 * Ends the player's turn during combat when CTRL is released.
+	 * Also checks enemy actions and combat end.
+	 *
+	 * @param ke the keyboard event
+	 * @return true if the turn was handled
+	 */
 	private boolean handleCombatEndTurn(KeyboardEvent ke) {
 		if (!inCombat || ke.action() != KeyboardEvent.Action.KEY_RELEASED)
 			return false;
@@ -349,7 +383,6 @@ public class GameController {
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
 
 			if (placingMalediction || currentMalediction != null) {
-
 				return true;
 			}
 
@@ -370,7 +403,15 @@ public class GameController {
 		return false;
 	}
 
+
 	// ===================== POINTER HANDLING =====================
+	
+	
+	/**
+	 * Handles mouse input.
+	 *
+	 * @param pe pointer event
+	 */
 	private void handlePointer(PointerEvent pe) {
 		int mouseX = pe.location().x();
 		int mouseY = pe.location().y();
@@ -383,7 +424,13 @@ public class GameController {
 		}
 		}
 	}
-
+	/**
+	 * Handles mouse button press.
+	 * Stores pointer position and dispatches the action.
+	 *
+	 * @param mouseX x position of the mouse
+	 * @param mouseY y position of the mouse
+	 */
 	private void handlePointerDown(int mouseX, int mouseY) {
 		pointerDownX = mouseX;
 		pointerDownY = mouseY;
@@ -404,7 +451,15 @@ public class GameController {
 		if (!inCombat && handleRoomNavigation(mouseX, mouseY))
 			return;
 	}
-
+	
+	
+	/**
+	 * Handles click on the healer room button.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if the healer button was clicked
+	 */
 	private boolean handleHealerClick(int mouseX, int mouseY) {
 		if (!inHealer)
 			return false;
@@ -421,7 +476,15 @@ public class GameController {
 		}
 		return false;
 	}
-
+	
+	
+	/**
+	 * Checks if the mouse movement is large enough to start dragging.
+	 * Applies penalties for forbidden drags.
+	 *
+	 * @param mouseX current mouse x position
+	 * @param mouseY current mouse y position
+	 */
 	private void checkDragThreshold(int mouseX, int mouseY) {
 		int deltaX = Math.abs(mouseX - pointerDownX);
 		int deltaY = Math.abs(mouseY - pointerDownY);
@@ -451,6 +514,15 @@ public class GameController {
 			combatPausedByMalediction = false;
 		}
 	}
+	
+	
+	/**
+	 * Handles clicks during backpack expansion mode.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if an expansion cell was unlocked
+	 */
 
 	private boolean handleExpansionClick(int mouseX, int mouseY) {
 		if (!inExpansionMode)
@@ -468,7 +540,14 @@ public class GameController {
 		}
 		return false;
 	}
-
+	/**
+	 * Handles clicks on floating items.
+	 * Starts dragging the selected item.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if a floating item was selected
+	 */
 	private boolean handleFloatingItemClick(int mouseX, int mouseY) {
 		FloatingItem fItem = findFloatingItemAt(mouseX, mouseY);
 		if (fItem != null) {
@@ -493,7 +572,13 @@ public class GameController {
 		}
 		return false;
 	}
-
+	/**
+	 * Handles clicks inside the treasure chest.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if a treasure item was selected
+	 */
 	private boolean handleTreasureClick(int mouseX, int mouseY) {
 		if (!inTreasure)
 			return false;
@@ -508,7 +593,16 @@ public class GameController {
 		}
 		return false;
 	}
-
+	
+	/**
+	 * Starts dragging an item from the merchant.
+	 *
+	 * @param x grid x position
+	 * @param y grid y position
+	 * @param item the dragged item
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 */
 	private void startTreasureDrag(int x, int y, Item item, int mouseX, int mouseY) {
 		int[] start = findItemOrigin(treasureChest.getGrid().getGrid(), x, y, item);
 		draggedItem = item;
@@ -525,6 +619,14 @@ public class GameController {
 		dragMouseY = mouseY - dragOffsetY;
 	}
 
+	
+	/**
+	 * Handles drag start from the backpack.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if a backpack item was selected
+	 */
 	private boolean handleMerchantDragStart(int mouseX, int mouseY) {
 		if (!inMerchant)
 			return false;
@@ -572,7 +674,17 @@ public class GameController {
 		}
 		return false;
 	}
-
+	
+	
+	/**
+	 * Starts dragging an item from the backpack.
+	 *
+	 * @param x grid x position
+	 * @param y grid y position
+	 * @param item the dragged item
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 */
 	private void startBackpackDrag(int x, int y, Item item, int mouseX, int mouseY) {
 
 		draggedItem = item;
@@ -588,6 +700,15 @@ public class GameController {
 		dragMouseX = mouseX - dragOffsetX;
 		dragMouseY = mouseY - dragOffsetY;
 	}
+	
+	
+	/**
+	 * Handles room navigation clicks on the map.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return true if the player starts moving
+	 */
 
 	private boolean handleRoomNavigation(int mouseX, int mouseY) {
 		if (inCombat || isFollowingPath || isPlayerMoving) {
@@ -617,7 +738,14 @@ public class GameController {
 		moveToNextRoomInPath();
 		return true;
 	}
-
+	
+	/**
+	 * Handles mouse movement.
+	 * Updates dragging state and item position.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 */
 	private void handlePointerMove(int mouseX, int mouseY) {
 
 		if (draggedItem == currentMalediction && placingMalediction) {
@@ -1162,6 +1290,15 @@ public class GameController {
 	}
 
 	// ===================== UTILITIES =====================
+	
+	
+	/**
+	 * Finds a floating item at the given mouse position.
+	 *
+	 * @param mouseX mouse x position
+	 * @param mouseY mouse y position
+	 * @return the floating item if found, otherwise null
+	 */
 	private FloatingItem findFloatingItemAt(int mouseX, int mouseY) {
 		for (FloatingItem f : floatingItems) {
 			int width = f.item.width() * (backpackCellSize + backpackPadding) - backpackPadding;
@@ -1173,7 +1310,16 @@ public class GameController {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * Finds the top-left position of an item in a grid.
+	 *
+	 * @param grid the item grid
+	 * @param x current x position
+	 * @param y current y position
+	 * @param item the searched item
+	 * @return the origin coordinates of the item
+	 */
 	private int[] findItemOrigin(Item[][] grid, int x, int y, Item item) {
 		int startX = x, startY = y;
 		while (startX > 0 && grid[y][startX - 1] == item)
@@ -1182,6 +1328,16 @@ public class GameController {
 			startY--;
 		return new int[] { startX, startY };
 	}
+	
+	
+	/**
+	 * Places an item into a grid at the given position.
+	 *
+	 * @param grid the target grid
+	 * @param item the item to place
+	 * @param x x position
+	 * @param y y position
+	 */
 
 	private void placeInGrid(Item[][] grid, Item item, int x, int y) {
 		for (int dy = 0; dy < item.height(); dy++) {
@@ -1239,7 +1395,10 @@ public class GameController {
 		isPlayerMoving = true;
 		moveStartTime = System.currentTimeMillis();
 	}
-
+	/**
+	 * Finishes the path movement.
+	 * Updates player position and room state.
+	 */
 	private void finishPathMovement() {
 
 		isFollowingPath = false;
@@ -1256,6 +1415,11 @@ public class GameController {
 
 		processRoomType(finalRoom);
 	}
+	
+	
+	/**
+	 * Cleans up floating items and invalid drag states.
+	 */
 
 	private void cleanupFloatingItems() {
 
