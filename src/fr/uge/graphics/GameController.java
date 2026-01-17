@@ -265,7 +265,10 @@ public class GameController {
 	public List<FloatingItem> getFloatingItems() {
 		return floatingItems;
 	}
-
+	/**
+	 * 
+	 * @return
+	 */
 	public float getPlayerAnimationProgress() {
 		if (!isPlayerMoving) {
 			return 1.0f;

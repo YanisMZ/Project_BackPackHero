@@ -37,7 +37,7 @@ public class GameRun {
 	public void run() {
 		Application.run(Color.BLACK, context -> {
 			int status = 0;
-			Dungeon dungeon = new Dungeon();
+			Dungeon dungeon = new Dungeon(new Random());
 
 			BackPack backpack = new BackPack(5, 7);
 			int[][] sCells = { { 1, 2 }, { 1, 3 }, { 1, 4 }, { 2, 2 }, { 2, 3 }, { 2, 4 }, { 3, 2 }, { 3, 3 }, { 3, 4 } };
@@ -58,8 +58,7 @@ public class GameRun {
 				view.loadingDisplay(startTime);
 				context.pollOrWaitEvent(10);
 			}
-//			Jusqu'ici car Boolean classique marchait pas 
-//			+ affichage en continue
+
 
 			backpack.place(new Sword(ItemType.SWORD, 10, 1, 1, 2, 5), 2, 2);
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);

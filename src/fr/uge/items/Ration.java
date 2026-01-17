@@ -8,7 +8,6 @@ public record Ration(String name, int width, int height, int durability) impleme
 		Objects.requireNonNull(name);
 	}
 
-	// Constructeur pratique pour une nouvelle ration
 	public Ration(String name, int width, int height) {
 		this(name, width, height, 1);
 	}
@@ -31,7 +30,7 @@ public record Ration(String name, int width, int height, int durability) impleme
 	@Override
 	public int staminaCost() {
 		return 0;
-	} // Utilisation gratuite
+	} 
 
 	@Override
 	public int staminaRegen() {
@@ -45,7 +44,7 @@ public record Ration(String name, int width, int height, int durability) impleme
 
 	@Override
 	public Item decreaseDurability() {
-		return new Ration(name, width, height, 0); // Devient cassé immédiatement
+		return new Ration(name, width, height, 0); 
 	}
 
 	@Override

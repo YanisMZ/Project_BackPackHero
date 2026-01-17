@@ -401,7 +401,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private void drawGrid(Graphics2D g, GameController controller) {
 		var adjacents = floor.adjacentRooms();
 
-		// Dessiner toutes les cases
+
 		for (int i = 0; i < floor.rooms().size(); i++) {
 			boolean isAdjacent = adjacents.contains(i);
 			boolean isAccessible = floor.isRoomAccessible(i);
@@ -409,10 +409,10 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			drawRoomCell(g, i, floor.rooms().get(i), isAdjacent, isAccessible);
 		}
 
-		// Dessiner le joueur avec animation
+		
 		drawAnimatedPlayer(g, controller);
 
-		// Dessiner le chemin si en cours
+
 		if (controller.isFollowingPath()) {
 			drawPath(g, controller.getCurrentPath(), controller.getPathIndex());
 		}
@@ -445,20 +445,20 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int imgSize = GRID_CELL_SIZE / 2;
 
 		if (controller.isPlayerMoving()) {
-			// Animation
+
 			float progress = controller.getPlayerAnimationProgress();
 			int startIdx = controller.getPlayerStartIndex();
 			int targetIdx = controller.getPlayerTargetIndex();
 
-			// Calculer les positions de départ et d'arrivée
+	
 			int[] startPos = getCellPosition(startIdx);
 			int[] targetPos = getCellPosition(targetIdx);
 
-			// Interpoler la position
+		
 			int x = (int) (startPos[0] + (targetPos[0] - startPos[0]) * progress);
 			int y = (int) (startPos[1] + (targetPos[1] - startPos[1]) * progress);
 
-			// Centrer l'icône
+
 			int offset = (GRID_CELL_SIZE - imgSize) / 2;
 			x += offset;
 			y += offset;
@@ -466,7 +466,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.setColor(Color.RED);
 			g.drawImage(heroImage, x, y, imgSize, imgSize, null);
 		} else {
-			// Position statique
+
 			currentIndex = floor.playerIndex();
 			int[] pos = getCellPosition(currentIndex);
 			int offset = (GRID_CELL_SIZE - imgSize) / 2;
@@ -828,7 +828,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 	private void drawHealerRoom(Graphics2D g, Hero hero, HealerRoom healerRoom) {
 		var info = context.getScreenInfo();
 
-		// Background (utiliser healerRoomImage si disponible, sinon couleur)
 		if (healerRoomImage != null) {
 			g.drawImage(healerRoomImage, 0, 0, info.width(), info.height(), null);
 		} else {
@@ -836,7 +835,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 			g.fillRect(0, 0, info.width(), info.height());
 		}
 
-		// Bouton de soin
+	
 		int buttonWidth = 200;
 		int buttonHeight = 80;
 		int buttonX = (info.width() - buttonWidth) / 2;
@@ -844,11 +843,11 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 		boolean canHeal = healerRoom.canHeal(hero);
 
-		// Fond du bouton
+	
 		g.setColor(canHeal ? new Color(100, 200, 100) : new Color(150, 150, 150));
 		g.fillRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 20, 20);
 
-		// Bordure
+
 		g.setColor(canHeal ? new Color(50, 150, 50) : new Color(100, 100, 100));
 		g.setStroke(new java.awt.BasicStroke(3));
 		g.drawRoundRect(buttonX, buttonY, buttonWidth, buttonHeight, 20, 20);
@@ -985,23 +984,23 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int startX = info.width() - sideBarWidth - 25;
 		int currentY = 30;
 
-		// Barre de vie
+
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
 				hero.hp() + " HP");
 
 		currentY += 40;
 
-		// NOUVELLE BARRE DE PROTECTION
+
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.protection(), 20, Color.DARK_GRAY,
 				new Color(100, 180, 255), "PROTECTION", hero.protection() + " DEF");
 
 		currentY += 40;
 
-		// Barre de stamina
+
 		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
 				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
 
-		// Barre d'expérience (en bas)
+		
 		int expBarHeight = 20;
 		int expY = info.height() - expBarHeight - 10;
 		int currentLevel = hero.lvl(hero.exp());

@@ -12,7 +12,7 @@ public record RotatableItem(Item base, boolean rotated) implements Item {
 		this(base, false);
 	}
 
-	// --- AJOUTS POUR LA DURABILITÉ ---
+
 
 	@Override
 	public int durability() {
@@ -26,8 +26,6 @@ public record RotatableItem(Item base, boolean rotated) implements Item {
 
 	@Override
 	public Item decreaseDurability() {
-		// IMPORTANT : On diminue la durabilité de la base
-		// ET on la ré-enveloppe dans un RotatableItem pour garder la rotation !
 		return new RotatableItem(base.decreaseDurability(), rotated);
 	}
 
@@ -41,7 +39,7 @@ public record RotatableItem(Item base, boolean rotated) implements Item {
 		return base.healthRegen();
 	}
 
-	// --- FIN DES AJOUTS ---
+
 
 	@Override
 	public Item rotate() {
