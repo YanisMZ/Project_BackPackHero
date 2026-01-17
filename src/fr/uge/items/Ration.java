@@ -70,7 +70,7 @@ public record Ration(String name, int width, int height, int durability) impleme
 
 	@Override
 	public int price() {
-		
+
 		return 10;
 	}
 }

@@ -1,19 +1,23 @@
 package fr.uge.enemy;
 
+/**
+ * Interface for all monsters.
+ */
 public sealed interface Enemy permits SmallWolfRat, WolfRat {
-  int hp();
-  int maxHp();
+	int hp();
 
-  String name();
+	int maxHp();
 
-  int protection();
+	String name();
 
-  boolean isAlive();
-  
-  int attackDamage();
+	int protection();
 
-  Enemy takeDamage(int dmg);
+	boolean isAlive();
 
-  Enemy defend();
+	int attackDamage();
+
+	Enemy takeDamage(int dmg);
+
+	Enemy defend();
 
 }

@@ -6,9 +6,9 @@ import fr.uge.map.MapDungeon;
 
 public class Main {
 
-  public static void main(String[] args) {
-    GameRun gameRun = new GameRun();
-    gameRun.run();
-  }
+	public static void main(String[] args) {
+		GameRun gameRun = new GameRun();
+		gameRun.run();
+	}
 
 }

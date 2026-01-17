@@ -86,7 +86,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		loadStaticImages();
 		loadAnimations();
 		loadAllWeapons();
-		System.out.println("Assets chargés !");
+		System.out.println("Assets loaded !");
 	}
 
 	private static void loadStaticImages() {
@@ -108,7 +108,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadFrames(int nbFrames, String folder, String name, String type) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames / 10; i++) { // a modifier le /10 !!!
+		for (int i = 1; i < nbFrames; i++) { // a modifier le /10 !!!
 			frames.add(loadImage("./" + folder + "/" + name + "(" + i + ")." + type));
 			System.out.println("./" + folder + "/" + name + "(" + i + ").jpg");
 		}
@@ -117,7 +117,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	private static List<BufferedImage> loadAttackFrames(int nbEnemies, int nbFrames) {
 		List<BufferedImage> frames = new ArrayList<>();
-		for (int i = 1; i < nbFrames / 10; i++) { // a modifier le /10 !!!
+		for (int i = 1; i < nbFrames; i++) { // a modifier le /10 !!!
 			if (i % 2 == 0) {
 				frames.add(loadImage("./fighting" + nbEnemies + "/hit_(" + i + ").png"));
 				System.out.println("Frame chargé : hit_(" + i + ").png");
@@ -422,7 +422,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		if (path == null || path.isEmpty())
 			return;
 
-		g.setColor(new Color(255, 255, 0, 100)); // Jaune transparent
+		g.setColor(new Color(255, 255, 0, 100)); // Yellow
 		g.setStroke(new java.awt.BasicStroke(4));
 
 		for (int i = currentIndex; i < path.size() - 1; i++) {
@@ -445,7 +445,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int imgSize = GRID_CELL_SIZE / 2;
 
 		if (controller.isPlayerMoving()) {
-			// Animation en cours
+			// Animation
 			float progress = controller.getPlayerAnimationProgress();
 			int startIdx = controller.getPlayerStartIndex();
 			int targetIdx = controller.getPlayerTargetIndex();
@@ -494,7 +494,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		if (isAdjacent) {
 			color = Color.GREEN;
 		} else if (isAccessible && index != floor.playerIndex()) {
-			color = new Color(100, 255, 100); // Vert clair pour accessible
+			color = new Color(100, 255, 100); // Green = availablke 
 		} else {
 			color = getRoomColor(room);
 		}
@@ -878,7 +878,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int itemW = item.width() * (CELL_SIZE + PADDING) - PADDING;
 		int itemH = item.height() * (CELL_SIZE + PADDING) - PADDING;
 
-		// Pour les malédictions dans le sac, on garde l'ancien rendu (rectangle simple)
+
 		drawItemImage(g, item, cellX, cellY, itemW, itemH);
 		drawStackQuantity(g, item, cellX, cellY, itemW, Color.YELLOW);
 
@@ -914,7 +914,7 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				key += "v";
 			}
 		}
-		
+
 		BufferedImage img = (key != null) ? weaponAssets.get(key) : null;
 		if (img != null) {
 			g.drawImage(img, x, y, w, h, null);
@@ -978,55 +978,52 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 
 	// ===================== STATS BARS =====================
 	private void drawHeroStats(Graphics2D g, Hero hero) {
-    var info = context.getScreenInfo();
+		var info = context.getScreenInfo();
 
-    int barHeight = 15;
-    int sideBarWidth = 300;
-    int startX = info.width() - sideBarWidth - 25;
-    int currentY = 30;
+		int barHeight = 15;
+		int sideBarWidth = 300;
+		int startX = info.width() - sideBarWidth - 25;
+		int currentY = 30;
 
-    // Barre de vie
-    drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), 
-            Color.RED, Color.GREEN, "HERO", hero.hp() + " HP");
+		// Barre de vie
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.hp(), hero.HeroMaxHp(), Color.RED, Color.GREEN, "HERO",
+				hero.hp() + " HP");
 
-    currentY += 40;
+		currentY += 40;
 
-    // NOUVELLE BARRE DE PROTECTION
-    drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.protection(), 20, 
-            Color.DARK_GRAY, new Color(100, 180, 255), "PROTECTION", 
-            hero.protection() + " DEF");
+		// NOUVELLE BARRE DE PROTECTION
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.protection(), 20, Color.DARK_GRAY,
+				new Color(100, 180, 255), "PROTECTION", hero.protection() + " DEF");
 
-    currentY += 40;
+		currentY += 40;
 
-    // Barre de stamina
-    drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), 
-            Color.DARK_GRAY, Color.ORANGE, "STAMINA", 
-            hero.currentStamina() + " / " + hero.maxStamina());
+		// Barre de stamina
+		drawBar(g, startX, currentY, sideBarWidth, barHeight, hero.currentStamina(), hero.maxStamina(), Color.DARK_GRAY,
+				Color.ORANGE, "STAMINA", hero.currentStamina() + " / " + hero.maxStamina());
 
-    // Barre d'expérience (en bas)
-    int expBarHeight = 20;
-    int expY = info.height() - expBarHeight - 10;
-    int currentLevel = hero.lvl(hero.exp());
+		// Barre d'expérience (en bas)
+		int expBarHeight = 20;
+		int expY = info.height() - expBarHeight - 10;
+		int currentLevel = hero.lvl(hero.exp());
 
-    float startExp = hero.getXpForLevel(currentLevel);
-    float endExp;
-    if (currentLevel >= 5) {
-        endExp = hero.maxExp();
-    } else {
-        endExp = hero.getXpForLevel(currentLevel + 1);
-    }
+		float startExp = hero.getXpForLevel(currentLevel);
+		float endExp;
+		if (currentLevel >= 5) {
+			endExp = hero.maxExp();
+		} else {
+			endExp = hero.getXpForLevel(currentLevel + 1);
+		}
 
-    float currentExpInLevel = hero.exp() - startExp;
-    float totalExpNeededForLevel = endExp - startExp;
+		float currentExpInLevel = hero.exp() - startExp;
+		float totalExpNeededForLevel = endExp - startExp;
 
-    if (totalExpNeededForLevel <= 0)
-        totalExpNeededForLevel = 1;
+		if (totalExpNeededForLevel <= 0)
+			totalExpNeededForLevel = 1;
 
-    drawBar(g, 0, expY, info.width(), expBarHeight, currentExpInLevel, 
-            totalExpNeededForLevel, Color.BLACK, new Color(255, 215, 0), null,
-            "Level : " + currentLevel + " | XP: " + (int) currentExpInLevel + 
-            " / " + (int) totalExpNeededForLevel);
-}
+		drawBar(g, 0, expY, info.width(), expBarHeight, currentExpInLevel, totalExpNeededForLevel, Color.BLACK,
+				new Color(255, 215, 0), null,
+				"Level : " + currentLevel + " | XP: " + (int) currentExpInLevel + " / " + (int) totalExpNeededForLevel);
+	}
 
 	private void drawBar(Graphics2D g, int x, int y, int width, int height, double current, double max, Color bgColor,
 			Color fillColor, String label, String valueText) {
@@ -1111,7 +1108,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 		int startY = 100;
 		int padding = 10;
 
-
 		int totalWidth = Math.min(actions.size(), 3) * (bubbleWidth + 20);
 		int startX = (info.width() - totalWidth) / 2;
 
@@ -1121,11 +1117,9 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				Battle.EnemyAction action = actions.get(i);
 				int bubbleX = startX + i * (bubbleWidth + 20);
 
-		
 				g.setColor(new Color(255, 255, 255, 230));
 				g.fillRoundRect(bubbleX, startY, bubbleWidth, bubbleHeight, 15, 15);
 
-	
 				Color borderColor = switch (action) {
 				case ATTACK -> Color.RED;
 				case DEFEND -> Color.BLUE;
@@ -1136,10 +1130,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				g.drawRoundRect(bubbleX, startY, bubbleWidth, bubbleHeight, 15, 15);
 				g.setStroke(new java.awt.BasicStroke(1));
 
-			
-		
-
-				
 				g.setFont(g.getFont().deriveFont(14f));
 				g.setColor(Color.BLACK);
 				String text = switch (action) {
@@ -1149,7 +1139,6 @@ public record GameView(ApplicationContext context, MapDungeon floor, BackPack ba
 				};
 				g.drawString(text, bubbleX + 50, startY + 25);
 
-			
 				if (action == Battle.EnemyAction.ATTACK) {
 					String dmgText = enemy.attackDamage() + " DMG";
 					g.setFont(g.getFont().deriveFont(12f));

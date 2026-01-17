@@ -14,12 +14,12 @@ public record HealingItem(String name, int healAmount, int width, int height, in
 	@Override
 	public int healthRegen() {
 		return healAmount;
-	} 
+	}
 
 	@Override
 	public int staminaCost() {
 		return 0;
-	} 
+	}
 
 	@Override
 	public Item decreaseDurability() {
@@ -58,7 +58,6 @@ public record HealingItem(String name, int healAmount, int width, int height, in
 
 	@Override
 	public int price() {
-		// TODO Auto-generated method stub
 		return 20;
 	}
 }

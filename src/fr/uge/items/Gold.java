@@ -6,7 +6,7 @@ public record Gold(String name, int quantity) implements Item {
 
 	public Gold {
 		Objects.requireNonNull(name);
-		
+
 	}
 
 	@Override
@@ -58,11 +58,12 @@ public record Gold(String name, int quantity) implements Item {
 	public boolean isRotated() {
 		return false;
 	}
-	
+
 	@Override
-  public boolean isSellable() {
-      return false; 
-  }
+	public boolean isSellable() {
+		return false;
+	}
+
 	public int price() {
 		return 0;
 	}

@@ -100,9 +100,9 @@ public record Malediction(String name, boolean[][] shape) implements Item {
 	public int healthRegen() {
 		return 0;
 	}
-	
+
 	@Override
 	public boolean isMalediction() {
-	    return true;
+		return true;
 	}
 }

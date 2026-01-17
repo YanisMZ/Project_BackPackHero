@@ -23,23 +23,25 @@ import fr.uge.room.HealerRoom;
 import fr.uge.room.Merchant;
 import fr.uge.room.TreasureChest;
 
+/**
+ * Main class to launch the game.
+ * It will create the window and the main loop.
+ */
 public class GameRun {
 
 	public GameRun() {
 	}
-
+	/**
+	 * Start the application and init variable
+	 */
 	public void run() {
 		Application.run(Color.BLACK, context -> {
 			int status = 0;
 			Dungeon dungeon = new Dungeon();
 
 			BackPack backpack = new BackPack(5, 7);
-			 int[][] sCells = { {1,2}, {1,3}, {1,4}, {2,2}, {2,3}, {2,4},{3,2}, {3,3}, {3,4} };
-			 backpack.unlockCells(sCells);
-
-
-
-		
+			int[][] sCells = { { 1, 2 }, { 1, 3 }, { 1, 4 }, { 2, 2 }, { 2, 3 }, { 2, 4 }, { 3, 2 }, { 3, 3 }, { 3, 4 } };
+			backpack.unlockCells(sCells);
 
 			var floor0 = dungeon.getFloor(0);
 			GameView view = new GameView(context, floor0, backpack);
@@ -63,20 +65,20 @@ public class GameRun {
 			backpack.place(new HealingItem("Heal", 10, 1, 1), 3, 2);
 			backpack.autoAdd(new Gold("Gold", 10));
 
-
 			var hero = new Hero(40, 0, 3, 0, backpack);
-			var fight = new Battle(hero, backpack,new Random());
+			var fight = new Battle(hero, backpack, new Random());
 
 			var screenInfo = context.getScreenInfo();
 			var width = screenInfo.width();
 			var height = screenInfo.height();
-			
+
 			var treasureChest = new TreasureChest(3, 5);
 			var merchant = new Merchant(3, 5);
 			var expansionSystem = new BackpackExpansionSystem(backpack);
 			var healerRoom = new HealerRoom();
 
-			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero,treasureChest,merchant,expansionSystem,healerRoom);
+			GameController controller = new GameController(context, view, floor0, backpack, fight, dungeon, hero,
+					treasureChest, merchant, expansionSystem, healerRoom);
 
 			while (true) {
 				boolean needsFastUpdate = controller.isDragging() || controller.isPlayerMoving()
@@ -118,7 +120,7 @@ public class GameRun {
 				}
 
 				if (hero.hp() <= 0) {
-					System.out.println("Votre personnage est MORT !");
+					System.out.println("Votre personnage est MORT ! Fin du jeu");
 					System.exit(0);
 				}
 			}

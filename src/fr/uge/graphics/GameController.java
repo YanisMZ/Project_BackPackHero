@@ -344,7 +344,7 @@ public class GameController {
 			return false;
 
 		if (ke.key() == KeyboardEvent.Key.CTRL) {
-		
+
 			if (placingMalediction || currentMalediction != null) {
 
 				return true;
@@ -361,8 +361,6 @@ public class GameController {
 				}
 
 				checkCombatEnd();
-			} else {
-				System.out.println("Votre tour est déjà terminé !");
 			}
 			return true;
 		}
@@ -431,8 +429,6 @@ public class GameController {
 			if (draggedItem != null && draggedItem.isMalediction() && !inCombat) {
 				int penalty = 10;
 				hero.takeDamage(penalty);
-				System.out.println("Vous déplacez la malédiction ! Vous perdez " + penalty + " PV !");
-				System.out.println("HP restants : " + hero.hp() + "/" + hero.maxHp());
 			}
 		}
 
@@ -566,7 +562,6 @@ public class GameController {
 		Item item = backpack.grid()[y][x];
 		if (item != null) {
 			if (item == placedMalediction && inCombat) {
-				System.out.println("Impossible de déplacer la malédiction pendant le combat !");
 				return true;
 			}
 			startBackpackDrag(x, y, item, mouseX, mouseY);
@@ -662,7 +657,6 @@ public class GameController {
 		dragMouseX = spawn.x;
 		dragMouseY = spawn.y;
 
-		System.out.println("☠️ Une malédiction apparaît ! Dépose-la dans le sac !");
 	}
 
 	private boolean handleMaledictionPlacement(int mouseX, int mouseY) {
@@ -689,7 +683,6 @@ public class GameController {
 		placingMalediction = false;
 		combatPausedByMalediction = false;
 
-		System.out.println(" Malédiction placée !");
 		return true;
 	}
 
@@ -718,7 +711,6 @@ public class GameController {
 				dragMouseX = 0;
 				dragMouseY = 0;
 
-				System.out.println("Placement invalide");
 			}
 			return;
 		}
@@ -763,9 +755,7 @@ public class GameController {
 		int totalHpAfter = fight.getEnemy().stream().mapToInt(e -> Math.max(0, e.hp())).sum();
 
 		int damageDealt = totalHpBefore - totalHpAfter;
-		System.out.println("DAMAGE " + damageDealt);
 		if (damageDealt > 0) {
-			System.out.println("J'ai ajouté lexp" + 0.8 * damageDealt);
 			hero.addExp(0.8 * damageDealt);
 		}
 		for (Battle.EnemyAction action : fight.getEnemyActions()) {
@@ -807,12 +797,7 @@ public class GameController {
 			if (hero.getBackpack().autoAdd(draggedItem)) {
 				hero.removeGold(price);
 				merchant.getStock().removeItem(draggedItem);
-				System.out.println("Achat : " + draggedItem.name() + " (" + price + " or)");
-			} else {
-				System.out.println("Pas de place !");
 			}
-		} else {
-			System.out.println("Pas assez d'or ! (" + price + " requis)");
 		}
 		resetDragState();
 	}
@@ -852,73 +837,71 @@ public class GameController {
 	// ===================== ROOM HANDLING =====================
 
 	private void processRoomType(int room) {
-    Type roomType = floor.rooms().get(room).type();
-    this.lastChangeRoom = System.currentTimeMillis();
+		Type roomType = floor.rooms().get(room).type();
+		this.lastChangeRoom = System.currentTimeMillis();
 
-    switch (roomType) {
+		switch (roomType) {
 
-    case ENEMY -> {
-        if (clearedEnemyRooms.contains(room)) {
-            setEmptyRoomState();
-        } else {
-            startCombat();
-        }
-    }
+		case ENEMY -> {
+			if (clearedEnemyRooms.contains(room)) {
+				setEmptyRoomState();
+			} else {
+				startCombat();
+			}
+		}
 
-    case TREASURE -> {
-       
-        TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
-            TreasureChest newChest = new TreasureChest(3, 5);
-            newChest.generateTreasure();
-            return newChest;
-        });
-        this.treasureChest = chest;
-        
-      
-        if (chest.getGrid().isEmpty()) {
-            clearedTreasureRooms.add(room);
-            setCorridorState();
-        } else {
-            setTreasureState();
-        }
-    }
+		case TREASURE -> {
 
-    case MERCHANT -> {
-        merchant.generateStock();
-        setMerchantState();
-    }
+			TreasureChest chest = treasureChests.computeIfAbsent(room, r -> {
+				TreasureChest newChest = new TreasureChest(3, 5);
+				newChest.generateTreasure();
+				return newChest;
+			});
+			this.treasureChest = chest;
 
-    case HEALER -> {
-        setHealerState();
-    }
+			if (chest.getGrid().isEmpty()) {
+				clearedTreasureRooms.add(room);
+				setCorridorState();
+			} else {
+				setTreasureState();
+			}
+		}
 
-    case EXIT -> {
-        if (!exitGuardDefeated) {
-            startExitCombat();
-        } else {
-            goToNextFloor();
-        }
-    }
+		case MERCHANT -> {
+			merchant.generateStock();
+			setMerchantState();
+		}
 
-    default -> {
-        setCorridorState();
-    }
-    }
-}
+		case HEALER -> {
+			setHealerState();
+		}
+
+		case EXIT -> {
+			if (!exitGuardDefeated) {
+				startExitCombat();
+			} else {
+				goToNextFloor();
+			}
+		}
+
+		default -> {
+			setCorridorState();
+		}
+		}
+	}
 
 	private void leaveTreasureRoom() {
-    int room = floor.playerIndex();
-    TreasureChest chest = treasureChests.get(room);
-    if (chest != null && chest.getGrid().isEmpty()) {
-       
-        clearedTreasureRooms.add(room);
-    }
-    
-    
-    floatingItems.clear();
-    
-    setCorridorState();
-}
+		int room = floor.playerIndex();
+		TreasureChest chest = treasureChests.get(room);
+		if (chest != null && chest.getGrid().isEmpty()) {
+
+			clearedTreasureRooms.add(room);
+		}
+
+		floatingItems.clear();
+
+		setCorridorState();
+	}
 
 	// ===================== COMBAT =====================
 	private void startCombat() {
@@ -936,7 +919,7 @@ public class GameController {
 			return;
 
 		if (combatPausedByMalediction && (placingMalediction || currentMalediction != null)) {
-			System.out.println("☠️ Tu dois placer la malédiction avant de continuer !");
+			System.out.println("Tu dois placer la malédiction !");
 			return;
 		}
 
@@ -1063,13 +1046,9 @@ public class GameController {
 
 			if (item != null) {
 				if (item.isMalediction()) {
-					if (inCombat) {
-						System.out.println("Impossible de supprimer la malédiction en combat !");
-					} else {
+					if (!inCombat) {
 						int penalty = 10;
 						hero.takeDamage(penalty);
-						System.out.println(" Malédiction supprimée ! Vous perdez " + penalty + " PV !");
-						System.out.println(" HP restants : " + hero.hp() + "/" + hero.maxHp());
 
 						backpack.remove(item);
 
@@ -1105,7 +1084,6 @@ public class GameController {
 	// ===================== FLOOR NAVIGATION =====================
 	private void goToNextFloor() {
 		if (floorIndex + 1 >= 3) {
-			System.out.println("Fin du donjon !");
 			System.exit(0);
 			return;
 		}
@@ -1223,7 +1201,6 @@ public class GameController {
 	}
 
 	private void completeMovement() {
-		System.out.println(" Animation terminée");
 
 		isPlayerMoving = false;
 

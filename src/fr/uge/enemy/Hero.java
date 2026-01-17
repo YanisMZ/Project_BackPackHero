@@ -11,7 +11,7 @@ public class Hero {
 	private float experience;
 	private float maxExperience = 100;
 	private final BackPack backpack;
-
+	
 	public Hero(int maxHp, int protection, int maxStamina, float exp, BackPack backpack) {
 		this.maxHp = maxHp;
 		this.maxStamina = maxStamina;
@@ -69,8 +69,6 @@ public class Hero {
 	public void takeDamage(int damage) {
 		int actualDamage = Math.max(0, damage - protection);
 		hp = Math.max(0, hp - actualDamage);
-		System.out.println("Héros prend " + actualDamage + " dégâts (Protection: " + protection + ")");
-		System.out.println("HP: " + hp + "/" + maxHp);
 	}
 
 	public void addProtection(int value) {
@@ -123,18 +121,23 @@ public class Hero {
 			return 5;
 		}
 	}
-	
+
 	public float getXpForLevel(int level) {
-    float max = maxExp();
-    
-    if (level <= 1) return 0;
-    if (level == 2) return (1.0f / 10.0f) * max;
-    if (level == 3) return (3.0f / 10.0f) * max;
-    if (level == 4) return (3.0f / 5.0f) * max;
-    if (level == 5) return (9.0f / 10.0f) * max;
-    
-    return max;
-}
+		float max = maxExp();
+
+		if (level <= 1)
+			return 0;
+		if (level == 2)
+			return (1.0f / 10.0f) * max;
+		if (level == 3)
+			return (3.0f / 10.0f) * max;
+		if (level == 4)
+			return (3.0f / 5.0f) * max;
+		if (level == 5)
+			return (9.0f / 10.0f) * max;
+
+		return max;
+	}
 
 	public void addExp(double amount) {
 		this.experience += amount;
@@ -162,13 +165,11 @@ public class Hero {
 
 	public void heal(int amount) {
 		if (amount < 0) {
-			return; 
+			return;
 		}
-
 
 		this.hp = Math.min(this.hp + amount, this.maxHp);
 
-		System.out.println("Héros soigné ! HP actuels : " + this.hp + "/" + this.maxHp);
 	}
 
 }
