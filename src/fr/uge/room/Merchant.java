@@ -27,15 +27,14 @@ public class Merchant {
 			return false;
 		}
 
-		// Retirer l'or avant d'ajouter l'item
 		hero.removeGold(price);
 
-		// Si l'item est de l'or, fusionner avec le stack existant
+	
 		if (item.isStackable() && item.name().equals("Gold")) {
 			hero.addGold(item.quantity());
 		} else {
 			if (!hero.getBackpack().autoAdd(item)) {
-				// Rembourser l'or si achat échoue
+			
 				hero.addGold(price);
 				return false;
 			}
@@ -46,7 +45,7 @@ public class Merchant {
 	}
 
 	public boolean sellItem(Item item, Hero hero) {
-		int sellPrice = item.price() / 2; // Revente à 50%
+		int sellPrice = item.price() / 2; 
 
 		hero.addGold(sellPrice);
 

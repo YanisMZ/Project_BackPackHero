@@ -4,7 +4,7 @@ package fr.uge.items;
  * Represents an item in the game.
  * An item can be equipped, stacked, sold, rotated, or used in different ways.
  */
-public interface Item {
+public sealed interface Item permits Gold,Magical,Mana,Shield,Sword,RotatableItem,Ration,Malediction,HealingItem  {
 
 	/**
 	 * @return the name of the item
